@@ -28,6 +28,7 @@ tasks.withType<KotlinCompile>().configureEach {
     kotlinOptions.apply {
         languageVersion = "1.3"
         jvmTarget = "1.8"
+        allWarningsAsErrors = true
     }
 }
 

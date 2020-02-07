@@ -80,14 +80,14 @@ fun KotlinClassMetadata.toClassVisibility(className: String): ClassVisibility? {
     )
 }
 
-private fun visitFunction(flags: Flags, name: String, addMember: (MemberVisibility) -> Unit) =
+private fun visitFunction(flags: Flags, addMember: (MemberVisibility) -> Unit) =
     object : KmFunctionVisitor() {
         var jvmDesc: JvmMemberSignature? = null
         override fun visitExtensions(type: KmExtensionType): KmFunctionExtensionVisitor? {
             if (type != JvmFunctionExtensionVisitor.TYPE) return null
             return object : JvmFunctionExtensionVisitor() {
-                override fun visit(desc: JvmMethodSignature?) {
-                    jvmDesc = desc
+                override fun visit(signature: JvmMethodSignature?) {
+                    jvmDesc = signature
                 }
             }
         }
@@ -105,8 +105,8 @@ private fun visitConstructor(flags: Flags, addMember: (MemberVisibility) -> Unit
         override fun visitExtensions(type: KmExtensionType): KmConstructorExtensionVisitor? {
             if (type != JvmConstructorExtensionVisitor.TYPE) return null
             return object : JvmConstructorExtensionVisitor() {
-                override fun visit(desc: JvmMethodSignature?) {
-                    jvmDesc = desc
+                override fun visit(signature: JvmMethodSignature?) {
+                    jvmDesc = signature
                 }
             }
         }
@@ -120,7 +120,6 @@ private fun visitConstructor(flags: Flags, addMember: (MemberVisibility) -> Unit
 
 private fun visitProperty(
     flags: Flags,
-    name: String,
     getterFlags: Flags,
     setterFlags: Flags,
     addMember: (MemberVisibility) -> Unit
@@ -163,7 +162,7 @@ private fun visitProperty(
 private fun visitPackage(addMember: (MemberVisibility) -> Unit) =
     object : KmPackageVisitor() {
         override fun visitFunction(flags: Flags, name: String): KmFunctionVisitor? {
-            return visitFunction(flags, name, addMember)
+            return visitFunction(flags, addMember)
         }
 
         override fun visitProperty(
@@ -174,7 +173,6 @@ private fun visitPackage(addMember: (MemberVisibility) -> Unit) =
         ): KmPropertyVisitor? {
             return visitProperty(
                 flags,
-                name,
                 getterFlags,
                 setterFlags,
                 addMember
@@ -193,7 +191,7 @@ private fun visitClass(flags: (Flags) -> Unit, addMember: (MemberVisibility) -> 
         }
 
         override fun visitFunction(flags: Flags, name: String): KmFunctionVisitor? {
-            return visitFunction(flags, name, addMember)
+            return visitFunction(flags, addMember)
         }
 
         override fun visitProperty(
@@ -204,7 +202,6 @@ private fun visitClass(flags: (Flags) -> Unit, addMember: (MemberVisibility) -> 
         ): KmPropertyVisitor? {
             return visitProperty(
                 flags,
-                name,
                 getterFlags,
                 setterFlags,
                 addMember
