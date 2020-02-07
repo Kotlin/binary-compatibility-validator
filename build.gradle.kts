@@ -33,6 +33,7 @@ tasks.withType<KotlinCompile>().configureEach {
     }
 }
 
+properties["DeployVersion"]?.let { version = it }
 publishing {
     publications {
         create<MavenPublication>("maven") {
