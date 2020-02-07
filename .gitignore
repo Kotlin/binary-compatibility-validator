@@ -4,3 +4,4 @@
 /buildSrc/.gradle/
 /buildSrc/build/
 /sample-project/build/
+/.idea/

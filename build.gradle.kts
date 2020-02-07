@@ -40,6 +40,7 @@ publishing {
             mavenCentralMetadata()
             mavenCentralArtifacts(project, project.sourceSets.main.get().allSource)
         }
+        bintrayRepositoryPublishing(project, user = "kotlin", repo = "kotlinx", name = "binary-compatibility-validator")
     }
 }
 
