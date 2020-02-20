@@ -5,3 +5,4 @@
 /buildSrc/build/
 /sample-project/build/
 /.idea/
+!/.idea/copyright
