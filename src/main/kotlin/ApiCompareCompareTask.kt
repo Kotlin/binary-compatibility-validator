@@ -11,6 +11,8 @@ import org.gradle.api.file.*
 import org.gradle.api.tasks.*
 import java.io.*
 
+const val COMPARE_TASk_BASE_NAME = "apiCheck"
+
 open class ApiCompareCompareTask : DefaultTask() {
     @InputDirectory
     @PathSensitive(PathSensitivity.RELATIVE)
@@ -59,7 +61,8 @@ open class ApiCompareCompareTask : DefaultTask() {
             diffSet.add(diff)
         if (diffSet.isNotEmpty()) {
             val diffText = diffSet.joinToString("\n\n")
-            error("API check failed for project $subject.\n$diffText\n\n You can run :$subject:apiDump task to overwrite API declarations")
+            val taskTarget = name.substring(COMPARE_TASk_BASE_NAME.length)
+            error("API check failed for project $subject.\n$diffText\n\n You can run :$subject:apiDump$taskTarget task to overwrite API declarations")
         }
     }
 

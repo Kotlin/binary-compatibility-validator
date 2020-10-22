@@ -62,17 +62,17 @@ class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
                 it.platformType == KotlinPlatformType.jvm
             }.all { target ->
                 target.compilations.matching { it.name == "main" }.all {
-                    project.configureKotlinCompilation(it)
+                    project.configureKotlinCompilation(it, target.name)
                 }
             }
         }
     }
 }
 
-private fun Project.configureKotlinCompilation(compilation: KotlinCompilation<KotlinCommonOptions>, useOutput: Boolean = false) {
+private fun Project.configureKotlinCompilation(compilation: KotlinCompilation<KotlinCommonOptions>, targetName: String = "", useOutput: Boolean = false) {
     val projectName = project.name
-    val apiBuildDir = file(buildDir.resolve(API_DIR))
-    val apiBuild = task<KotlinApiBuildTask>("apiBuild") {
+    val apiBuildDir = file(buildDir.resolve(API_DIR + targetName.capitalize()))
+    val apiBuild = task<KotlinApiBuildTask>("apiBuild${targetName.capitalize()}") {
         // Do not enable task for empty umbrella modules
         isEnabled = apiCheckEnabled && compilation.allKotlinSourceSets.any { it.kotlin.srcDirs.any { it.exists() } }
         // 'group' is not specified deliberately so it will be hidden from ./gradlew tasks
@@ -88,7 +88,7 @@ private fun Project.configureKotlinCompilation(compilation: KotlinCompilation<Ko
         }
         outputApiDir = apiBuildDir
     }
-    configureCheckTasks(apiBuildDir, apiBuild)
+    configureCheckTasks(apiBuildDir, apiBuild, targetName)
 }
 
 val Project.sourceSets: SourceSetContainer
@@ -119,11 +119,12 @@ private fun Project.configureApiTasks(sourceSet: SourceSet) {
 
 private fun Project.configureCheckTasks(
     apiBuildDir: File,
-    apiBuild: TaskProvider<KotlinApiBuildTask>
+    apiBuild: TaskProvider<KotlinApiBuildTask>,
+    targetName: String = ""
 ) {
     val projectName = project.name
-    val apiCheckDir = file(projectDir.resolve(API_DIR))
-    val apiCheck = task<ApiCompareCompareTask>("apiCheck") {
+    val apiCheckDir = file(projectDir.resolve(API_DIR + targetName.capitalize()))
+    val apiCheck = task<ApiCompareCompareTask>("$COMPARE_TASk_BASE_NAME${targetName.capitalize()}") {
         isEnabled = apiCheckEnabled && apiBuild.map { it.enabled }.getOrElse(true)
         group = "verification"
         description = "Checks signatures of public API against the golden value in API folder for $projectName"
@@ -132,10 +133,10 @@ private fun Project.configureCheckTasks(
         dependsOn(apiBuild)
     }
 
-    task<Sync>("apiDump") {
+    task<Sync>("apiDump${targetName.capitalize()}") {
         isEnabled = apiCheckEnabled && apiBuild.map { it.enabled }.getOrElse(true)
         group = "other"
-        description = "Syncs API from build dir to $API_DIR dir for $projectName"
+        description = "Syncs API from build dir to ${API_DIR + targetName.capitalize()} dir for $projectName"
         from(apiBuildDir)
         into(apiCheckDir)
         dependsOn(apiBuild)
