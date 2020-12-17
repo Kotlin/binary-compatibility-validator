@@ -64,13 +64,12 @@ publishing {
             from(components["java"])
             mavenCentralMetadata()
             mavenCentralArtifacts(project, project.sourceSets.main.get().allSource)
-            mavenRepositoryPublishing()
         }
 
         if (bintrayUpload) {
             bintrayRepositoryPublishing(project, user = "kotlin", repo = "kotlinx", name = "binary-compatibility-validator")
         } else {
-            mavenRepositoryPublishing()
+            mavenRepositoryPublishing(project)
         }
         mavenCentralMetadata()
     }
