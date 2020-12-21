@@ -56,7 +56,7 @@ tasks {
 }
 
 properties["DeployVersion"]?.let { version = it }
-val bintrayUpload = System.getenv("libs.bintray.upload") != null
+val bintrayUpload = project.getSensitiveProperty("libs.bintray.upload") != null
 
 publishing {
     publications {
