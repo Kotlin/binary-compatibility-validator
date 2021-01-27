@@ -5,41 +5,26 @@
 
 package kotlinx.validation.test
 
+import kotlinx.validation.api.*
 import kotlinx.validation.api.BaseKotlinGradleTest
-import kotlinx.validation.api.assertTaskFailure
 import kotlinx.validation.api.assertTaskSuccess
 import kotlinx.validation.api.buildGradleKts
 import kotlinx.validation.api.kotlin
-import kotlinx.validation.api.runner
 import kotlinx.validation.api.readFileList
 import kotlinx.validation.api.resolve
+import kotlinx.validation.api.runner
 import kotlinx.validation.api.test
 import org.assertj.core.api.Assertions
 import org.junit.Test
+import kotlin.test.assertTrue
 
-internal class IngoredClassesTest : BaseKotlinGradleTest() {
-    @Test
-    fun `apiCheck should succeed, when no kotlin files are included in SourceSet`() {
-        val runner = test {
-            buildGradleKts {
-                resolve("examples/gradle/default/build.gradle.kts")
-            }
-
-            runner {
-                arguments.add(":apiCheck")
-            }
-        }
-
-        runner.build().apply {
-            assertTaskSuccess(":apiCheck")
-        }
-    }
+internal class IgnoredClassesTests : BaseKotlinGradleTest() {
 
     @Test
     fun `apiCheck should succeed, when given class is not in api-File, but is ignored via ignoredClasses`() {
         val runner = test {
             buildGradleKts {
-                resolve("examples/gradle/default/build.gradle.kts")
+                resolve("examples/gradle/base/withPlugin.gradle.kts")
                 resolve("examples/gradle/configuration/ignoredClasses/oneValidFullyQualifiedClass.gradle.kts")
             }
 
@@ -47,6 +32,8 @@ internal class IngoredClassesTest : BaseKotlinGradleTest() {
                 resolve("examples/classes/BuildConfig.kt")
             }
 
+            emptyApiFile(projectName = rootProjectDir.name)
+
             runner {
                 arguments.add(":apiCheck")
             }
@@ -58,46 +45,18 @@ internal class IngoredClassesTest : BaseKotlinGradleTest() {
     }
 
     @Test
-    fun `apiCheck should fail, when a public class is not in api-File`() {
-        val runner = test {
-            buildGradleKts {
-                resolve("examples/gradle/default/build.gradle.kts")
-            }
-
-            kotlin("BuildConfig.kt") {
-                resolve("examples/classes/BuildConfig.kt")
-            }
-
-            runner {
-                arguments.add(":apiCheck")
-            }
-        }
-
-        runner.buildAndFail().apply {
-            val dumpOutput =
-                    "  @@ -1,1 +1,7 @@\n" +
-                            "  +public final class com/company/BuildConfig {\n" +
-                            "  +\tpublic fun <init> ()V\n" +
-                            "  +\tpublic final fun function ()I\n" +
-                            "  +\tpublic final fun getProperty ()I\n" +
-                            "  +}"
-
-            assertTaskFailure(":apiCheck")
-            Assertions.assertThat(output).contains(dumpOutput)
-        }
-    }
-
-    @Test
     fun `apiCheck should succeed, when given class is not in api-File, but is ignored via ignoredPackages`() {
         val runner = test {
             buildGradleKts {
-                resolve("examples/gradle/default/build.gradle.kts")
+                resolve("examples/gradle/base/withPlugin.gradle.kts")
                 resolve("examples/gradle/configuration/ignoredPackages/oneValidPackage.gradle.kts")
             }
 
             kotlin("BuildConfig.kt") {
                 resolve("examples/classes/BuildConfig.kt")
             }
+
+            emptyApiFile(projectName = rootProjectDir.name)
 
             runner {
                 arguments.add(":apiCheck")
@@ -113,7 +72,7 @@ internal class IngoredClassesTest : BaseKotlinGradleTest() {
     fun `apiDump should not dump ignoredClasses, when class is excluded via ignoredClasses`() {
         val runner = test {
             buildGradleKts {
-                resolve("examples/gradle/default/build.gradle.kts")
+                resolve("examples/gradle/base/withPlugin.gradle.kts")
                 resolve("examples/gradle/configuration/ignoredClasses/oneValidFullyQualifiedClass.gradle.kts")
             }
             kotlin("BuildConfig.kt") {
@@ -131,8 +90,10 @@ internal class IngoredClassesTest : BaseKotlinGradleTest() {
         runner.build().apply {
             assertTaskSuccess(":apiDump")
 
+            assertTrue(rootProjectApiDump.exists(), "api dump file should exist")
+
             val expected = readFileList("examples/classes/AnotherBuildConfig.dump")
-            Assertions.assertThat(apiDump.readText()).isEqualToIgnoringNewLines(expected)
+            Assertions.assertThat(rootProjectApiDump.readText()).isEqualToIgnoringNewLines(expected)
         }
     }
 }
