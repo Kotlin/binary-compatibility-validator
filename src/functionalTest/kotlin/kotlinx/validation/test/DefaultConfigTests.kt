@@ -24,7 +24,6 @@ internal class DefaultConfigTests : BaseKotlinGradleTest() {
         }
 
         runner.buildAndFail().apply {
-            println(output)
             assertTrue { output.contains("Please ensure that ':apiDump' was executed") }
             assertTaskFailure(":apiCheck")
         }

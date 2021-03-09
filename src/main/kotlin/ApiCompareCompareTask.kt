@@ -25,6 +25,8 @@ open class ApiCompareCompareTask : DefaultTask() {
     var projectApiDir: File? = null
 
     // Used for diagnostic error message when projectApiDir doesn't exist
+    @Input
+    @Optional
     var nonExistingProjectApiDir: String? = null
 
     @InputDirectory
