@@ -40,6 +40,8 @@ class CasesPublicAPITest {
 
     @Test fun nestedClasses() { snapshotAPIAndCompare(testName.methodName) }
 
+    @Test fun nullable() { snapshotAPIAndCompare(testName.methodName) }
+
     @Test fun private() { snapshotAPIAndCompare(testName.methodName) }
 
     @Test fun protected() { snapshotAPIAndCompare(testName.methodName) }

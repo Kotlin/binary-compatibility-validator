@@ -7,6 +7,7 @@ package kotlinx.validation.api
 
 import kotlinx.metadata.jvm.*
 import kotlinx.validation.*
+import org.objectweb.asm.Type
 import org.objectweb.asm.tree.*
 
 @ExternalApi // Only name is part of the API, nothing else is used by stdlib
@@ -48,10 +49,35 @@ data class MethodBinarySignature(
     override val jvmMember: JvmMethodSignature,
     override val isPublishedApi: Boolean,
     override val access: AccessFlags,
-    override val annotations: List<AnnotationNode>
+    override val annotations: List<AnnotationNode>,
+    val invisibleParameterAnnotations: List<List<AnnotationNode>?>
 ) : MemberBinarySignature {
+    private val annotatedDesc: String
+        get() {
+            // insert `?` after the usual type descriptor if it's nullable/optional
+            fun annotatedDescriptor(type: Type, annotations: List<AnnotationNode>?): String =
+                    // if any of the annotations is a `@Nullable` annotation (or optional Kotlin type)
+                    if (annotations?.any { node -> node.desc.contains("Nullable") } == true) {
+                        // if it's an object type, insert the `?` before the `;`
+                        if (type.descriptor.endsWith(";")) {
+                            type.descriptor.substringBeforeLast(";") + "?;"
+                        } else {
+                            "$type.descriptor?"
+                        }
+                    } else {
+                        type.descriptor
+                    }
+
+            val type = Type.getType(desc)
+            val arguments = type.argumentTypes.mapIndexed { index, argumentType ->
+                annotatedDescriptor(argumentType, invisibleParameterAnnotations.getOrNull(index))
+            }
+
+            return "(${arguments.joinToString("")})${annotatedDescriptor(type.returnType, annotations)}"
+        }
+
     override val signature: String
-        get() = "${access.getModifierString()} fun $name $desc"
+        get() = "${access.getModifierString()} fun $name $annotatedDesc"
 
     override fun isEffectivelyPublic(classAccess: AccessFlags, classVisibility: ClassVisibility?) =
         super.isEffectivelyPublic(classAccess, classVisibility)
@@ -111,7 +137,9 @@ fun MethodNode.toMethodBinarySignature() =
         JvmMethodSignature(name, desc),
         isPublishedApi(),
         AccessFlags(access),
-        annotations(visibleAnnotations, invisibleAnnotations))
+        annotations(visibleAnnotations, invisibleAnnotations),
+        (invisibleParameterAnnotations ?: emptyArray()).toList()
+    )
 
 data class FieldBinarySignature(
     override val jvmMember: JvmFieldSignature,

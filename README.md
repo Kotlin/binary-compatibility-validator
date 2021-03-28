@@ -201,6 +201,7 @@ For a class member a binary incompatible change is:
  - changing its name
  - changing its descriptor (erased return type and parameter types for methods);
    this includes changing field to method and vice versa
+ - changing the nullability/optionality of a type 
  - changing one of the following access flags:
     - `ACC_PUBLIC`, `ACC_PROTECTED`, `ACC_PRIVATE` — lessening the member visibility
     - `ACC_FINAL` — making non-final field or method final
