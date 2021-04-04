@@ -42,7 +42,7 @@ interface MemberBinarySignature {
         return classVisibility?.findMember(jvmMember)
     }
 
-    val signature: String
+    fun signature(annotateNullability: Boolean = false): String
 }
 
 data class MethodBinarySignature(
@@ -76,8 +76,8 @@ data class MethodBinarySignature(
             return "(${arguments.joinToString("")})${annotatedDescriptor(type.returnType, annotations)}"
         }
 
-    override val signature: String
-        get() = "${access.getModifierString()} fun $name $annotatedDesc"
+    override fun signature(annotateNullability: Boolean): String =
+            "${access.getModifierString()} fun $name ${if (annotateNullability) annotatedDesc else desc}"
 
     override fun isEffectivelyPublic(classAccess: AccessFlags, classVisibility: ClassVisibility?) =
         super.isEffectivelyPublic(classAccess, classVisibility)
@@ -147,8 +147,8 @@ data class FieldBinarySignature(
     override val access: AccessFlags,
     override val annotations: List<AnnotationNode>
 ) : MemberBinarySignature {
-    override val signature: String
-        get() = "${access.getModifierString()} field $name $desc"
+    override fun signature(annotateNullability: Boolean): String =
+            "${access.getModifierString()} field $name $desc"
 
     override fun findMemberVisibility(classVisibility: ClassVisibility?): MemberVisibility? {
         return super.findMemberVisibility(classVisibility)

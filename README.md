@@ -85,6 +85,12 @@ apiValidation {
      * Flag to programmatically disable compatibility validator
      */
     validationDisabled = true
+
+    /**
+     * Enable nullability annotations.
+     * Effectively appending `?` to nullable Types. Disabled by default.
+     */
+    annotateNullability = true
 }
 ```
 
@@ -119,6 +125,12 @@ apiValidation {
      * Flag to programmatically disable compatibility validator
      */
     validationDisabled = false
+
+    /**
+     * Enable nullability annotations.
+     * Effectively appending `?` to nullable Types. Disabled by default.
+     */
+    annotateNullability = true
 }
 ```
 
