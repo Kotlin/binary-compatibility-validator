@@ -160,7 +160,6 @@ data class AccessFlags(val access: Int) {
 }
 
 fun FieldBinarySignature.isCompanionField(outerClassMetadata: KotlinClassMetadata?): Boolean {
-    val access = access
     if (!access.isFinal || !access.isStatic) return false
     val metadata = outerClassMetadata ?: return false
     // Non-classes are not affected by the problem
