@@ -5,6 +5,7 @@
 
 package kotlinx.validation.api
 
+import kotlinx.metadata.jvm.KotlinClassMetadata
 import kotlinx.validation.*
 import org.objectweb.asm.*
 import org.objectweb.asm.tree.*
@@ -26,12 +27,13 @@ public fun Sequence<InputStream>.loadApiFromJvmClasses(visibilityFilter: (String
         }
     }
 
-    val visibilityMapNew = classNodes.readKotlinVisibilities().filterKeys(visibilityFilter)
+    val visibilityMap = classNodes.readKotlinVisibilities().filterKeys(visibilityFilter)
+    val classNodeMap = classNodes.associateBy { it.name }
     return classNodes
         .map { classNode ->
             with(classNode) {
                 val metadata = kotlinMetadata
-                val mVisibility = visibilityMapNew[name]
+                val mVisibility = visibilityMap[name]
                 val classAccess = AccessFlags(effectiveAccess and Opcodes.ACC_STATIC.inv())
                 val supertypes = listOf(superName) - "java/lang/Object" + interfaces.sorted()
 
@@ -39,6 +41,19 @@ public fun Sequence<InputStream>.loadApiFromJvmClasses(visibilityFilter: (String
                     .map { it.toFieldBinarySignature() }
                     .filter {
                         it.isEffectivelyPublic(classAccess, mVisibility)
+                    }.filter {
+                        /*
+                         * Filter out 'public static final Companion' field that doesn't constitutes public API.
+                         * For that we first check if field corresponds to the 'Companion' class and then
+                         * if companion is effectively public by itself, so the 'Companion' field has the same visibility.
+                         */
+                        if (!it.isCompanionField(classNode.kotlinMetadata)) return@filter true
+                        val outerKClass = (classNode.kotlinMetadata as KotlinClassMetadata.Class).toKmClass()
+                        val companionName = name + "$" + outerKClass.companionObject
+                        // False positive is better than the crash here
+                        val companionClass = classNodeMap[companionName] ?: return@filter true
+                        val visibility = visibilityMap[companionName] ?: return@filter true
+                        companionClass.isEffectivelyPublic(visibility)
                     }
 
                 val allMethods = methods.map { it.toMethodBinarySignature() }
