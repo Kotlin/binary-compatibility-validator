@@ -10,6 +10,7 @@ import kotlinx.validation.*
 import org.objectweb.asm.*
 import org.objectweb.asm.tree.*
 import java.io.*
+import java.util.*
 import java.util.jar.*
 
 @ExternalApi
@@ -27,9 +28,11 @@ public fun Sequence<InputStream>.loadApiFromJvmClasses(visibilityFilter: (String
         }
     }
 
-    val visibilityMap = classNodes.readKotlinVisibilities().filterKeys(visibilityFilter)
-    val classNodeMap = classNodes.associateBy { it.name }
-    return classNodes
+    // Note: map is sorted, so the dump will produce stable result
+    val classNodeMap = classNodes.associateByTo(TreeMap()) { it.name }
+    val visibilityMap = classNodeMap.readKotlinVisibilities(visibilityFilter)
+    return classNodeMap
+        .values
         .map { classNode ->
             with(classNode) {
                 val metadata = kotlinMetadata
@@ -75,8 +78,6 @@ public fun Sequence<InputStream>.loadApiFromJvmClasses(visibilityFilter: (String
                 )
             }
         }
-        .asIterable()
-        .sortedBy { it.name }
 }
 
 internal fun List<ClassBinarySignature>.filterOutAnnotated(targetAnnotations: Set<String>): List<ClassBinarySignature> {
