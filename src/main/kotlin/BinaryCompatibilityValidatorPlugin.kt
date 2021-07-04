@@ -59,16 +59,28 @@ class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
         project.pluginManager.withPlugin("kotlin-multiplatform") {
             if (project.name in extension.ignoredProjects) return@withPlugin
             val kotlin = project.extensions.getByName("kotlin") as KotlinMultiplatformExtension
+
+            // Create common tasks for multiplatform
+            val commonApiDump = project.tasks.register("apiDump") {
+                it.group = "other"
+                it.description = "Task that collects all target specific dump tasks"
+            }
+            val commonApiCheck = project.tasks.register("apiCheck") {
+                it.group = "verification"
+                it.description = "Shortcut task that depends on all specific check tasks"
+            }
+            project.tasks.named("check") { it.dependsOn(commonApiCheck) }
+
             kotlin.targets.matching {
                 it.platformType == KotlinPlatformType.jvm || it.platformType == KotlinPlatformType.androidJvm
             }.all { target ->
                 if (target.platformType == KotlinPlatformType.jvm) {
                     target.compilations.matching { it.name == "main" }.all {
-                        project.configureKotlinCompilation(it, extension, target)
+                        project.configureKotlinCompilation(it, extension, target, commonApiDump, commonApiCheck)
                     }
                 } else if (target.platformType == KotlinPlatformType.androidJvm) {
                     target.compilations.matching { it.name == "release" }.all {
-                        project.configureKotlinCompilation(it, extension, target, useOutput = true)
+                        project.configureKotlinCompilation(it, extension, target, commonApiDump, commonApiCheck, useOutput = true)
                     }
                 }
             }
@@ -92,6 +104,8 @@ private fun Project.configureKotlinCompilation(
     compilation: KotlinCompilation<KotlinCommonOptions>,
     extension: ApiValidationExtension,
     target: KotlinTarget? = null,
+    commonApiDump: TaskProvider<Task>? = null,
+    commonApiCheck: TaskProvider<Task>? = null,
     useOutput: Boolean = false
 ) {
     val projectName = project.name
@@ -112,7 +126,7 @@ private fun Project.configureKotlinCompilation(
         }
         outputApiDir = apiBuildDir
     }
-    configureCheckTasks(apiBuildDir, apiBuild, extension, target)
+    configureCheckTasks(apiBuildDir, apiBuild, extension, target, commonApiDump, commonApiCheck)
 }
 
 val Project.sourceSets: SourceSetContainer
@@ -145,7 +159,9 @@ private fun Project.configureCheckTasks(
     apiBuildDir: File,
     apiBuild: TaskProvider<KotlinApiBuildTask>,
     extension: ApiValidationExtension,
-    target: KotlinTarget? = null
+    target: KotlinTarget? = null,
+    commonApiDump: TaskProvider<Task>? = null,
+    commonApiCheck: TaskProvider<Task>? = null
 ) {
     val projectName = project.name
     val apiCheckDir = file(projectDir.resolve(target.apiDir))
@@ -163,7 +179,7 @@ private fun Project.configureCheckTasks(
         dependsOn(apiBuild)
     }
 
-    task<Sync>(target.apiTaskName("Dump")) {
+    val apiDump = task<Sync>(target.apiTaskName("Dump")) {
         isEnabled = apiCheckEnabled(extension) && apiBuild.map { it.enabled }.getOrElse(true)
         group = "other"
         description = "Syncs API from build dir to ${target.apiDir} dir for $projectName"
@@ -174,8 +190,12 @@ private fun Project.configureCheckTasks(
             apiCheckDir.mkdirs()
         }
     }
-    project.tasks.named("check").configure {
-        it.dependsOn(apiCheck)
+
+    commonApiDump?.configure { it.dependsOn(apiDump) }
+
+    when (commonApiCheck) {
+        null -> project.tasks.named("check").configure { it.dependsOn(apiCheck) }
+        else -> commonApiCheck.configure { it.dependsOn(apiCheck) }
     }
 }
 
