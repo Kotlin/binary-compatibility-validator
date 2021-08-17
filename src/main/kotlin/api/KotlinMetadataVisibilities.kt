@@ -66,7 +66,7 @@ val ClassNode.kotlinMetadata: KotlinClassMetadata?
                 Incompatible version of Kotlin metadata.
                 Maximal supported Kotlin metadata version: ${COMPATIBLE_METADATA_VERSION.joinToString(".")},
                 $name Kotlin metadata version: ${header.metadataVersion.joinToString(".")}.
-                As a workaround, it is possible to manually update 'kotlinx-metadata' version in your project.
+                As a workaround, it is possible to manually update 'kotlinx-metadata-jvm' version in your project.
             """.trimIndent()
             )
     }
