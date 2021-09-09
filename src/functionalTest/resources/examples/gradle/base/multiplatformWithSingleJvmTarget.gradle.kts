@@ -22,14 +22,9 @@ kotlin {
                 useJUnit()
             }
         }
-        jvm("anotherJvm") {
-            compilations.all {
-                kotlinOptions.jvmTarget = "1.8"
-            }
-            testRuns["test"].executionTask.configure {
-                useJUnit()
-            }
-        }
+//        android {
+//
+//        }
     }
     sourceSets {
         val commonMain by getting
@@ -44,12 +39,6 @@ kotlin {
         val jvmTest by getting {
             dependencies {
                 implementation(kotlin("stdlib"))
-                implementation(kotlin("test-junit"))
-            }
-        }
-        val anotherJvmMain by getting
-        val anotherJvmTest by getting {
-            dependencies {
                 implementation(kotlin("test-junit"))
             }
         }

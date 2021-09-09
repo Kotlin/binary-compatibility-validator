@@ -12,13 +12,13 @@ import org.junit.Test
 import java.io.File
 import java.io.InputStreamReader
 
-internal class MultipleJvmTargetsTest : BaseKotlinGradleTest() {
+internal class MultiPlatformSingleJvmTargetTest : BaseKotlinGradleTest() {
     private fun BaseKotlinScope.createProjectHierarchyWithPluginOnRoot() {
         settingsGradleKts {
             resolve("examples/gradle/settings/settings-name-testproject.gradle.kts")
         }
         buildGradleKts {
-            resolve("examples/gradle/base/multiplatformWithJvmTargets.gradle.kts")
+            resolve("examples/gradle/base/multiplatformWithSingleJvmTarget.gradle.kts")
         }
     }
 
@@ -39,20 +39,23 @@ internal class MultipleJvmTargetsTest : BaseKotlinGradleTest() {
             createProjectHierarchyWithPluginOnRoot()
             runner {
                 arguments.add(":apiCheck")
+                arguments.add("--stacktrace")
             }
 
-            dir("api/jvm/") {
+            dir("api/") {
                 file("testproject.api") {
                     resolve("examples/classes/Subsub1Class.dump")
                     resolve("examples/classes/Subsub2Class.dump")
                 }
             }
 
+/*
             dir("api/anotherJvm/") {
                 file("testproject.api") {
                     resolve("examples/classes/Subsub1Class.dump")
                 }
             }
+*/
 
             dir("src/jvmMain/kotlin") {}
             kotlin("Subsub1Class.kt", "commonMain") {
@@ -66,8 +69,6 @@ internal class MultipleJvmTargetsTest : BaseKotlinGradleTest() {
 
         runner.build().apply {
             assertTaskSuccess(":apiCheck")
-            assertTaskSuccess(":jvmApiCheck")
-            assertTaskSuccess(":anotherJvmApiCheck")
         }
     }
 
@@ -78,18 +79,13 @@ internal class MultipleJvmTargetsTest : BaseKotlinGradleTest() {
             runner {
                 arguments.add("--continue")
                 arguments.add(":check")
+                arguments.add("--stacktrace")
             }
 
-            dir("api/jvm/") {
+            dir("api/") {
                 file("testproject.api") {
                     resolve("examples/classes/Subsub2Class.dump")
                     resolve("examples/classes/Subsub1Class.dump")
-                }
-            }
-
-            dir("api/anotherJvm/") {
-                file("testproject.api") {
-                    resolve("examples/classes/Subsub2Class.dump")
                 }
             }
 
@@ -104,9 +100,8 @@ internal class MultipleJvmTargetsTest : BaseKotlinGradleTest() {
         }.addClasspathFromPlugin()
 
         runner.buildAndFail().apply {
-            assertTaskNotRun(":apiCheck")
             assertTaskFailure(":jvmApiCheck")
-            assertTaskFailure(":anotherJvmApiCheck")
+            assertTaskNotRun(":apiCheck")
             assertThat(output).contains("API check failed for project testproject")
             assertTaskNotRun(":check")
         }
@@ -119,6 +114,7 @@ internal class MultipleJvmTargetsTest : BaseKotlinGradleTest() {
 
             runner {
                 arguments.add(":apiDump")
+                arguments.add("--stacktrace")
             }
 
             dir("src/jvmMain/kotlin") {}
@@ -132,20 +128,14 @@ internal class MultipleJvmTargetsTest : BaseKotlinGradleTest() {
         }.addClasspathFromPlugin()
         runner.build().apply {
             assertTaskSuccess(":apiDump")
-            assertTaskSuccess(":jvmApiDump")
-            assertTaskSuccess(":anotherJvmApiDump")
 
-            System.err.println(output)
+            val commonExpectedApi = readFileList("examples/classes/Subsub1Class.dump")
 
-            val anotherExpectedApi = readFileList("examples/classes/Subsub1Class.dump")
-            assertThat(anotherApiDump.readText()).isEqualToIgnoringNewLines(anotherExpectedApi)
-
-            val mainExpectedApi = anotherExpectedApi + "\n" + readFileList("examples/classes/Subsub2Class.dump")
+            val mainExpectedApi = commonExpectedApi + "\n" + readFileList("examples/classes/Subsub2Class.dump")
             assertThat(jvmApiDump.readText()).isEqualToIgnoringNewLines(mainExpectedApi)
         }
     }
 
-    private val jvmApiDump: File get() = rootProjectDir.resolve("api/jvm/testproject.api")
-    private val anotherApiDump: File get() = rootProjectDir.resolve("api/anotherJvm/testproject.api")
+    private val jvmApiDump: File get() = rootProjectDir.resolve("api/testproject.api")
 
 }

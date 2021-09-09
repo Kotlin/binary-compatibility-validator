@@ -36,6 +36,9 @@ tasks.register<Test>("functionalTest") {
 }
 tasks.check { dependsOn(tasks["functionalTest"]) }
 
+// Hack (from guidance on gradle forums) needed to handle optional plugin dependencies
+// in test code. In test mode classloading works different and classes provided by other
+// plugins are not visible.
 val createClasspathManifest = tasks.register("createClasspathManifest") {
     val outputDir = buildDir.resolve("cpManifests")
     inputs.files(configurations["testRuntimeClasspath"])
