@@ -126,11 +126,7 @@ private class TargetConfig constructor(
     val apiDir
         get() = dirConfig?.map { dirConfig ->
             when {
-                dirConfig == DirConfig.COMMON || (
-                        dirConfig == DirConfig.AUTO &&
-                                (targetName == null ||
-                                        targetName == "jvm"))
-                     -> API_DIR
+                dirConfig == DirConfig.COMMON -> API_DIR
 
                 else -> "$API_DIR/$targetName"
             }
@@ -142,7 +138,6 @@ private class TargetConfig constructor(
 enum class DirConfig {
     COMMON,
     TARGET_DIR,
-    AUTO
 }
 
 private fun Project.configureKotlinCompilation(
