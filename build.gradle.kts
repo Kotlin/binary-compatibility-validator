@@ -36,17 +36,29 @@ tasks.register<Test>("functionalTest") {
 }
 tasks.check { dependsOn(tasks["functionalTest"]) }
 
-// Hack (from guidance on gradle forums) needed to handle optional plugin dependencies
-// in test code. In test mode classloading works different and classes provided by other
-// plugins are not visible.
+// While gradle testkit supports injection of the plugin classpath it doesn't allow using dependency notation
+// to determine the actual runtime classpath for the plugin. It uses isolation, so plugins applied by the build
+// script are not visible in the plugin classloader. This means optional dependencies (dependent on applied plugins -
+// for example kotlin multiplatform) are not visible even if they are in regular gradle use. This hack will allow
+// extending the classpath. It is based upon: https://docs.gradle.org/6.0/userguide/test_kit.html#sub:test-kit-classpath-injection
+
+// Create a configuration to register the dependencies against
+val testPluginRuntimeConfiguration = configurations.register("testPluginRuntime")
+
+// The task that will create a file that stores the classpath needed for the plugin to have additional runtime dependencies
+// This file is then used in to tell TestKit which classpath to use.
 val createClasspathManifest = tasks.register("createClasspathManifest") {
     val outputDir = buildDir.resolve("cpManifests")
-    inputs.files(configurations["testRuntimeClasspath"])
+    inputs.files(testPluginRuntimeConfiguration)
+        .withPropertyName("runtimeClasspath")
+        .withNormalizer(ClasspathNormalizer::class)
+
     outputs.dir(outputDir)
+        .withPropertyName("outputDir")
 
     doLast {
         outputDir.mkdirs()
-        file(outputDir.resolve("plugin-classpath.txt")).writeText(configurations.testRuntimeClasspath.get().joinToString("\n"))
+        file(outputDir.resolve("plugin-classpath.txt")).writeText(testPluginRuntimeConfiguration.get().joinToString("\n"))
     }
 }
 
@@ -59,7 +71,11 @@ dependencies {
     implementation("org.ow2.asm:asm-tree:9.0")
     implementation("com.googlecode.java-diff-utils:diffutils:1.3.0")
     compileOnly("org.jetbrains.kotlin.multiplatform:org.jetbrains.kotlin.multiplatform.gradle.plugin:1.3.61")
-    testRuntimeOnly("org.jetbrains.kotlin.multiplatform:org.jetbrains.kotlin.multiplatform.gradle.plugin:$kotlinVersion")
+
+    // The test needs the full kotlin multiplatform plugin loaded as it has no visibility of previously loaded plugins,
+    // unlike the regular way gradle loads plugins.
+    add(testPluginRuntimeConfiguration.name, "org.jetbrains.kotlin.multiplatform:org.jetbrains.kotlin.multiplatform.gradle.plugin:$kotlinVersion")
+
     testImplementation(kotlin("test-junit"))
     "functionalTestImplementation"(files(createClasspathManifest))
 

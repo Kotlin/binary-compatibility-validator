@@ -22,17 +22,6 @@ internal class MultipleJvmTargetsTest : BaseKotlinGradleTest() {
         }
     }
 
-    private fun GradleRunner.addClasspathFromPlugin() = apply {
-
-        val cpResource = javaClass.classLoader.getResourceAsStream("plugin-classpath.txt")
-            ?.let { InputStreamReader(it) }
-            ?: throw IllegalStateException("Could not find classpath resource")
-
-        val pluginClasspath = pluginClasspath + cpResource.readLines().map { File(it) }
-        withPluginClasspath(pluginClasspath)
-
-    }
-
     @Test
     fun testApiCheckPasses() {
         val runner = test {
@@ -62,7 +51,7 @@ internal class MultipleJvmTargetsTest : BaseKotlinGradleTest() {
                 resolve("examples/classes/Subsub2Class.kt")
             }
 
-        }.addClasspathFromPlugin()
+        }.addPluginTestRuntimeClasspath()
 
         runner.build().apply {
             assertTaskSuccess(":apiCheck")
@@ -101,7 +90,7 @@ internal class MultipleJvmTargetsTest : BaseKotlinGradleTest() {
                 resolve("examples/classes/Subsub2Class.kt")
             }
 
-        }.addClasspathFromPlugin()
+        }.addPluginTestRuntimeClasspath()
 
         runner.buildAndFail().apply {
             assertTaskNotRun(":apiCheck")
@@ -129,7 +118,7 @@ internal class MultipleJvmTargetsTest : BaseKotlinGradleTest() {
                 resolve("examples/classes/Subsub2Class.kt")
             }
 
-        }.addClasspathFromPlugin()
+        }.addPluginTestRuntimeClasspath()
         runner.build().apply {
             assertTaskSuccess(":apiDump")
             assertTaskSuccess(":jvmApiDump")

@@ -7,10 +7,8 @@ package kotlinx.validation.test
 
 import kotlinx.validation.api.*
 import org.assertj.core.api.Assertions.assertThat
-import org.gradle.testkit.runner.GradleRunner
 import org.junit.Test
 import java.io.File
-import java.io.InputStreamReader
 
 internal class MultiPlatformSingleJvmTargetTest : BaseKotlinGradleTest() {
     private fun BaseKotlinScope.createProjectHierarchyWithPluginOnRoot() {
@@ -22,50 +20,31 @@ internal class MultiPlatformSingleJvmTargetTest : BaseKotlinGradleTest() {
         }
     }
 
-    private fun GradleRunner.addClasspathFromPlugin() = apply {
-
-        val cpResource = javaClass.classLoader.getResourceAsStream("plugin-classpath.txt")
-            ?.let { InputStreamReader(it) }
-            ?: throw IllegalStateException("Could not find classpath resource")
-
-        val pluginClasspath = pluginClasspath + cpResource.readLines().map { File(it) }
-        withPluginClasspath(pluginClasspath)
-
-    }
-
     @Test
     fun testApiCheckPasses() {
         val runner = test {
-            createProjectHierarchyWithPluginOnRoot()
-            runner {
-                arguments.add(":apiCheck")
-                arguments.add("--stacktrace")
-            }
-
-            dir("api/") {
-                file("testproject.api") {
-                    resolve("examples/classes/Subsub1Class.dump")
-                    resolve("examples/classes/Subsub2Class.dump")
+                createProjectHierarchyWithPluginOnRoot()
+                runner {
+                    arguments.add(":apiCheck")
+                    arguments.add("--stacktrace")
                 }
-            }
 
-/*
-            dir("api/anotherJvm/") {
-                file("testproject.api") {
-                    resolve("examples/classes/Subsub1Class.dump")
+                dir("api/") {
+                    file("testproject.api") {
+                        resolve("examples/classes/Subsub1Class.dump")
+                        resolve("examples/classes/Subsub2Class.dump")
+                    }
                 }
-            }
-*/
 
-            dir("src/jvmMain/kotlin") {}
-            kotlin("Subsub1Class.kt", "commonMain") {
-                resolve("examples/classes/Subsub1Class.kt")
-            }
-            kotlin("Subsub2Class.kt", "jvmMain") {
-                resolve("examples/classes/Subsub2Class.kt")
-            }
+                dir("src/jvmMain/kotlin") {}
+                kotlin("Subsub1Class.kt", "commonMain") {
+                    resolve("examples/classes/Subsub1Class.kt")
+                }
+                kotlin("Subsub2Class.kt", "jvmMain") {
+                    resolve("examples/classes/Subsub2Class.kt")
+                }
 
-        }.addClasspathFromPlugin()
+            }.addPluginTestRuntimeClasspath()
 
         runner.build().apply {
             assertTaskSuccess(":apiCheck")
@@ -75,29 +54,29 @@ internal class MultiPlatformSingleJvmTargetTest : BaseKotlinGradleTest() {
     @Test
     fun testApiCheckFails() {
         val runner = test {
-            createProjectHierarchyWithPluginOnRoot()
-            runner {
-                arguments.add("--continue")
-                arguments.add(":check")
-                arguments.add("--stacktrace")
-            }
-
-            dir("api/") {
-                file("testproject.api") {
-                    resolve("examples/classes/Subsub2Class.dump")
-                    resolve("examples/classes/Subsub1Class.dump")
+                createProjectHierarchyWithPluginOnRoot()
+                runner {
+                    arguments.add("--continue")
+                    arguments.add(":check")
+                    arguments.add("--stacktrace")
                 }
-            }
 
-            dir("src/jvmMain/kotlin") {}
-            kotlin("Subsub1Class.kt", "commonMain") {
-                resolve("examples/classes/Subsub1Class.kt")
-            }
-            kotlin("Subsub2Class.kt", "jvmMain") {
-                resolve("examples/classes/Subsub2Class.kt")
-            }
+                dir("api/") {
+                    file("testproject.api") {
+                        resolve("examples/classes/Subsub2Class.dump")
+                        resolve("examples/classes/Subsub1Class.dump")
+                    }
+                }
 
-        }.addClasspathFromPlugin()
+                dir("src/jvmMain/kotlin") {}
+                kotlin("Subsub1Class.kt", "commonMain") {
+                    resolve("examples/classes/Subsub1Class.kt")
+                }
+                kotlin("Subsub2Class.kt", "jvmMain") {
+                    resolve("examples/classes/Subsub2Class.kt")
+                }
+
+            }.addPluginTestRuntimeClasspath()
 
         runner.buildAndFail().apply {
             assertTaskFailure(":jvmApiCheck")
@@ -110,22 +89,23 @@ internal class MultiPlatformSingleJvmTargetTest : BaseKotlinGradleTest() {
     @Test
     fun testApiDumpPasses() {
         val runner = test {
-            createProjectHierarchyWithPluginOnRoot()
+                createProjectHierarchyWithPluginOnRoot()
 
-            runner {
-                arguments.add(":apiDump")
-                arguments.add("--stacktrace")
-            }
+                runner {
+                    arguments.add(":apiDump")
+                    arguments.add("--stacktrace")
+                }
 
-            dir("src/jvmMain/kotlin") {}
-            kotlin("Subsub1Class.kt", "commonMain") {
-                resolve("examples/classes/Subsub1Class.kt")
-            }
-            kotlin("Subsub2Class.kt", "jvmMain") {
-                resolve("examples/classes/Subsub2Class.kt")
-            }
+                dir("src/jvmMain/kotlin") {}
+                kotlin("Subsub1Class.kt", "commonMain") {
+                    resolve("examples/classes/Subsub1Class.kt")
+                }
+                kotlin("Subsub2Class.kt", "jvmMain") {
+                    resolve("examples/classes/Subsub2Class.kt")
+                }
 
-        }.addClasspathFromPlugin()
+            }.addPluginTestRuntimeClasspath()
+
         runner.build().apply {
             assertTaskSuccess(":apiDump")
 
