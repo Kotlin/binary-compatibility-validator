@@ -145,18 +145,25 @@ private class TargetConfig constructor(
 
     val apiDir
         get() = dirConfig?.map { dirConfig ->
-            when {
-                dirConfig == DirConfig.COMMON -> API_DIR
-
+            when (dirConfig) {
+                DirConfig.COMMON -> API_DIR
                 else -> "$API_DIR/$targetName"
             }
         } ?: API_DIR_PROVIDER
-
 }
 
-
-enum class DirConfig {
+private enum class DirConfig {
+    /**
+     * `api` directory for .api files.
+     * Used in single target projects
+     */
     COMMON,
+    /**
+     * Target-based directory, used in multitarget setups.
+     * E.g. for the project with targets jvm and android,
+     * the resulting paths will be
+     * `/api/jvm/project.api` and `/api/android/project.api`
+     */
     TARGET_DIR,
 }
 
@@ -176,7 +183,7 @@ private fun Project.configureKotlinCompilation(
         // Do not enable task for empty umbrella modules
         isEnabled =
             apiCheckEnabled(extension) && compilation.allKotlinSourceSets.any { it.kotlin.srcDirs.any { it.exists() } }
-        // 'group' is not specified deliberately so it will be hidden from ./gradlew tasks
+        // 'group' is not specified deliberately, so it will be hidden from ./gradlew tasks
         description =
             "Builds Kotlin API for 'main' compilations of $projectName. Complementary task and shouldn't be called manually"
         if (useOutput) {
@@ -233,7 +240,7 @@ private fun Project.configureCheckTasks(
     val projectName = project.name
     val apiCheckDir = targetConfig.apiDir.map {
         projectDir.resolve(it).also { r ->
-            logger.lifecycle("Configuring api for ${targetConfig.targetName} to $r")
+            logger.debug("Configuring api for ${targetConfig.targetName ?: "jvm"} to $r")
         }
     }
     val apiCheck = task<ApiCompareCompareTask>(targetConfig.apiTaskName("Check")) {
