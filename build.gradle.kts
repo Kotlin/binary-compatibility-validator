@@ -67,10 +67,10 @@ val kotlinVersion: String by project
 dependencies {
     implementation(gradleApi())
     implementation("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.3.0")
-    implementation("org.ow2.asm:asm:9.0")
-    implementation("org.ow2.asm:asm-tree:9.0")
+    implementation("org.ow2.asm:asm:9.2")
+    implementation("org.ow2.asm:asm-tree:9.2")
     implementation("com.googlecode.java-diff-utils:diffutils:1.3.0")
-    compileOnly("org.jetbrains.kotlin.multiplatform:org.jetbrains.kotlin.multiplatform.gradle.plugin:1.3.61")
+    compileOnly("org.jetbrains.kotlin.multiplatform:org.jetbrains.kotlin.multiplatform.gradle.plugin:1.6.0")
 
     // The test needs the full kotlin multiplatform plugin loaded as it has no visibility of previously loaded plugins,
     // unlike the regular way gradle loads plugins.
@@ -86,7 +86,7 @@ dependencies {
 
 tasks.withType<KotlinCompile>().configureEach {
     kotlinOptions.apply {
-        languageVersion = "1.4"
+        languageVersion = "1.6"
         jvmTarget = "1.8"
         allWarningsAsErrors = true
         // Suppress the warning about kotlin-reflect 1.3 and kotlin-stdlib 1.4 in the classpath.
@@ -103,7 +103,7 @@ java {
 tasks {
     compileTestKotlin {
         kotlinOptions {
-            languageVersion = "1.4"
+            languageVersion = "1.6"
         }
     }
     test {
