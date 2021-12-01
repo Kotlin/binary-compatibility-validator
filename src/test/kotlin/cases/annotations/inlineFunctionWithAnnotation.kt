@@ -5,13 +5,7 @@
 
 package cases.annotations
 
-annotation class Foo(val i: Int)
-
-private class Bar {
-    val foo: Foo = Foo(1) // Same module
-    val e = Volatile() // Cross-module
-
-    fun bar() {
-        foo()
-    }
+@Suppress("NOTHING_TO_INLINE")
+internal inline fun foo() {
+    Foo(42)
 }
