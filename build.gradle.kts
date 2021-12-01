@@ -84,11 +84,14 @@ dependencies {
     "functionalTestImplementation"(kotlin("test-junit"))
 }
 
-tasks.withType<KotlinCompile>().configureEach {
+tasks.compileKotlin {
     kotlinOptions.apply {
-        languageVersion = "1.6"
+        languageVersion = "1.4"
+        apiVersion = "1.4"
         jvmTarget = "1.8"
-        allWarningsAsErrors = true
+        // TODO revert that when updating Kotlin. This flag also affects kts files and prevents
+        // the project from build due to "w: Language version 1.4 is deprecated and its support will be removed"
+//        allWarningsAsErrors = true
         // Suppress the warning about kotlin-reflect 1.3 and kotlin-stdlib 1.4 in the classpath.
         // It's incorrect in this case because we're limiting API version to 1.3 anyway.
         freeCompilerArgs += "-Xskip-runtime-version-check"
