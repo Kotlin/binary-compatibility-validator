@@ -13,6 +13,10 @@ internal fun BaseKotlinGradleTest.test(fn: BaseKotlinScope.() -> Unit): GradleRu
     val baseKotlinScope = BaseKotlinScope()
     fn(baseKotlinScope)
 
+    // even though we use mkdirs() on the files, we need this to ensure empty directories are created too
+    baseKotlinScope.directories.forEach { dirPath ->
+        rootProjectDir.resolve(dirPath).mkdirs()
+    }
     baseKotlinScope.files.forEach { scope ->
         val fileWriteTo = rootProjectDir.resolve(scope.filePath)
             .apply {
@@ -63,15 +67,12 @@ internal fun FileContainer.settingsGradleKts(fn: AppendableScope.() -> Unit) {
     file(fileName, fn)
 }
 
+// not using default argument in dir(name, fn) for clarity in tests (explicit "empty" in the name)
 /**
- * Declares a directory with the given [dirName] inside the current container.
- * All calls creating files within this scope will create the files nested in this directory.
- *
- * Note that it is valid to call this method multiple times at the same level with the same [dirName].
- * Files declared within 2 independent calls to [dir] will be added to the same directory.
+ * Shortcut for creating an empty directory.
  */
-internal fun FileContainer.dir(dirName: String, fn: DirectoryScope.() -> Unit) {
-    DirectoryScope(dirName, this).fn()
+internal fun FileContainer.emptyDir(dirName: String) {
+    dir(dirName) {}
 }
 
 /**
@@ -104,16 +105,32 @@ internal fun AppendableScope.resolve(fileName: String) {
 
 internal interface FileContainer {
     fun file(fileName: String, fn: AppendableScope.() -> Unit)
+
+    /**
+     * Declares a directory with the given [dirName] inside the current container.
+     * All calls creating files within this scope will create the files nested in this directory.
+     *
+     * Note that it is valid to call this method multiple times at the same level with the same [dirName].
+     * Files declared within 2 independent calls to [dir] will be added to the same directory.
+     */
+    fun dir(dirName: String, fn: DirectoryScope.() -> Unit)
 }
 
 internal class BaseKotlinScope : FileContainer {
-    var files: MutableList<AppendableScope> = mutableListOf()
+    val files: MutableList<AppendableScope> = mutableListOf()
+    // even though we create parent directories for the files, we need this to track potential empty dirs
+    val directories: MutableList<String> = mutableListOf()
     var runner: Runner = Runner()
 
     override fun file(fileName: String, fn: AppendableScope.() -> Unit) {
         val appendableScope = AppendableScope(fileName)
         fn(appendableScope)
         files.add(appendableScope)
+    }
+
+    override fun dir(dirName: String, fn: DirectoryScope.() -> Unit) {
+        directories.add(dirName)
+        DirectoryScope(dirName, this).fn()
     }
 }
 
@@ -124,6 +141,10 @@ internal class DirectoryScope(
 
     override fun file(fileName: String, fn: AppendableScope.() -> Unit) {
         parent.file("$dirPath/$fileName", fn)
+    }
+
+    override fun dir(dirName: String, fn: DirectoryScope.() -> Unit) {
+        parent.dir("$dirPath/$dirName", fn)
     }
 }
 
