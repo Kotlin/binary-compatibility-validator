@@ -243,6 +243,19 @@ private fun Project.configureCheckTasks(
             logger.debug("Configuring api for ${targetConfig.targetName ?: "jvm"} to $r")
         }
     }
+
+    val apiDump = task<Sync>(targetConfig.apiTaskName("Dump")) {
+        isEnabled = apiCheckEnabled(extension) && apiBuild.map { it.enabled }.getOrElse(true)
+        group = "other"
+        description = "Syncs API from build dir to ${targetConfig.apiDir} dir for $projectName"
+        from(apiBuildDir)
+        into(apiCheckDir)
+        dependsOn(apiBuild)
+        doFirst {
+            apiCheckDir.get().mkdirs()
+        }
+    }
+
     val apiCheck = task<ApiCompareCompareTask>(targetConfig.apiTaskName("Check")) {
         isEnabled = apiCheckEnabled(extension) && apiBuild.map { it.enabled }.getOrElse(true)
         group = "verification"
@@ -256,20 +269,9 @@ private fun Project.configureCheckTasks(
                 null
             }
             this.apiBuildDir = apiBuildDir.get()
+            dumpTaskFqn = apiDump.get().path
         }
         dependsOn(apiBuild)
-    }
-
-    val apiDump = task<Sync>(targetConfig.apiTaskName("Dump")) {
-        isEnabled = apiCheckEnabled(extension) && apiBuild.map { it.enabled }.getOrElse(true)
-        group = "other"
-        description = "Syncs API from build dir to ${targetConfig.apiDir} dir for $projectName"
-        from(apiBuildDir)
-        into(apiCheckDir)
-        dependsOn(apiBuild)
-        doFirst {
-            apiCheckDir.get().mkdirs()
-        }
     }
 
     commonApiDump?.configure { it.dependsOn(apiDump) }

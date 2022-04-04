@@ -5,6 +5,7 @@
 
 package kotlinx.validation.test
 
+import kotlinx.validation.API_DIR
 import kotlinx.validation.api.*
 import kotlinx.validation.api.BaseKotlinGradleTest
 import kotlinx.validation.api.assertTaskSuccess
@@ -14,6 +15,7 @@ import kotlinx.validation.api.runner
 import kotlinx.validation.api.test
 import org.assertj.core.api.Assertions
 import org.junit.Test
+import java.nio.file.Paths
 import kotlin.test.assertTrue
 
 internal class SubprojectsWithPluginOnRootTests : BaseKotlinGradleTest() {
@@ -93,6 +95,43 @@ internal class SubprojectsWithPluginOnRootTests : BaseKotlinGradleTest() {
             assertTaskSuccess(":sub1:subsub1:apiCheck")
             assertTaskSuccess(":sub1:subsub2:apiCheck")
             assertTaskSuccess(":sub2:apiCheck")
+        }
+    }
+
+    @Test
+    fun `check should fail with rename hint when a subproject doesn't have a correct api file`() {
+        val runner = test {
+            createProjectHierarchyWithPluginOnRoot()
+
+            emptyApiFile(projectName = rootProjectDir.name)
+
+            dir("sub1") {
+                emptyApiFile(projectName = "sub1")
+
+                dir("subsub1") {
+                    emptyApiFile(projectName = "not-subsub1")
+                }
+
+                dir("subsub2") {
+                    emptyApiFile(projectName = "subsub2")
+                }
+            }
+
+            dir("sub2") {
+                emptyApiFile(projectName = "sub2")
+            }
+
+            runner {
+                arguments.add("check")
+            }
+        }
+
+        runner.buildAndFail().apply {
+            assertTaskFailure(":sub1:subsub1:apiCheck")
+            // using Paths.get() to ensure correct separators on Windows
+            val apiFilePath = Paths.get("sub1/subsub1/api/subsub1.api")
+            assertOutputContains("File $apiFilePath is missing, but another file was found instead: not-subsub1.api")
+            assertOutputContains("If you renamed the project, please run task ':sub1:subsub1:apiDump' again to re-generate the API file.")
         }
     }
 
@@ -196,6 +235,64 @@ internal class SubprojectsWithPluginOnRootTests : BaseKotlinGradleTest() {
 
         runner.build().apply {
             assertTaskSuccess(":sub1:subsub2:apiCheck")
+        }
+    }
+
+    @Test
+    fun `apiCheck should fail on sub-subproject when the api file is missing`() {
+        val runner = test {
+            createProjectHierarchyWithPluginOnRoot()
+
+            dir("sub1") {
+                dir("subsub2") {
+                    kotlin("Subsub2Class.kt") {
+                        resolve("examples/classes/Subsub2Class.kt")
+                    }
+                    emptyDir(API_DIR)
+                }
+            }
+
+            runner {
+                arguments.add(":sub1:subsub2:apiCheck")
+            }
+        }
+
+        runner.buildAndFail().apply {
+            assertTaskFailure(":sub1:subsub2:apiCheck")
+            // using Paths.get() to ensure correct separators on Windows
+            val apiFilePath = Paths.get("sub1/subsub2/api/subsub2.api")
+            assertOutputContains("File $apiFilePath is missing, please run task ':sub1:subsub2:apiDump' to generate it")
+        }
+    }
+
+    @Test
+    fun `apiCheck should fail on sub-subproject with rename hint when the api file doesn't have the correct name`() {
+        val runner = test {
+            createProjectHierarchyWithPluginOnRoot()
+
+            dir("sub1") {
+                dir("subsub2") {
+                    kotlin("Subsub2Class.kt") {
+                        resolve("examples/classes/Subsub2Class.kt")
+                    }
+                    apiFile(projectName = "not-subsub2") {
+                        resolve("examples/classes/Subsub2Class.dump")
+                    }
+                }
+            }
+
+            runner {
+                arguments.add(":sub1:subsub2:apiCheck")
+            }
+        }
+
+        runner.buildAndFail().apply {
+            assertTaskFailure(":sub1:subsub2:apiCheck")
+            // using Paths.get() to ensure correct separators on Windows
+            val apiFilePath = Paths.get("sub1/subsub2/api/subsub2.api")
+            assertOutputContains("File $apiFilePath is missing, but another file was found instead: not-subsub2.api")
+            assertOutputContains("If you renamed the project, please run task ':sub1:subsub2:apiDump' again to re-generate the API file.")
+
         }
     }
 

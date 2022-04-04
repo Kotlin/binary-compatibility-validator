@@ -5,6 +5,7 @@
 
 package kotlinx.validation.api
 
+import org.assertj.core.api.Assertions
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
 import kotlin.test.assertEquals
@@ -34,4 +35,8 @@ private fun BuildResult.assertTaskOutcome(taskOutcome: TaskOutcome, taskName: St
  */
 internal fun BuildResult.assertTaskNotRun(taskName: String) {
     assertNull(task(taskName), "task $taskName was not expected to be run")
+}
+
+internal fun BuildResult.assertOutputContains(text: String) {
+    Assertions.assertThat(output).contains(text)
 }

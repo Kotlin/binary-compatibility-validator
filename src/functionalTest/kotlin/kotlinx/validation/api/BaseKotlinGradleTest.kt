@@ -17,4 +17,7 @@ internal open class BaseKotlinGradleTest {
     internal val rootProjectDir: File get() = testProjectDir.root
 
     internal val rootProjectApiDump: File get() = rootProjectDir.resolve("api/${rootProjectDir.name}.api")
+
+    // Not using a simple string here to ensure the correct file separator is used on every system
+    internal val rootProjectApiDumpRelative: File get() = rootProjectApiDump.relativeTo(rootProjectDir)
 }

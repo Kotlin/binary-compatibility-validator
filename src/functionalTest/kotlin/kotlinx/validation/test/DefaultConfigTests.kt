@@ -5,6 +5,7 @@
 
 package kotlinx.validation.test
 
+import kotlinx.validation.API_DIR
 import kotlinx.validation.api.*
 import org.assertj.core.api.*
 import org.junit.Test
@@ -24,7 +25,7 @@ internal class DefaultConfigTests : BaseKotlinGradleTest() {
         }
 
         runner.buildAndFail().apply {
-            assertTrue { output.contains("Please ensure that ':apiDump' was executed") }
+            assertOutputContains("Please ensure that ':apiDump' was executed")
             assertTaskFailure(":apiCheck")
         }
     }
@@ -48,6 +49,26 @@ internal class DefaultConfigTests : BaseKotlinGradleTest() {
     }
 
     @Test
+    fun `apiCheck should fail when there is no api file, even if there is an api dir and no Kotlin sources`() {
+        val runner = test {
+            buildGradleKts {
+                resolve("examples/gradle/base/withPlugin.gradle.kts")
+            }
+
+            emptyDir(API_DIR)
+
+            runner {
+                arguments.add(":check")
+            }
+        }
+
+        runner.buildAndFail().apply {
+            assertOutputContains("File $rootProjectApiDumpRelative is missing, please run task ':apiDump' to generate it")
+            assertTaskFailure(":apiCheck")
+        }
+    }
+
+    @Test
     fun `apiCheck should succeed, when api-File is empty, but no kotlin files are included in SourceSet`() {
         val runner = test {
             buildGradleKts {
@@ -63,6 +84,83 @@ internal class DefaultConfigTests : BaseKotlinGradleTest() {
 
         runner.build().apply {
             assertTaskSuccess(":apiCheck")
+        }
+    }
+
+    @Test
+    fun `apiCheck should fail with rename hint when the api file exists but with incorrect name`() {
+        val runner = test {
+            buildGradleKts {
+                resolve("examples/gradle/base/withPlugin.gradle.kts")
+            }
+            kotlin("AnotherBuildConfig.kt") {
+                resolve("examples/classes/AnotherBuildConfig.kt")
+            }
+            apiFile(projectName = "some-unrelated-name") {
+                resolve("examples/classes/AnotherBuildConfig.dump")
+            }
+            runner {
+                arguments.add(":apiCheck")
+            }
+        }
+
+        runner.buildAndFail().apply {
+            assertOutputContains("File $rootProjectApiDumpRelative is missing, but another file was found instead: some-unrelated-name.api.")
+            assertOutputContains("If you renamed the project, please run task ':apiDump' again to re-generate the API file.")
+            assertTaskFailure(":apiCheck")
+        }
+    }
+    @OptIn(ExperimentalStdlibApi::class)
+    @Test
+    fun `apiCheck should fail with case-sensitivity hint when an api file exists but a name that differs only by case`() {
+        val projectNameUpperCase = rootProjectDir.name.uppercase()
+        val runner = test {
+            buildGradleKts {
+                resolve("examples/gradle/base/withPlugin.gradle.kts")
+            }
+            kotlin("AnotherBuildConfig.kt") {
+                resolve("examples/classes/AnotherBuildConfig.kt")
+            }
+            apiFile(projectName = projectNameUpperCase) {
+                resolve("examples/classes/AnotherBuildConfig.dump")
+            }
+            runner {
+                arguments.add(":apiCheck")
+            }
+        }
+
+        runner.buildAndFail().apply {
+            assertOutputContains("File $rootProjectApiDumpRelative is missing, but a similar file was found instead: $projectNameUpperCase.api.")
+            assertOutputContains("If you renamed the project, please run task ':apiDump' again to re-generate the API file.")
+            assertOutputContains("Since the rename only involved a case change, you may need to delete the file manually " +
+                "before running the task (if your file system is case-insensitive.")
+            assertTaskFailure(":apiCheck")
+        }
+    }
+
+    @Test
+    fun `apiCheck should fail when several api files exist but none with the correct name`() {
+        val runner = test {
+            buildGradleKts {
+                resolve("examples/gradle/base/withPlugin.gradle.kts")
+            }
+            kotlin("AnotherBuildConfig.kt") {
+                resolve("examples/classes/AnotherBuildConfig.kt")
+            }
+            apiFile(projectName = "some-unrelated-name") {
+                resolve("examples/classes/AnotherBuildConfig.dump")
+            }
+            apiFile(projectName = "some-unrelated-name2") {
+                resolve("examples/classes/AnotherBuildConfig.dump")
+            }
+            runner {
+                arguments.add(":apiCheck")
+            }
+        }
+
+        runner.buildAndFail().apply {
+            assertOutputContains("File $rootProjectApiDumpRelative is missing, please run task ':apiDump' to generate it")
+            assertTaskFailure(":apiCheck")
         }
     }
 

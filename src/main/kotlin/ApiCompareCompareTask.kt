@@ -7,13 +7,10 @@ package kotlinx.validation
 
 import difflib.*
 import org.gradle.api.*
-import org.gradle.api.file.*
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.*
 import java.io.*
-import javax.inject.Inject
 
-open class ApiCompareCompareTask @Inject constructor(private val objects: ObjectFactory): DefaultTask() {
+open class ApiCompareCompareTask : DefaultTask() {
 
     /*
      * Nullability and optionality is a workaround for
@@ -35,6 +32,11 @@ open class ApiCompareCompareTask @Inject constructor(private val objects: Object
     @PathSensitive(PathSensitivity.RELATIVE)
     lateinit var apiBuildDir: File
 
+    // Used for diagnostic error messages when API file is missing/incorrect
+    @Input
+    @Optional
+    lateinit var dumpTaskFqn: String
+
     @OutputFile
     @Optional
     val dummyOutputFile: File? = null
@@ -46,44 +48,39 @@ open class ApiCompareCompareTask @Inject constructor(private val objects: Object
     @TaskAction
     fun verify() {
         val projectApiDir = projectApiDir
-        if (projectApiDir == null) {
-            error("Expected folder with API declarations '$nonExistingProjectApiDir' does not exist.\n" +
-                    "Please ensure that ':apiDump' was executed in order to get API dump to compare the build against")
-        }
+            ?: error("Expected folder with API declarations '$nonExistingProjectApiDir' does not exist.\n" +
+                "Please ensure that '$dumpTaskFqn' was executed in order to get API dump to compare the build against")
 
-        val subject = projectName
-        val apiBuildDirFiles = mutableSetOf<RelativePath>()
-        val expectedApiFiles = mutableSetOf<RelativePath>()
-        objects.fileTree().from(apiBuildDir).visit { file ->
-            apiBuildDirFiles.add(file.relativePath)
-        }
-        objects.fileTree().from(projectApiDir).visit { file ->
-            expectedApiFiles.add(file.relativePath)
-        }
+        val actualApiFiles = apiBuildDir.listFiles { f: File -> f.isFile }
+        val actualApiFile = actualApiFiles.singleOrNull()
+            ?: error("Expected a single file $projectName.api, but found: ${actualApiFiles.map { it.relativeTo(rootDir) }}")
 
-        if (apiBuildDirFiles.size != 1) {
-            error("Expected a single file $subject.api, but found: $expectedApiFiles")
-        }
+        val expectedApiFiles = projectApiDir.listFiles { f: File -> f.isFile }
+        val expectedApiFile = expectedApiFiles.find { it.name == actualApiFile.name }
+            ?: errorWithExplanation(projectApiDir, actualApiFile, expectedApiFiles)
 
-        val expectedApiDeclaration = apiBuildDirFiles.single()
-        if (expectedApiDeclaration !in expectedApiFiles) {
-            error("File ${expectedApiDeclaration.lastName} is missing from ${projectApiDir.relativePath()}, please run " +
-                    ":$subject:apiDump task to generate one")
-        }
-
-        val diffSet = mutableSetOf<String>()
-        val expectedFile = expectedApiDeclaration.getFile(projectApiDir)
-        val actualFile = expectedApiDeclaration.getFile(apiBuildDir)
-        val diff = compareFiles(expectedFile, actualFile)
-        if (diff != null) diffSet.add(diff)
-        if (diffSet.isNotEmpty()) {
-            val diffText = diffSet.joinToString("\n\n")
-            error("API check failed for project $subject.\n$diffText\n\n You can run :$subject:apiDump task to overwrite API declarations")
+        val diff = compareFiles(expectedApiFile, actualApiFile)
+        if (diff != null) {
+            error("API check failed for project $projectName.\n$diff\n\n You can run task '$dumpTaskFqn' to overwrite API declarations")
         }
     }
 
-    private fun File.relativePath(): String {
-        return relativeTo(rootDir).toString() + "/"
+    private fun errorWithExplanation(projectApiDir: File, actualApiFile: File, expectedApiFiles: Array<File>): Nothing {
+        val nonExistingExpectedApiFile = projectApiDir.resolve(actualApiFile.name).relativeTo(rootDir)
+        if (expectedApiFiles.size != 1) {
+            error("File $nonExistingExpectedApiFile is missing, please run task '$dumpTaskFqn' to generate it")
+        }
+        val incorrectApiFileName = expectedApiFiles.single().name
+        val caseChangeOnly = incorrectApiFileName.equals(actualApiFile.name, ignoreCase = true)
+        if (caseChangeOnly) {
+            error("File $nonExistingExpectedApiFile is missing, but a similar file was found instead: $incorrectApiFileName.\n" +
+                "If you renamed the project, please run task '$dumpTaskFqn' again to re-generate the API file. " +
+                "Since the rename only involved a case change, you may need to delete the file manually before " +
+                "running the task (if your file system is case-insensitive.")
+        } else {
+            error("File $nonExistingExpectedApiFile is missing, but another file was found instead: $incorrectApiFileName.\n" +
+                "If you renamed the project, please run task '$dumpTaskFqn' again to re-generate the API file.")
+        }
     }
 
     private fun compareFiles(checkFile: File, builtFile: File): String? {
