@@ -43,6 +43,8 @@ class CasesPublicAPITest {
 
     @Test fun marker() { snapshotAPIAndCompare(testName.methodName, setOf("cases/marker/HiddenField", "cases/marker/HiddenProperty")) }
 
+    @Test fun markerDefault() { snapshotAPIAndCompare(testName.methodName, setOf("cases/markerDefault/HiddenMethod")) }
+
     @Test fun nestedClasses() { snapshotAPIAndCompare(testName.methodName) }
 
     @Test fun private() { snapshotAPIAndCompare(testName.methodName) }

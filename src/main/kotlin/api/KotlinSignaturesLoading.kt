@@ -85,7 +85,20 @@ public fun Sequence<InputStream>.loadApiFromJvmClasses(visibilityFilter: (String
                             ?.visibleAnnotations ?: emptyList()
                     }
 
-                    it.toMethodBinarySignature(foundAnnotations)
+                    /**
+                     * For synthetic $default methods, pull the annotations from
+                     * This is either on the field if any or in a '$annotations' synthetic function.
+                     */
+                    val alternateDefaultSignature = mVisibility?.name?.let { className ->
+                        it.alternateDefaultSignature(className)
+                    }
+                    if (alternateDefaultSignature != null) {
+                        foundAnnotations += methods
+                            .firstOrNull { it.name == alternateDefaultSignature.name && it.desc == alternateDefaultSignature.desc }
+                            ?.visibleAnnotations ?: emptyList()
+                    }
+
+                    it.toMethodBinarySignature(foundAnnotations, alternateDefaultSignature)
                 }
                 // Signatures marked with @PublishedApi
                 val publishedApiSignatures = allMethods.filter {

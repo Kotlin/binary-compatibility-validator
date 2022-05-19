@@ -7,6 +7,7 @@ package kotlinx.validation.api
 
 import kotlinx.metadata.jvm.*
 import kotlinx.validation.*
+import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.*
 
 @ExternalApi // Only name is part of the API, nothing else is used by stdlib
@@ -48,7 +49,8 @@ data class MethodBinarySignature(
     override val jvmMember: JvmMethodSignature,
     override val isPublishedApi: Boolean,
     override val access: AccessFlags,
-    override val annotations: List<AnnotationNode>
+    override val annotations: List<AnnotationNode>,
+    private val alternateDefaultSignature: JvmMethodSignature?
 ) : MemberBinarySignature {
     override val signature: String
         get() = "${access.getModifierString()} fun $name $desc"
@@ -59,7 +61,7 @@ data class MethodBinarySignature(
                 && !isDummyDefaultConstructor()
 
     override fun findMemberVisibility(classVisibility: ClassVisibility?): MemberVisibility? {
-        return super.findMemberVisibility(classVisibility) ?: classVisibility?.let { alternateDefaultSignature(it.name)?.let(it::findMember) }
+        return super.findMemberVisibility(classVisibility) ?: classVisibility?.let { alternateDefaultSignature?.let(it::findMember) }
     }
 
     /**
@@ -83,35 +85,36 @@ data class MethodBinarySignature(
     private fun isAccessOrAnnotationsMethod() = access.isSynthetic && (name.startsWith("access\$") || name.endsWith("\$annotations"))
 
     private fun isDummyDefaultConstructor() = access.isSynthetic && name == "<init>" && desc == "(Lkotlin/jvm/internal/DefaultConstructorMarker;)V"
+}
 
-    /**
-     * Calculates the signature of this method without default parameters
-     *
-     * Returns `null` if this method isn't an entry point of a function
-     * or a constructor with default parameters.
-     * Returns an incorrect result, if there are more than 31 default parameters.
-     */
-    private fun alternateDefaultSignature(className: String): JvmMethodSignature? {
-        return when {
-            !access.isSynthetic -> null
-            name == "<init>" && "ILkotlin/jvm/internal/DefaultConstructorMarker;" in desc ->
-                JvmMethodSignature(name, desc.replace("ILkotlin/jvm/internal/DefaultConstructorMarker;", ""))
-            name.endsWith("\$default") && "ILjava/lang/Object;)" in desc ->
-                JvmMethodSignature(
-                    name.removeSuffix("\$default"),
-                    desc.replace("ILjava/lang/Object;)", ")").replace("(L$className;", "(")
-                )
-            else -> null
-        }
+/**
+ * Calculates the signature of this method without default parameters
+ *
+ * Returns `null` if this method isn't an entry point of a function
+ * or a constructor with default parameters.
+ * Returns an incorrect result, if there are more than 31 default parameters.
+ */
+internal fun MethodNode.alternateDefaultSignature(className: String): JvmMethodSignature? {
+    return when {
+        access and Opcodes.ACC_SYNTHETIC == 0 -> null
+        name == "<init>" && "ILkotlin/jvm/internal/DefaultConstructorMarker;" in desc ->
+            JvmMethodSignature(name, desc.replace("ILkotlin/jvm/internal/DefaultConstructorMarker;", ""))
+        name.endsWith("\$default") && "ILjava/lang/Object;)" in desc ->
+            JvmMethodSignature(
+                name.removeSuffix("\$default"),
+                desc.replace("ILjava/lang/Object;)", ")").replace("(L$className;", "(")
+            )
+        else -> null
     }
 }
 
-fun MethodNode.toMethodBinarySignature(propertyAnnotations: List<AnnotationNode>) =
+fun MethodNode.toMethodBinarySignature(propertyAnnotations: List<AnnotationNode>, alternateDefaultSignature: JvmMethodSignature?) =
     MethodBinarySignature(
         JvmMethodSignature(name, desc),
         isPublishedApi(),
         AccessFlags(access),
-        visibleAnnotations.orEmpty() + invisibleAnnotations.orEmpty() + propertyAnnotations
+        visibleAnnotations.orEmpty() + invisibleAnnotations.orEmpty() + propertyAnnotations,
+        alternateDefaultSignature
     )
 
 data class FieldBinarySignature(
