@@ -86,8 +86,7 @@ public fun Sequence<InputStream>.loadApiFromJvmClasses(visibilityFilter: (String
                     }
 
                     /**
-                     * For synthetic $default methods, pull the annotations from
-                     * This is either on the field if any or in a '$annotations' synthetic function.
+                     * For synthetic $default methods, pull the annotations from the corresponding method
                      */
                     val alternateDefaultSignature = mVisibility?.name?.let { className ->
                         it.alternateDefaultSignature(className)
