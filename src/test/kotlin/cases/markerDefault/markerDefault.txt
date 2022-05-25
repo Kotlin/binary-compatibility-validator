@@ -1,7 +1,0 @@
-public final class cases/markerDefault/Foo {
-	public fun <init> ()V
-}
-
-public abstract interface annotation class cases/markerDefault/HiddenMethod : java/lang/annotation/Annotation {
-}
-
