@@ -61,30 +61,15 @@ data class MethodBinarySignature(
                 && !isDummyDefaultConstructor()
 
     override fun findMemberVisibility(classVisibility: ClassVisibility?): MemberVisibility? {
-        return super.findMemberVisibility(classVisibility) ?: classVisibility?.let { alternateDefaultSignature?.let(it::findMember) }
+        return super.findMemberVisibility(classVisibility)
+            ?: classVisibility?.let { alternateDefaultSignature?.let(it::findMember) }
     }
 
-    /**
-     * Checks whether the method is a $default counterpart of internal @PublishedApi method
-     */
-    public fun isPublishedApiWithDefaultArguments(
-        classVisibility: ClassVisibility?,
-        publishedApiSignatures: Set<JvmMethodSignature>
-    ): Boolean {
-        // Fast-path
-        findMemberVisibility(classVisibility)?.isInternal() ?: return false
-        val name = jvmMember.name
-        if (!name.endsWith("\$default")) return false
-        // Leverage the knowledge about modified signature
-        val expectedPublishedApiCounterPart = JvmMethodSignature(
-            name.removeSuffix("\$default"),
-            jvmMember.desc.replace( ";ILjava/lang/Object;)", ";)"))
-        return expectedPublishedApiCounterPart in publishedApiSignatures
-    }
+    private fun isAccessOrAnnotationsMethod() =
+        access.isSynthetic && (name.startsWith("access\$") || name.endsWith("\$annotations"))
 
-    private fun isAccessOrAnnotationsMethod() = access.isSynthetic && (name.startsWith("access\$") || name.endsWith("\$annotations"))
-
-    private fun isDummyDefaultConstructor() = access.isSynthetic && name == "<init>" && desc == "(Lkotlin/jvm/internal/DefaultConstructorMarker;)V"
+    private fun isDummyDefaultConstructor() =
+        access.isSynthetic && name == "<init>" && desc == "(Lkotlin/jvm/internal/DefaultConstructorMarker;)V"
 }
 
 /**
@@ -108,14 +93,19 @@ internal fun MethodNode.alternateDefaultSignature(className: String): JvmMethodS
     }
 }
 
-fun MethodNode.toMethodBinarySignature(propertyAnnotations: List<AnnotationNode>, alternateDefaultSignature: JvmMethodSignature?) =
-    MethodBinarySignature(
+fun MethodNode.toMethodBinarySignature(
+    extraAnnotations: List<AnnotationNode>,
+    alternateDefaultSignature: JvmMethodSignature?
+): MethodBinarySignature {
+    val allAnnotations = visibleAnnotations.orEmpty() + invisibleAnnotations.orEmpty() + extraAnnotations
+    return MethodBinarySignature(
         JvmMethodSignature(name, desc),
-        isPublishedApi(),
+        allAnnotations.isPublishedApi(),
         AccessFlags(access),
-        visibleAnnotations.orEmpty() + invisibleAnnotations.orEmpty() + propertyAnnotations,
+        allAnnotations,
         alternateDefaultSignature
     )
+}
 
 data class FieldBinarySignature(
     override val jvmMember: JvmFieldSignature,
@@ -132,13 +122,15 @@ data class FieldBinarySignature(
     }
 }
 
-fun FieldNode.toFieldBinarySignature() =
-    FieldBinarySignature(
+fun FieldNode.toFieldBinarySignature(extraAnnotations: List<AnnotationNode>): FieldBinarySignature {
+    val allAnnotations = visibleAnnotations.orEmpty() + invisibleAnnotations.orEmpty() + extraAnnotations
+    return FieldBinarySignature(
         JvmFieldSignature(name, desc),
-        isPublishedApi(),
+        allAnnotations.isPublishedApi(),
         AccessFlags(access),
-        annotations(visibleAnnotations, invisibleAnnotations))
-
+        allAnnotations
+    )
+}
 private val MemberBinarySignature.kind: Int
     get() = when (this) {
         is FieldBinarySignature -> 1
@@ -159,7 +151,9 @@ data class AccessFlags(val access: Int) {
     val isFinal: Boolean get() = isFinal(access)
     val isSynthetic: Boolean get() = isSynthetic(access)
 
-    fun getModifiers(): List<String> = ACCESS_NAMES.entries.mapNotNull { if (access and it.key != 0) it.value else null }
+    fun getModifiers(): List<String> =
+        ACCESS_NAMES.entries.mapNotNull { if (access and it.key != 0) it.value else null }
+
     fun getModifierString(): String = getModifiers().joinToString(" ")
 }
 
