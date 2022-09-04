@@ -5,13 +5,25 @@
 
 package kotlinx.validation
 
-import org.gradle.api.*
-import org.gradle.api.plugins.*
-import org.gradle.api.provider.*
-import org.gradle.api.tasks.*
-import org.jetbrains.kotlin.gradle.dsl.*
-import org.jetbrains.kotlin.gradle.plugin.*
-import java.io.*
+import com.android.build.gradle.LibraryExtension
+import org.gradle.api.Action
+import org.gradle.api.Plugin
+import org.gradle.api.Project
+import org.gradle.api.Task
+import org.gradle.api.plugins.AppliedPlugin
+import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.SourceSet
+import org.gradle.api.tasks.SourceSetContainer
+import org.gradle.api.tasks.Sync
+import org.gradle.api.tasks.TaskProvider
+import org.gradle.api.tasks.compile.JavaCompile
+import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
+import org.jetbrains.kotlin.gradle.dsl.KotlinCommonOptions
+import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
+import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJvmAndroidCompilation
+import java.io.File
 
 const val API_DIR = "api"
 
@@ -105,25 +117,104 @@ class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
         }
     }
 
-    private fun configureAndroidPlugin(
-        project: Project,
-        extension: ApiValidationExtension
-    ) {
+    private fun configureAndroidPlugin(project: Project, extension: ApiValidationExtension) {
+        configureAndroidPluginForJavaLibrary(project, extension)
         configureAndroidPluginForKotlinLibrary(project, extension)
-
     }
 
     private fun configureAndroidPluginForKotlinLibrary(
-        project: Project,
-        extension: ApiValidationExtension
+            project: Project,
+            extension: ApiValidationExtension
     ) = configurePlugin("kotlin-android", project, extension) {
         val androidExtension = project.extensions
-            .getByName("kotlin") as KotlinAndroidProjectExtension
+                .getByName("kotlin") as KotlinAndroidProjectExtension
         androidExtension.target.compilations.matching {
             it.compilationName == "release"
-        }.all {
-            project.configureKotlinCompilation(it, extension, useOutput = true)
+        }.all { kotlinJvmAndroidCompilation ->
+            val targetConfig = TargetConfig(project)
+            val apiBuildTask = project.tasks.findByName(
+                    targetConfig.apiTaskName("Build")
+            ) as? KotlinApiBuildTask
+            if (apiBuildTask == null) {
+                project.configureKotlinCompilation(
+                        kotlinJvmAndroidCompilation,
+                        extension,
+                        targetConfig)
+            } else {
+                apiBuildTask.configureAdditionalInputsForKotlinAndroidLibrary(
+                        project,
+                        kotlinJvmAndroidCompilation,
+                        extension
+                )
+            }
         }
+    }
+
+    private fun KotlinApiBuildTask.configureAdditionalInputsForKotlinAndroidLibrary(
+            project: Project,
+            compilation: KotlinJvmAndroidCompilation,
+            extension: ApiValidationExtension
+    ) {
+        enabled = apiCheckEnabled(project.name, extension)
+                && compilation.allKotlinSourceSets.any {
+            it.kotlin.srcDirs.any { srcDir -> srcDir.exists() }
+        }
+        if (enabled) {
+            inputClassesDirs = inputClassesDirs?.plus(
+                    project.files(project.provider<Any> {
+                        if (isEnabled) compilation.output.classesDirs
+                        else emptyList<Any>()
+                    })
+            )
+            inputDependencies = inputDependencies.plus(
+                    project.files(project.provider<Any> {
+                        if (isEnabled) compilation.output.classesDirs
+                        else emptyList<Any>()
+                    })
+            )
+        }
+    }
+
+    private fun configureAndroidPluginForJavaLibrary(
+            project: Project,
+            extension: ApiValidationExtension
+    ) = configurePlugin("com.android.library", project, extension) {
+        val androidExtension = project.extensions.getByType(LibraryExtension::class.java)
+        androidExtension.libraryVariants.matching {
+            it.name == "release"
+        }.all {
+            val targetConfig = TargetConfig(project)
+            val projectName = project.name
+            val apiBuildTask = project.tasks.findByName(
+                    targetConfig.apiTaskName("Build")
+            ) as? KotlinApiBuildTask
+
+            if (apiBuildTask == null) {
+                project.configureJavaCompilation(it.javaCompileProvider, extension)
+            } else {
+                apiBuildTask.configureAdditionalInputsForJavaAndroidLibrary(
+                        project,
+                        it.javaCompileProvider,
+                        extension
+                )
+            }
+        }
+    }
+
+    private fun KotlinApiBuildTask.configureAdditionalInputsForJavaAndroidLibrary(
+            project: Project,
+            javaCompileProvider: TaskProvider<JavaCompile>,
+            extension: ApiValidationExtension
+    ) {
+        enabled = apiCheckEnabled(projectName, extension)
+        inputClassesDirs = inputClassesDirs?.plus(project.files(project.provider<Any> {
+            if (isEnabled) javaCompileProvider.get().outputs.files
+            else emptyList<Any>()
+        }))
+        inputDependencies = inputDependencies.plus(project.files(project.provider<Any> {
+            if (isEnabled) javaCompileProvider.get().outputs.files
+            else emptyList<Any>()
+        }))
     }
 
     private fun configureKotlinPlugin(
@@ -212,14 +303,47 @@ private fun Project.configureKotlinCompilation(
     configureCheckTasks(apiBuildDir, apiBuild, extension, targetConfig, commonApiDump, commonApiCheck)
 }
 
+private fun Project.configureJavaCompilation(
+        configurableFileCollection: TaskProvider<JavaCompile>,
+        extension: ApiValidationExtension,
+        targetConfig: TargetConfig = TargetConfig(this),
+) {
+    val projectName = project.name
+    val apiDirProvider = targetConfig.apiDir
+    val apiBuildDir = apiDirProvider.map { buildDir.resolve(it) }
+
+    val apiBuild = task<KotlinApiBuildTask>(targetConfig.apiTaskName("Build")) {
+        isEnabled = apiCheckEnabled(projectName, extension)
+        // 'group' is not specified deliberately, so it will be hidden from ./gradlew tasks
+        description = "Builds API for 'main' compilations of $projectName. " +
+                "Complementary task and shouldn't be called manually"
+        inputClassesDirs = files(provider<Any> {
+            if (isEnabled) configurableFileCollection.get().outputs.files
+            else emptyList<Any>()
+        })
+        inputDependencies = files(provider<Any> {
+            if (isEnabled) configurableFileCollection.get().outputs.files
+            else emptyList<Any>()
+        })
+        outputApiDir = apiBuildDir.get()
+    }
+
+    configureCheckTasks(
+            apiBuildDir,
+            apiBuild,
+            extension,
+            targetConfig
+    )
+}
+
 internal val Project.sourceSets: SourceSetContainer
     get() = extensions.getByName("sourceSets") as SourceSetContainer
 
 internal val Project.apiValidationExtensionOrNull: ApiValidationExtension?
     get() =
         generateSequence(this) { it.parent }
-            .map { it.extensions.findByType(ApiValidationExtension::class.java) }
-            .firstOrNull { it != null }
+                .map { it.extensions.findByType(ApiValidationExtension::class.java) }
+                .firstOrNull { it != null }
 
 fun apiCheckEnabled(projectName: String, extension: ApiValidationExtension): Boolean =
     projectName !in extension.ignoredProjects && !extension.validationDisabled

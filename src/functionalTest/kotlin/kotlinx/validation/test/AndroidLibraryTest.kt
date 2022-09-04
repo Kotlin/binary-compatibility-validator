@@ -6,19 +6,17 @@
 package kotlinx.validation.test
 
 import kotlinx.validation.api.*
-import org.junit.Assume
 import org.junit.Ignore
 import org.junit.Test
 import java.io.File
 
-@Ignore // Leftovers after revert of #94
+@Ignore("ANDROID_HOME is not available on CI, and this functionality is not critical")
 internal class AndroidLibraryTest : BaseKotlinGradleTest() {
 
     // region Kotlin Android Library
 
     @Test
-    fun `Given a Kotlin Android Library, when api is dumped, then task should be successful`() {
-        assumeHasAndroid()
+    fun `Given a Kotlin Android Library with plugin on root project, when api is dumped, then task should be successful`() {
         val runner = test {
             createProjectWithSubModules()
             runner {
@@ -33,8 +31,7 @@ internal class AndroidLibraryTest : BaseKotlinGradleTest() {
     }
 
     @Test
-    fun `Given a Kotlin Android Library, when api is checked, then it should match the expected`() {
-        assumeHasAndroid()
+    fun `Given a Kotlin Android Library with plugin on root project, when api is checked, then it should match the expected`() {
         test {
             createProjectWithSubModules()
             runner {
@@ -45,13 +42,40 @@ internal class AndroidLibraryTest : BaseKotlinGradleTest() {
         }
     }
 
-    //endregion
+    @Test
+    fun `Given a Kotlin Android Library, when api is dumped, then task should be successful`() {
+        val runner = test {
+            createProjectWithSubModules(pluginOnRoot = false)
+            runner {
+                arguments.add(":kotlin-library:apiDump")
+                arguments.add("--full-stacktrace")
+            }
+        }
 
-    //region Java Android Library
+        runner.build().apply {
+            assertTaskSuccess(":kotlin-library:apiDump")
+        }
+    }
 
     @Test
-    fun `Given a Java Android Library, when api is dumped, then task should be successful`() {
-        assumeHasAndroid()
+    fun `Given a Kotlin Android Library, when api is checked, then it should match the expected`() {
+        test {
+            createProjectWithSubModules(pluginOnRoot = false)
+            runner {
+                arguments.add(":kotlin-library:apiCheck")
+                arguments.add("--full-stacktrace")
+            }
+        }.build().apply {
+            assertTaskSuccess(":kotlin-library:apiCheck")
+        }
+    }
+
+    // endregion
+
+    // region Java Android Library
+
+    @Test
+    fun `Given a Java Android Library with plugin on root project, when api is dumped, then task should be successful`() {
         val runner = test {
             createProjectWithSubModules()
             runner {
@@ -66,8 +90,7 @@ internal class AndroidLibraryTest : BaseKotlinGradleTest() {
     }
 
     @Test
-    fun `Given a Java Android Library, when api is checked, then it should match the expected`() {
-        assumeHasAndroid()
+    fun `Given a Java Android Library with plugin on root project, when api is checked, then it should match the expected`() {
         test {
             createProjectWithSubModules()
             runner {
@@ -78,24 +101,63 @@ internal class AndroidLibraryTest : BaseKotlinGradleTest() {
         }
     }
 
-    //endregion
+    @Test
+    fun `Given a Java Android Library, when api is dumped, then task should be successful`() {
+        val runner = test {
+            createProjectWithSubModules(pluginOnRoot = false)
+            runner {
+                arguments.add(":java-library:apiDump")
+                arguments.add("--full-stacktrace")
+            }
+        }
+
+        runner.build().apply {
+            assertTaskSuccess(":java-library:apiDump")
+        }
+    }
+
+    @Test
+    fun `Given a Java Android Library, when api is checked, then it should match the expected`() {
+        test {
+            createProjectWithSubModules(pluginOnRoot = false)
+            runner {
+                arguments.add(":java-library:apiCheck")
+            }
+        }.build().apply {
+            assertTaskSuccess(":java-library:apiCheck")
+        }
+    }
+
+    // endregion
 
     /**
-     * Creates a single project with 2 (Kotlin and Java Android Library) modules, applies
-     * the plugin on the root project.
+     * Creates a project with 2 (Kotlin and Java Android Library) modules.
+     *
+     * @param pluginOnRoot whether the `binary-compatibility-validator` plugin should be applied to
+     * the root project
      */
-    private fun BaseKotlinScope.createProjectWithSubModules() {
+    private fun BaseKotlinScope.createProjectWithSubModules(
+            pluginOnRoot: Boolean = true
+    ) {
         settingsGradleKts {
             resolve("examples/gradle/settings/settings-android-project.gradle.kts")
         }
         buildGradleKts {
-            resolve("examples/gradle/base/androidProjectRoot.gradle.kts")
+            if (pluginOnRoot) {
+                resolve("examples/gradle/base/androidProjectRootWithPlugin.gradle.kts")
+            } else {
+                resolve("examples/gradle/base/androidProjectRoot.gradle.kts")
+            }
         }
         initLocalProperties()
 
         dir("kotlin-library") {
             buildGradleKts {
-                resolve("examples/gradle/base/androidKotlinLibrary.gradle.kts")
+                if (pluginOnRoot) {
+                    resolve("examples/gradle/base/androidKotlinLibrary.gradle.kts")
+                } else {
+                    resolve("examples/gradle/base/androidKotlinLibraryWithPlugin.gradle.kts")
+                }
             }
             kotlin("KotlinLib.kt") {
                 resolve("examples/classes/KotlinLib.kt")
@@ -106,7 +168,11 @@ internal class AndroidLibraryTest : BaseKotlinGradleTest() {
         }
         dir("java-library") {
             buildGradleKts {
-                resolve("examples/gradle/base/androidJavaLibrary.gradle.kts")
+                if (pluginOnRoot) {
+                    resolve("examples/gradle/base/androidJavaLibrary.gradle.kts")
+                } else {
+                    resolve("examples/gradle/base/androidJavaLibraryWithPlugin.gradle.kts")
+                }
             }
             java("JavaLib.java") {
                 resolve("examples/classes/JavaLib.java")
@@ -124,9 +190,4 @@ internal class AndroidLibraryTest : BaseKotlinGradleTest() {
         }
     }
 
-    // We do not have ANDROID_HOME on CI, and this functionality is not critical, so we are disabling these
-    // tests on CI
-    private fun assumeHasAndroid() {
-        Assume.assumeFalse(System.getenv("ANDROID_HOME").isNullOrEmpty())
-    }
 }
