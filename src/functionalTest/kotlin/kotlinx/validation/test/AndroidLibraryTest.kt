@@ -44,7 +44,32 @@ internal class AndroidLibraryTest : BaseKotlinGradleTest() {
 
     //region Java Android Library
 
-    // TODO #94 Java Android Library functional test cases
+    @Test
+    fun `Given a Java Android Library, when api is dumped, then task should be successful`() {
+        val runner = test {
+            createProjectWithSubModules()
+            runner {
+                arguments.add(":java-library:apiDump")
+                arguments.add("--full-stacktrace")
+            }
+        }
+
+        runner.build().apply {
+            assertTaskSuccess(":java-library:apiDump")
+        }
+    }
+
+    @Test
+    fun `Given a Java Android Library, when api is checked, then it should match the expected`() {
+        test {
+            createProjectWithSubModules()
+            runner {
+                arguments.add(":java-library:apiCheck")
+            }
+        }.build().apply {
+            assertTaskSuccess(":java-library:apiCheck")
+        }
+    }
 
     //endregion
 
@@ -76,7 +101,12 @@ internal class AndroidLibraryTest : BaseKotlinGradleTest() {
             buildGradleKts {
                 resolve("examples/gradle/base/androidJavaLibrary.gradle.kts")
             }
-            // TODO #94 Add sample Java class and expected api dump file
+            java("JavaLib.java") {
+                resolve("examples/classes/JavaLib.java")
+            }
+            apiFile(projectName = "java-library") {
+                resolve("examples/classes/JavaLib.dump")
+            }
         }
     }
 
