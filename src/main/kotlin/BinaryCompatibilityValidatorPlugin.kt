@@ -251,7 +251,7 @@ private fun Project.configureJavaCompilation(
     val apiDirProvider = targetConfig.apiDir
     val apiBuildDir = apiDirProvider.map { buildDir.resolve(it) }
 
-    val apiBuild = task<KotlinApiBuildTask>(targetConfig.apiTaskName("Build"), extension) {
+    val apiBuild = task<KotlinApiBuildTask>(targetConfig.apiTaskName("Build")) {
         isEnabled = apiCheckEnabled(projectName, extension)
         // 'group' is not specified deliberately, so it will be hidden from ./gradlew tasks
         description = "Builds Java API for 'main' compilations of $projectName. " +
@@ -287,7 +287,7 @@ private fun Project.configureApiTasks(
     val apiBuildDir = targetConfig.apiDir.map { buildDir.resolve(it) }
     val apiBuild = task<KotlinApiBuildTask>(targetConfig.apiTaskName("Build")) {
         isEnabled = apiCheckEnabled(projectName, extension)
-        // 'group' is not specified deliberately so it will be hidden from ./gradlew tasks
+        // 'group' is not specified deliberately, so it will be hidden from ./gradlew tasks
         description =
             "Builds Kotlin API for 'main' compilations of $projectName. Complementary task and shouldn't be called manually"
         inputClassesDirs = files(provider<Any> { if (isEnabled) sourceSet.output.classesDirs else emptyList<Any>() })
