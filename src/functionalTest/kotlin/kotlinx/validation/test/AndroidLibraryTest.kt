@@ -6,15 +6,17 @@
 package kotlinx.validation.test
 
 import kotlinx.validation.api.*
+import org.junit.Assume
 import org.junit.Test
 import java.io.File
 
 internal class AndroidLibraryTest : BaseKotlinGradleTest() {
 
-    //region Kotlin Android Library
+    // region Kotlin Android Library
 
     @Test
     fun `Given a Kotlin Android Library, when api is dumped, then task should be successful`() {
+        assumeHasAndroid()
         val runner = test {
             createProjectWithSubModules()
             runner {
@@ -30,6 +32,7 @@ internal class AndroidLibraryTest : BaseKotlinGradleTest() {
 
     @Test
     fun `Given a Kotlin Android Library, when api is checked, then it should match the expected`() {
+        assumeHasAndroid()
         test {
             createProjectWithSubModules()
             runner {
@@ -46,6 +49,7 @@ internal class AndroidLibraryTest : BaseKotlinGradleTest() {
 
     @Test
     fun `Given a Java Android Library, when api is dumped, then task should be successful`() {
+        assumeHasAndroid()
         val runner = test {
             createProjectWithSubModules()
             runner {
@@ -61,6 +65,7 @@ internal class AndroidLibraryTest : BaseKotlinGradleTest() {
 
     @Test
     fun `Given a Java Android Library, when api is checked, then it should match the expected`() {
+        assumeHasAndroid()
         test {
             createProjectWithSubModules()
             runner {
@@ -117,4 +122,9 @@ internal class AndroidLibraryTest : BaseKotlinGradleTest() {
         }
     }
 
+    // We do not have ANDROID_HOME on CI, and this functionality is not critical, so we are disabling these
+    // tests on CI
+    private fun assumeHasAndroid() {
+        Assume.assumeFalse(System.getenv("ANDROID_HOME").isNullOrEmpty())
+    }
 }
