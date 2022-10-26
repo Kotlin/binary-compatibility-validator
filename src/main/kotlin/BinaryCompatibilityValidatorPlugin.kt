@@ -111,15 +111,14 @@ class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
         project: Project,
         extension: ApiValidationExtension
     ) {
-        val kotlinPluginPresent = project.plugins
-            .withType(KotlinAndroidPluginWrapper::class.java)
-            .isEmpty().not()
+//        val kotlinPluginPresent = project.pluginManager.hasPlugin("kotlin-android")
+//        if (kotlinPluginPresent) {
+//            configureAndroidPluginForKotlinLibrary(project, extension)
+//        } else {
+//            configureAndroidPluginForJavaLibrary(project, extension)
+//        }
+        configureAndroidPluginForKotlinLibrary(project, extension)
 
-        if (kotlinPluginPresent) {
-            configureAndroidPluginForKotlinLibrary(project, extension)
-        } else {
-            configureAndroidPluginForJavaLibrary(project, extension)
-        }
     }
 
     private fun configureAndroidPluginForKotlinLibrary(
