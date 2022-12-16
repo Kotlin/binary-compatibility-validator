@@ -7,6 +7,7 @@ package kotlinx.validation.api
 
 import kotlinx.metadata.jvm.*
 import kotlinx.validation.*
+import org.jetbrains.kotlin.gradle.utils.`is`
 import org.objectweb.asm.*
 import org.objectweb.asm.tree.*
 import java.io.*
@@ -125,24 +126,39 @@ public fun List<ClassBinarySignature>.filterOutAnnotated(targetAnnotations: Set<
     if (targetAnnotations.isEmpty()) return this
     return filter {
         it.annotations.all { ann -> !targetAnnotations.any { ann.refersToName(it) } }
-    }.map {
-        ClassBinarySignature(
-            it.name,
-            it.superName,
-            it.outerName,
-            it.supertypes,
-            it.memberSignatures.filter {
-                it.annotations.all { ann ->
+    }.map { signature ->
+        signature.copy(
+            memberSignatures = signature.memberSignatures.filter { memberSignature ->
+                memberSignature.annotations.all { ann ->
                     !targetAnnotations.any {
                         ann.refersToName(it)
                     }
                 }
-            },
-            it.access,
-            it.isEffectivelyPublic,
-            it.isNotUsedWhenEmpty,
-            it.annotations
+            }
         )
+    }
+}
+
+@ExternalApi
+public fun List<ClassBinarySignature>.filterOutNotAnnotated(
+    targetAnnotations: Set<String>
+): List<ClassBinarySignature> {
+    if (targetAnnotations.isEmpty()) return this
+    return mapNotNull { classSignature ->
+
+        /* If class is annotated: Return class and all its members */
+        if (classSignature.annotations.any { annotation ->
+                targetAnnotations.any { annotation.refersToName(it) }
+            }) return@mapNotNull classSignature
+
+        val annotatedMembers = classSignature.memberSignatures.filter { memberSignature ->
+            memberSignature.annotations.any { annotation ->
+                targetAnnotations.any { annotation.refersToName(it) }
+            }
+        }
+
+        /* If some members are annotated, return class with only annotated members */
+        if (annotatedMembers.isNotEmpty()) classSignature.copy(memberSignatures = annotatedMembers) else null
     }
 }
 
@@ -150,19 +166,36 @@ public fun List<ClassBinarySignature>.filterOutAnnotated(targetAnnotations: Set<
 public fun List<ClassBinarySignature>.filterOutNonPublic(
     nonPublicPackages: Collection<String> = emptyList(),
     nonPublicClasses: Collection<String> = emptyList()
+): List<ClassBinarySignature> = filterOutNonPublic(
+    nonPublicPackages = nonPublicPackages,
+    nonPublicClasses = nonPublicClasses,
+    publicPackages = emptyList(),
+    publicClasses = emptyList()
+)
+
+@ExternalApi
+public fun List<ClassBinarySignature>.filterOutNonPublic(
+    nonPublicPackages: Collection<String> = emptyList(),
+    nonPublicClasses: Collection<String> = emptyList(),
+    publicPackages: Collection<String> = emptyList(),
+    publicClasses: Collection<String> = emptyList()
 ): List<ClassBinarySignature> {
     val pathMapper: (String) -> String = { it.replace('.', '/') + '/' }
     val nonPublicPackagePaths = nonPublicPackages.map(pathMapper)
+    val publicPackagePaths = publicPackages.map(pathMapper)
     val excludedClasses = nonPublicClasses.map(pathMapper)
+    val includedClasses = publicClasses.map(pathMapper)
 
     val classByName = associateBy { it.name }
 
     fun ClassBinarySignature.isInNonPublicPackage() =
-        nonPublicPackagePaths.any { name.startsWith(it) }
+        nonPublicPackagePaths.any { name.startsWith(it) } ||
+                (publicPackagePaths.isNotEmpty() && publicPackagePaths.none { name.startsWith(it) })
 
     // checks whether class (e.g. com/company/BuildConfig) is in excluded class (e.g. com/company/BuildConfig/)
     fun ClassBinarySignature.isInExcludedClasses() =
-        excludedClasses.any { it.startsWith(name) }
+        excludedClasses.any { it.startsWith(name) } ||
+                (includedClasses.isNotEmpty() && includedClasses.none { it.startsWith(name) })
 
     fun ClassBinarySignature.isPublicAndAccessible(): Boolean =
         isEffectivelyPublic &&

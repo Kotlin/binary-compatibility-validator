@@ -34,4 +34,11 @@ open class ApiValidationExtension {
      * Example of such a class could be `com.package.android.BuildConfig`.
      */
     public var ignoredClasses: MutableSet<String> = HashSet()
+
+
+    public var publicMarkers: MutableSet<String> = HashSet()
+
+    public var publicPackages: MutableSet<String> = HashSet()
+
+    public var publicClasses: MutableSet<String> = HashSet()
 }
