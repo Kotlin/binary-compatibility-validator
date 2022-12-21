@@ -34,4 +34,28 @@ open class ApiValidationExtension {
      * Example of such a class could be `com.package.android.BuildConfig`.
      */
     public var ignoredClasses: MutableSet<String> = HashSet()
+
+    /**
+     * Fully qualified names of annotations that can be used to explicitly mark public declarations. 
+     * If at least one of [publicMarkers], [publicPackages] or [publicClasses] is defined,
+     * all declarations not covered by any of them will be considered non-public. 
+     * [ignoredPackages], [ignoredClasses] and [nonPublicMarkers] can be used for additional filtering.
+     */
+    public var publicMarkers: MutableSet<String> = HashSet()
+
+    /**
+     * Fully qualified package names that contain public declarations. 
+     * If at least one of [publicMarkers], [publicPackages] or [publicClasses] is defined,
+     * all declarations not covered by any of them will be considered non-public. 
+     * [ignoredPackages], [ignoredClasses] and [nonPublicMarkers] can be used for additional filtering.
+     */
+    public var publicPackages: MutableSet<String> = HashSet()
+
+    /**
+     * Fully qualified names of public classes.
+     * If at least one of [publicMarkers], [publicPackages] or [publicClasses] is defined,
+     * all declarations not covered by any of them will be considered non-public.
+     * [ignoredPackages], [ignoredClasses] and [nonPublicMarkers] can be used for additional filtering.
+     */
+    public var publicClasses: MutableSet<String> = HashSet()
 }
