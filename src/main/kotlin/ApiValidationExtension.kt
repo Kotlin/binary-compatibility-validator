@@ -58,4 +58,10 @@ open class ApiValidationExtension {
      * [ignoredPackages], [ignoredClasses] and [nonPublicMarkers] can be used for additional filtering.
      */
     public var publicClasses: MutableSet<String> = HashSet()
+
+    /**
+     * Non-default Gradle SourceSet names that should be validated.
+     * By default, only the `main` source set is checked.
+     */
+    public var additionalSourceSets: MutableSet<String> = HashSet()
 }
