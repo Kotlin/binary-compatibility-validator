@@ -149,7 +149,7 @@ private class TargetConfig constructor(
 
     fun apiTaskName(suffix: String) = when (targetName) {
         null, "" -> "api$suffix"
-        else     -> "${targetName}Api$suffix"
+        else -> "${targetName}Api$suffix"
     }
 
     val apiDir
@@ -262,7 +262,11 @@ private fun Project.configureCheckTasks(
         isEnabled = apiCheckEnabled(projectName, extension) && apiBuild.map { it.enabled }.getOrElse(true)
         group = "verification"
         description = "Checks signatures of public API against the golden value in API folder for $projectName"
-        compareApiDumps(apiReferenceDir = apiCheckDir.get(), apiBuildDir = apiBuildDir.get())
+        compareApiDumps(
+            apiReferenceDir = apiCheckDir.get(),
+            apiBuildDir = apiBuildDir.get(),
+            shouldCheckNewPublicElements = extension.shouldCheckNewPublicElements
+        )
         dependsOn(apiBuild)
     }
 

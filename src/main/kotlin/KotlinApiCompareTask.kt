@@ -14,7 +14,7 @@ import java.io.*
 import java.util.TreeMap
 import javax.inject.Inject
 
-open class KotlinApiCompareTask @Inject constructor(private val objects: ObjectFactory): DefaultTask() {
+open class KotlinApiCompareTask @Inject constructor(private val objects: ObjectFactory) : DefaultTask() {
 
     /*
      * Nullability and optionality is a workaround for
@@ -32,7 +32,15 @@ open class KotlinApiCompareTask @Inject constructor(private val objects: ObjectF
     @Optional
     var nonExistingProjectApiDir: String? = null
 
-    fun compareApiDumps(apiReferenceDir: File, apiBuildDir: File) {
+    // Used for diagnostic error message when projectApiDir doesn't exist
+    @Input
+    var shouldCheckNewPublicElements: Boolean = true
+
+    fun compareApiDumps(
+        apiReferenceDir: File,
+        apiBuildDir: File,
+        shouldCheckNewPublicElements: Boolean
+    ) {
         if (apiReferenceDir.exists()) {
             projectApiDir = apiReferenceDir
         } else {
@@ -40,6 +48,7 @@ open class KotlinApiCompareTask @Inject constructor(private val objects: ObjectF
             nonExistingProjectApiDir = apiReferenceDir.toString()
         }
         this.apiBuildDir = apiBuildDir
+        this.shouldCheckNewPublicElements = shouldCheckNewPublicElements
     }
 
     @InputDirectory
@@ -123,7 +132,12 @@ open class KotlinApiCompareTask @Inject constructor(private val objects: ObjectF
             return null
 
         val patch = DiffUtils.diff(checkLines, builtLines)
+        if (!shouldCheckNewPublicElements && !isContainsChangesOrDeletes(patch)) return null
         val diff = DiffUtils.generateUnifiedDiff(checkFile.toString(), builtFile.toString(), checkLines, patch, 3)
         return diff.joinToString("\n")
+    }
+
+    private fun isContainsChangesOrDeletes(patch: Patch<String>): Boolean {
+        return patch.deltas.any { it is ChangeDelta || it is DeleteDelta }
     }
 }

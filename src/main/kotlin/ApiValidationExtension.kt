@@ -7,6 +7,13 @@ package kotlinx.validation
 
 open class ApiValidationExtension {
 
+
+    /**
+     * Disables validation of new public elements.
+     * It will check only changes and deletes to current api.
+     */
+    public var shouldCheckNewPublicElements = true
+
     /**
      * Disables API validation checks completely.
      */
