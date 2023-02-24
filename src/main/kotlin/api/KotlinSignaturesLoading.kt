@@ -5,13 +5,20 @@
 
 package kotlinx.validation.api
 
-import kotlinx.metadata.jvm.*
-import kotlinx.validation.*
-import org.objectweb.asm.*
-import org.objectweb.asm.tree.*
-import java.io.*
+import kotlinx.metadata.jvm.JvmFieldSignature
+import kotlinx.metadata.jvm.JvmMethodSignature
+import kotlinx.metadata.jvm.KotlinClassMetadata
+import kotlinx.validation.ExternalApi
+import org.objectweb.asm.ClassReader
+import org.objectweb.asm.Opcodes
+import org.objectweb.asm.tree.AnnotationNode
+import org.objectweb.asm.tree.ClassNode
+import org.objectweb.asm.tree.FieldNode
+import org.objectweb.asm.tree.MethodNode
+import java.io.InputStream
 import java.util.*
-import java.util.jar.*
+import java.util.jar.JarFile
+import java.util.regex.Pattern
 
 @ExternalApi
 @Suppress("unused")
@@ -148,6 +155,7 @@ public fun List<ClassBinarySignature>.filterOutAnnotated(targetAnnotations: Set<
 
 @ExternalApi
 public fun List<ClassBinarySignature>.filterOutNonPublic(
+    nonPublic: Collection<Pattern> = emptyList(),
     nonPublicPackages: Collection<String> = emptyList(),
     nonPublicClasses: Collection<String> = emptyList()
 ): List<ClassBinarySignature> {
@@ -156,6 +164,8 @@ public fun List<ClassBinarySignature>.filterOutNonPublic(
     val excludedClasses = nonPublicClasses.map(pathMapper)
 
     val classByName = associateBy { it.name }
+
+    fun ClassBinarySignature.isNonPublic() = nonPublic.any { it.matcher(name).matches() }
 
     fun ClassBinarySignature.isInNonPublicPackage() =
         nonPublicPackagePaths.any { name.startsWith(it) }
@@ -189,7 +199,8 @@ public fun List<ClassBinarySignature>.filterOutNonPublic(
         )
     }
 
-    return filter { !it.isInNonPublicPackage() && !it.isInExcludedClasses() && it.isPublicAndAccessible() }
+
+    return filter { !it.isInNonPublicPackage() && !it.isInExcludedClasses() && !it.isNonPublic() && it.isPublicAndAccessible() }
         .map { it.flattenNonPublicBases() }
         .filterNot { it.isNotUsedWhenEmpty && it.memberSignatures.isEmpty() }
 }
