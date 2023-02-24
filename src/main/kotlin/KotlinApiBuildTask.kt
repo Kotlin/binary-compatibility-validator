@@ -11,6 +11,7 @@ import org.gradle.api.file.*
 import org.gradle.api.tasks.*
 import java.io.*
 import java.util.jar.JarFile
+import java.util.regex.Pattern
 import javax.inject.Inject
 
 open class KotlinApiBuildTask @Inject constructor(
@@ -53,6 +54,12 @@ open class KotlinApiBuildTask @Inject constructor(
         get() = _ignoredClasses ?: extension?.ignoredClasses ?: emptySet()
         set(value) { _ignoredClasses = value }
 
+    private var _ignored: Set<Pattern>? = null
+    @get:Input
+    var ignored : Set<Pattern>
+        get() = _ignored ?: extension?.ignored?.map { Pattern.compile(it) }?.toSet() ?: emptySet()
+        set(value) { _ignored = value }
+
     @get:Internal
     internal val projectName = project.name
 
@@ -79,7 +86,7 @@ open class KotlinApiBuildTask @Inject constructor(
 
 
         val filteredSignatures = signatures
-            .filterOutNonPublic(ignoredPackages, ignoredClasses)
+            .filterOutNonPublic(ignored, ignoredPackages, ignoredClasses)
             .filterOutAnnotated(nonPublicMarkers.map { it.replace(".", "/") }.toSet())
 
         outputApiDir.resolve("$projectName.api").bufferedWriter().use { writer ->

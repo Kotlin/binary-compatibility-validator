@@ -34,4 +34,12 @@ open class ApiValidationExtension {
      * Example of such a class could be `com.package.android.BuildConfig`.
      */
     public var ignoredClasses: MutableSet<String> = HashSet()
+
+    /**
+     * Defines a regex pattern used to define classes and packages that are ignored by the API check.
+     *
+     * Example of such a package could be `.+\/internal\/.+`.
+     * An example of such a class could be `.+\/BuildConfig`
+     */
+    public var ignored: MutableSet<String> = HashSet()
 }
