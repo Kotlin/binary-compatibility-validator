@@ -73,7 +73,7 @@ configurations.implementation {
 
 dependencies {
     implementation(gradleApi())
-    implementation("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.5.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.6.0")
     implementation("org.ow2.asm:asm:9.2")
     implementation("org.ow2.asm:asm-tree:9.2")
     implementation("com.googlecode.java-diff-utils:diffutils:1.3.0")
@@ -95,15 +95,15 @@ dependencies {
 
 tasks.compileKotlin {
     kotlinOptions.apply {
+        allWarningsAsErrors = true
+
         languageVersion = "1.4"
         apiVersion = "1.4"
         jvmTarget = "1.8"
-        // TODO revert that when updating Kotlin. This flag also affects kts files and prevents
-        // the project from build due to "w: Language version 1.4 is deprecated and its support will be removed"
-//        allWarningsAsErrors = true
-        // Suppress the warning about kotlin-reflect 1.3 and kotlin-stdlib 1.4 in the classpath.
-        // It's incorrect in this case because we're limiting API version to 1.3 anyway.
-        freeCompilerArgs += "-Xskip-runtime-version-check"
+
+        // Suppressing "w: Language version 1.4 is deprecated and its support will be removed" message
+        // because LV=1.4 in practice is mandatory as it is a default language version in Gradle 7.0+ for users' kts scripts.
+        freeCompilerArgs += "-Xsuppress-version-warnings"
     }
 }
 
