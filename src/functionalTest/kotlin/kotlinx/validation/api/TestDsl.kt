@@ -9,6 +9,8 @@ import kotlinx.validation.API_DIR
 import org.gradle.testkit.runner.GradleRunner
 import org.intellij.lang.annotations.Language
 import java.io.*
+import java.io.File
+import java.io.InputStreamReader
 
 internal fun BaseKotlinGradleTest.test(fn: BaseKotlinScope.() -> Unit): GradleRunner {
     val baseKotlinScope = BaseKotlinScope()

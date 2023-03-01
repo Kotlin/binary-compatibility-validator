@@ -1,12 +1,9 @@
-import com.gradle.publish.*
-import java.io.*
-import kotlinx.validation.build.*
+import kotlinx.validation.build.mavenCentralMetadata
+import kotlinx.validation.build.mavenRepositoryPublishing
+import kotlinx.validation.build.signPublicationIfKeyPresent
 import org.gradle.api.attributes.TestSuiteType.FUNCTIONAL_TEST
-import org.gradle.api.internal.tasks.testing.*
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
-import org.jetbrains.kotlin.gradle.tasks.*
-
 
 plugins {
     kotlin("jvm")
@@ -72,7 +69,7 @@ dependencies {
     implementation("org.ow2.asm:asm-tree:9.2")
     implementation("com.googlecode.java-diff-utils:diffutils:1.3.0")
     compileOnly("org.jetbrains.kotlin.multiplatform:org.jetbrains.kotlin.multiplatform.gradle.plugin:1.8.10")
-    //compileOnly("com.android.tools.build:gradle:${androidGradlePluginVersion}")
+    compileOnly("com.android.tools.build:gradle:${androidGradlePluginVersion}")
 
     // The test needs the full kotlin multiplatform plugin loaded as it has no visibility of previously loaded plugins,
     // unlike the regular way gradle loads plugins.
@@ -192,4 +189,46 @@ testing {
 
 tasks.withType<Sign>().configureEach {
     onlyIf("only sign if signatory is present") { signatory?.keyId != null }
+}
+
+@Suppress("UnstableApiUsage")
+testing {
+    suites {
+        withType<JvmTestSuite>().configureEach {
+            useJUnit()
+            dependencies {
+                implementation(project())
+                implementation("org.assertj:assertj-core:3.18.1")
+                implementation(project.dependencies.kotlin("test-junit").toString())
+            }
+        }
+
+        val test by getting(JvmTestSuite::class) {
+            description = "Regular unit tests"
+        }
+
+        val functionalTest by creating(JvmTestSuite::class) {
+            testType.set(FUNCTIONAL_TEST)
+            description = "Functional Plugin tests using Gradle TestKit"
+
+            dependencies {
+                implementation(files(createClasspathManifest))
+
+                implementation(gradleApi())
+                implementation(gradleTestKit())
+            }
+
+            targets.configureEach {
+                testTask.configure {
+                    shouldRunAfter(test)
+                }
+            }
+        }
+
+        gradlePlugin.testSourceSets(functionalTest.sources)
+
+        tasks.check {
+            dependsOn(functionalTest)
+        }
+    }
 }
