@@ -16,7 +16,3 @@ java {
     withSourcesJar()
     withJavadocJar()
 }
-
-tasks.withType<Test>().configureEach {
-    useJUnit()
-}
