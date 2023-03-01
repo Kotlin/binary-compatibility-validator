@@ -21,7 +21,7 @@ class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
         val extension = extensions.create("apiValidation", ApiValidationExtension::class.java)
         validateExtension(extension)
         allprojects {
-            configureProject(it, extension)
+            configureProject(this, extension)
         }
     }
 
@@ -48,7 +48,7 @@ class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
         action: Action<AppliedPlugin>
     ) = project.pluginManager.withPlugin(name) {
         if (project.name in extension.ignoredProjects) return@withPlugin
-        action.execute(it)
+        action.execute(this)
     }
 
     private fun configureMultiplatformPlugin(
@@ -60,14 +60,16 @@ class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
 
         // Create common tasks for multiplatform
         val commonApiDump = project.tasks.register("apiDump") {
-            it.group = "other"
-            it.description = "Task that collects all target specific dump tasks"
+            group = "other"
+            description = "Task that collects all target specific dump tasks"
         }
 
         val commonApiCheck: TaskProvider<Task> = project.tasks.register("apiCheck") {
-            it.group = "verification"
-            it.description = "Shortcut task that depends on all specific check tasks"
-        }.apply { project.tasks.named("check") { it.dependsOn(this) } }
+            group = "verification"
+            description = "Shortcut task that depends on all specific check tasks"
+        }
+
+        project.tasks.named("check") { dependsOn(commonApiCheck) }
 
         val jvmTargetCountProvider = project.provider {
             kotlin.targets.count {
@@ -84,16 +86,17 @@ class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
 
         kotlin.targets.matching {
             it.platformType == KotlinPlatformType.jvm || it.platformType == KotlinPlatformType.androidJvm
-        }.all { target ->
+        }.all {
+            val target = this
             val targetConfig = TargetConfig(project, target.name, dirConfig)
             if (target.platformType == KotlinPlatformType.jvm) {
                 target.compilations.matching { it.name == "main" }.all {
-                    project.configureKotlinCompilation(it, extension, targetConfig, commonApiDump, commonApiCheck)
+                    project.configureKotlinCompilation(this, extension, targetConfig, commonApiDump, commonApiCheck)
                 }
             } else if (target.platformType == KotlinPlatformType.androidJvm) {
                 target.compilations.matching { it.name == "release" }.all {
                     project.configureKotlinCompilation(
-                        it,
+                        this,
                         extension,
                         targetConfig,
                         commonApiDump,
@@ -110,7 +113,6 @@ class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
         extension: ApiValidationExtension
     ) {
         configureAndroidPluginForKotlinLibrary(project, extension)
-
     }
 
     private fun configureAndroidPluginForKotlinLibrary(
@@ -122,7 +124,7 @@ class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
         androidExtension.target.compilations.matching {
             it.compilationName == "release"
         }.all {
-            project.configureKotlinCompilation(it, extension, useOutput = true)
+            project.configureKotlinCompilation(this, extension, useOutput = true)
         }
     }
 
@@ -144,10 +146,10 @@ private class TargetConfig constructor(
 
     fun apiTaskName(suffix: String) = when (targetName) {
         null, "" -> "api$suffix"
-        else     -> "${targetName}Api$suffix"
+        else -> "${targetName}Api$suffix"
     }
 
-    val apiDir
+    val apiDir: Provider<String>
         get() = dirConfig?.map { dirConfig ->
             when (dirConfig) {
                 DirConfig.COMMON -> API_DIR
@@ -162,6 +164,7 @@ private enum class DirConfig {
      * Used in single target projects
      */
     COMMON,
+
     /**
      * Target-based directory, used in multitarget setups.
      * E.g. for the project with targets jvm and android,
@@ -186,7 +189,10 @@ private fun Project.configureKotlinCompilation(
     val apiBuild = task<KotlinApiBuildTask>(targetConfig.apiTaskName("Build")) {
         // Do not enable task for empty umbrella modules
         isEnabled =
-            apiCheckEnabled(projectName, extension) && compilation.allKotlinSourceSets.any { it.kotlin.srcDirs.any { it.exists() } }
+            apiCheckEnabled(
+                projectName,
+                extension
+            ) && compilation.allKotlinSourceSets.any { it.kotlin.srcDirs.any { it.exists() } }
         // 'group' is not specified deliberately, so it will be hidden from ./gradlew tasks
         description =
             "Builds Kotlin API for 'main' compilations of $projectName. Complementary task and shouldn't be called manually"
@@ -275,11 +281,11 @@ private fun Project.configureCheckTasks(
         dependsOn(apiBuild)
     }
 
-    commonApiDump?.configure { it.dependsOn(apiDump) }
+    commonApiDump?.configure { dependsOn(apiDump) }
 
     when (commonApiCheck) {
-        null -> project.tasks.named("check").configure { it.dependsOn(apiCheck) }
-        else -> commonApiCheck.configure { it.dependsOn(apiCheck) }
+        null -> project.tasks.named("check").configure { dependsOn(apiCheck) }
+        else -> commonApiCheck.configure { dependsOn(apiCheck) }
     }
 }
 

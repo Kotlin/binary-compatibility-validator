@@ -14,6 +14,7 @@ import java.io.*
 import java.util.TreeMap
 import javax.inject.Inject
 
+@CacheableTask
 open class KotlinApiCompareTask @Inject constructor(private val objects: ObjectFactory): DefaultTask() {
 
     /*
@@ -78,11 +79,11 @@ open class KotlinApiCompareTask @Inject constructor(private val objects: ObjectF
         val apiBuildDirFiles = caseInsensitiveMap()
         val expectedApiFiles = caseInsensitiveMap()
 
-        objects.fileTree().from(apiBuildDir).visit { file ->
-            apiBuildDirFiles[file.relativePath] = file.relativePath
+        objects.fileTree().from(apiBuildDir).visit {
+            apiBuildDirFiles[relativePath] = relativePath
         }
-        objects.fileTree().from(projectApiDir).visit { file ->
-            expectedApiFiles[file.relativePath] = file.relativePath
+        objects.fileTree().from(projectApiDir).visit {
+            expectedApiFiles[relativePath] = relativePath
         }
 
         if (apiBuildDirFiles.size != 1) {

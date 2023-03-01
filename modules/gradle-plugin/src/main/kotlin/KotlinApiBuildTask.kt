@@ -13,8 +13,8 @@ import java.io.*
 import java.util.jar.JarFile
 import javax.inject.Inject
 
-open class KotlinApiBuildTask @Inject constructor(
-) : DefaultTask() {
+@CacheableTask
+open class KotlinApiBuildTask @Inject constructor() : DefaultTask() {
 
     private val extension = project.apiValidationExtensionOrNull
 

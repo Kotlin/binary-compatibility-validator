@@ -12,8 +12,7 @@ import org.gradle.kotlin.dsl.invoke
  */
 plugins {
     id("kotlinx.validation.build.conventions.java-base")
-    //id("org.gradle.kotlin.kotlin-dsl") // TODO remove 'embedded-kotlin', add 'kotlin-dsl'
-    id("org.gradle.kotlin.embedded-kotlin")
+    id("org.gradle.kotlin.kotlin-dsl")
     id("com.gradle.plugin-publish")
 }
 
@@ -24,5 +23,5 @@ tasks.compileKotlin {
 }
 
 tasks.validatePlugins {
-    //enableStricterValidation.set(true) // TODO enable validation
+    enableStricterValidation.set(true)
 }
