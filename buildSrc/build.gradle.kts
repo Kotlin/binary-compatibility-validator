@@ -3,16 +3,11 @@
  * Use of this source code is governed by the Apache 2.0 License that can be found in the LICENSE.txt file.
  */
 
-import org.jetbrains.kotlin.gradle.plugin.*
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.util.*
 
 plugins {
     `kotlin-dsl`
-}
-
-repositories {
-    jcenter()
 }
 
 val props = Properties().apply {
@@ -25,23 +20,27 @@ dependencies {
     implementation(kotlin("gradle-plugin-api", kotlinVersion))
 }
 
-sourceSets["main"].withConvention(KotlinSourceSet::class) { kotlin.srcDirs("src") }
+sourceSets {
+    configureEach {
+        when (name) {
+            SourceSet.MAIN_SOURCE_SET_NAME -> {
+                kotlin.setSrcDirs(listOf("src"))
+                resources.setSrcDirs(listOf("resources"))
+            }
 
-kotlinDslPluginOptions {
-    experimentalWarning.set(false)
-}
-
-tasks.withType<KotlinCompile>().configureEach {
-    kotlinOptions.apply {
-        allWarningsAsErrors = true
-        apiVersion = "1.3"
-        freeCompilerArgs += "-Xskip-runtime-version-check"
+            else -> {
+                kotlin.setSrcDirs(emptyList<String>())
+                resources.setSrcDirs(emptyList<String>())
+            }
+        }
+        java.setSrcDirs(emptyList<String>())
+        groovy.setSrcDirs(emptyList<String>())
     }
 }
 
-// Silence the following warning:
-// 'compileJava' task (current target is 17) and 'compileKotlin' task (current target is 1.8) jvm target compatibility should be set to the same Java version.
-java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+
+tasks.withType<KotlinCompile>().configureEach {
+    kotlinOptions {
+        allWarningsAsErrors = true
+    }
 }

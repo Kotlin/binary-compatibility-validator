@@ -6,8 +6,9 @@
 package kotlinx.validation.api
 
 import kotlinx.validation.API_DIR
-import org.gradle.testkit.runner.*
-import java.io.*
+import org.gradle.testkit.runner.GradleRunner
+import java.io.File
+import java.io.InputStreamReader
 
 internal fun BaseKotlinGradleTest.test(fn: BaseKotlinScope.() -> Unit): GradleRunner {
     val baseKotlinScope = BaseKotlinScope()
@@ -30,6 +31,7 @@ internal fun BaseKotlinGradleTest.test(fn: BaseKotlinScope.() -> Unit): GradleRu
         .withProjectDir(rootProjectDir)
         .withPluginClasspath()
         .withArguments(baseKotlinScope.runner.arguments)
+        .withGradleVersion("7.4.2")
         .addPluginTestRuntimeClasspath()
     // disabled because of: https://github.com/gradle/gradle/issues/6862
     // .withDebug(baseKotlinScope.runner.debug)
@@ -38,7 +40,7 @@ internal fun BaseKotlinGradleTest.test(fn: BaseKotlinScope.() -> Unit): GradleRu
 /**
  * same as [file][FileContainer.file], but prepends "src/${sourceSet}/kotlin" before given `classFileName`
  */
-internal fun FileContainer.kotlin(classFileName: String, sourceSet:String = "main", fn: AppendableScope.() -> Unit) {
+internal fun FileContainer.kotlin(classFileName: String, sourceSet: String = "main", fn: AppendableScope.() -> Unit) {
     require(classFileName.endsWith(".kt")) {
         "ClassFileName must end with '.kt'"
     }
@@ -50,7 +52,7 @@ internal fun FileContainer.kotlin(classFileName: String, sourceSet:String = "mai
 /**
  * same as [file][FileContainer.file], but prepends "src/${sourceSet}/java" before given `classFileName`
  */
-internal fun FileContainer.java(classFileName: String, sourceSet:String = "main", fn: AppendableScope.() -> Unit) {
+internal fun FileContainer.java(classFileName: String, sourceSet: String = "main", fn: AppendableScope.() -> Unit) {
     require(classFileName.endsWith(".java")) {
         "ClassFileName must end with '.java'"
     }
@@ -132,7 +134,7 @@ internal class BaseKotlinScope : FileContainer {
 internal class DirectoryScope(
     val dirPath: String,
     val parent: FileContainer
-): FileContainer {
+) : FileContainer {
 
     override fun file(fileName: String, fn: AppendableScope.() -> Unit) {
         parent.file("$dirPath/$fileName", fn)
