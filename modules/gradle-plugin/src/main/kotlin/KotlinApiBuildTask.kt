@@ -99,7 +99,7 @@ open class KotlinApiBuildTask @Inject constructor(
         val filteredSignatures = signatures
             .retainExplicitlyIncludedIfDeclared(publicPackages, publicClasses, publicMarkers)
             .filterOutNonPublic(ignoredPackages, ignoredClasses)
-            .filterOutAnnotated(nonPublicMarkers.map(::replaceDots).toSet())
+            .filterOutAnnotated(nonPublicMarkers.map { it.replace(".", "/") }.toSet())
 
         outputApiDir.resolve("$projectName.api").bufferedWriter().use { writer ->
             filteredSignatures
@@ -126,4 +126,3 @@ open class KotlinApiBuildTask @Inject constructor(
         }
     }
 }
-

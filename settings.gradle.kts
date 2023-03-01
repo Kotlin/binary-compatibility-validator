@@ -24,3 +24,12 @@ dependencyResolutionManagement {
         google()
     }
 }
+
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+enableFeaturePreview("STABLE_CONFIGURATION_CACHE")
+
+
+include(
+    ":modules:gradle-plugin",
+    ":modules:signatures-generator",
+)

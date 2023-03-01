@@ -6,6 +6,10 @@
 package kotlinx.validation.test
 
 import kotlinx.validation.api.*
+import kotlinx.validation.api.buildGradleKts
+import kotlinx.validation.api.kotlin
+import kotlinx.validation.api.resolve
+import kotlinx.validation.api.test
 import org.junit.Test
 
 class MixedMarkersTest : BaseKotlinGradleTest() {
