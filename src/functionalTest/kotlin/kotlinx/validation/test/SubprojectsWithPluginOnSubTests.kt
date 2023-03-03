@@ -33,29 +33,29 @@ internal class SubprojectsWithPluginOnSubTests : BaseKotlinGradleTest() {
      */
     private fun BaseKotlinScope.createProjectHierarchyWithPluginOnSub1() {
         settingsGradleKts {
-            resolve("examples/gradle/settings/settings-with-hierarchy.gradle.kts")
+            resolve("/examples/gradle/settings/settings-with-hierarchy.gradle.kts")
         }
         buildGradleKts {
-            resolve("examples/gradle/base/withoutPlugin.gradle.kts")
+            resolve("/examples/gradle/base/withoutPlugin.gradle.kts")
         }
         dir("sub1") {
             buildGradleKts {
-                resolve("examples/gradle/base/withPlugin-noKotlinVersion.gradle.kts")
+                resolve("/examples/gradle/base/withPlugin-noKotlinVersion.gradle.kts")
             }
             dir("subsub1") {
                 buildGradleKts {
-                    resolve("examples/gradle/base/withoutPlugin-noKotlinVersion.gradle.kts")
+                    resolve("/examples/gradle/base/withoutPlugin-noKotlinVersion.gradle.kts")
                 }
             }
             dir("subsub2") {
                 buildGradleKts {
-                    resolve("examples/gradle/base/withoutPlugin-noKotlinVersion.gradle.kts")
+                    resolve("/examples/gradle/base/withoutPlugin-noKotlinVersion.gradle.kts")
                 }
             }
         }
         dir("sub2") {
             buildGradleKts {
-                resolve("examples/gradle/base/withoutPlugin-noKotlinVersion.gradle.kts")
+                resolve("/examples/gradle/base/withoutPlugin-noKotlinVersion.gradle.kts")
             }
         }
     }
@@ -170,10 +170,10 @@ internal class SubprojectsWithPluginOnSubTests : BaseKotlinGradleTest() {
             dir("sub1") {
                 dir("subsub2") {
                     kotlin("Subsub2Class.kt") {
-                        resolve("examples/classes/Subsub2Class.kt")
+                        resolve("/examples/classes/Subsub2Class.kt")
                     }
                     apiFile(projectName = "subsub2") {
-                        resolve("examples/classes/Subsub2Class.dump")
+                        resolve("/examples/classes/Subsub2Class.dump")
                     }
                 }
             }
@@ -198,18 +198,18 @@ internal class SubprojectsWithPluginOnSubTests : BaseKotlinGradleTest() {
 
                 dir("subsub1") {
                     kotlin("Subsub1Class.kt") {
-                        resolve("examples/classes/Subsub1Class.kt")
+                        resolve("/examples/classes/Subsub1Class.kt")
                     }
                     apiFile(projectName = "subsub1") {
-                        resolve("examples/classes/Subsub1Class.dump")
+                        resolve("/examples/classes/Subsub1Class.dump")
                     }
                 }
                 dir("subsub2") {
                     kotlin("Subsub2Class.kt") {
-                        resolve("examples/classes/Subsub2Class.kt")
+                        resolve("/examples/classes/Subsub2Class.kt")
                     }
                     apiFile(projectName = "subsub2") {
-                        resolve("examples/classes/Subsub2Class.dump")
+                        resolve("/examples/classes/Subsub2Class.dump")
                     }
                 }
             }
@@ -256,12 +256,12 @@ internal class SubprojectsWithPluginOnSubTests : BaseKotlinGradleTest() {
             dir("sub1") {
                 dir("subsub1") {
                     kotlin("Subsub1Class.kt") {
-                        resolve("examples/classes/Subsub1Class.kt")
+                        resolve("/examples/classes/Subsub1Class.kt")
                     }
                 }
                 dir("subsub2") {
                     kotlin("Subsub2Class.kt") {
-                        resolve("examples/classes/Subsub2Class.kt")
+                        resolve("/examples/classes/Subsub2Class.kt")
                     }
                 }
             }
@@ -286,12 +286,12 @@ internal class SubprojectsWithPluginOnSubTests : BaseKotlinGradleTest() {
 
             val apiSubsub1 = rootProjectDir.resolve("sub1/subsub1/api/subsub1.api")
             assertTrue(apiSubsub1.exists(), "api dump file ${apiSubsub1.path} should exist")
-            val apiSubsub1Expected = readFileList("examples/classes/Subsub1Class.dump")
+            val apiSubsub1Expected = readFileList("/examples/classes/Subsub1Class.dump")
             Assertions.assertThat(apiSubsub1.readText()).isEqualToIgnoringNewLines(apiSubsub1Expected)
 
             val apiSubsub2 = rootProjectDir.resolve("sub1/subsub2/api/subsub2.api")
             assertTrue(apiSubsub2.exists(), "api dump file ${apiSubsub2.path} should exist")
-            val apiSubsub2Expected = readFileList("examples/classes/Subsub2Class.dump")
+            val apiSubsub2Expected = readFileList("/examples/classes/Subsub2Class.dump")
             Assertions.assertThat(apiSubsub2.readText()).isEqualToIgnoringNewLines(apiSubsub2Expected)
 
             val apiSub2 = rootProjectDir.resolve("sub2/api/sub2.api")
