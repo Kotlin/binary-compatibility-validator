@@ -6,24 +6,28 @@
 package kotlinx.validation.test
 
 import kotlinx.validation.api.*
-import org.junit.*
+import kotlinx.validation.api.buildGradleKts
+import kotlinx.validation.api.kotlin
+import kotlinx.validation.api.resolve
+import kotlinx.validation.api.test
+import org.junit.Test
 
-class NonPublicMarkersTest : BaseKotlinGradleTest() {
+class MixedMarkersTest : BaseKotlinGradleTest() {
 
     @Test
-    fun testIgnoredMarkersOnProperties() {
+    fun testMixedMarkers() {
         val runner = test {
             buildGradleKts {
                 resolve("/examples/gradle/base/withPlugin.gradle.kts")
-                resolve("/examples/gradle/configuration/nonPublicMarkers/markers.gradle.kts")
+                resolve("/examples/gradle/configuration/publicMarkers/mixedMarkers.gradle.kts")
             }
 
-            kotlin("Properties.kt") {
-                resolve("/examples/classes/Properties.kt")
+            kotlin("MixedAnnotations.kt") {
+                resolve("/examples/classes/MixedAnnotations.kt")
             }
 
             apiFile(projectName = rootProjectDir.name) {
-                resolve("/examples/classes/Properties.dump")
+                resolve("/examples/classes/MixedAnnotations.dump")
             }
 
             runner {
@@ -31,7 +35,7 @@ class NonPublicMarkersTest : BaseKotlinGradleTest() {
             }
         }
 
-        runner.build().apply {
+        runner.withDebug(true).build().apply {
             assertTaskSuccess(":apiCheck")
         }
     }
