@@ -7,8 +7,8 @@ package kotlinx.validation.api
 
 import kotlinx.validation.API_DIR
 import org.gradle.testkit.runner.GradleRunner
-import java.io.File
-import java.io.InputStreamReader
+import org.intellij.lang.annotations.Language
+import java.io.*
 
 internal fun BaseKotlinGradleTest.test(fn: BaseKotlinScope.() -> Unit): GradleRunner {
     val baseKotlinScope = BaseKotlinScope()
@@ -112,7 +112,7 @@ internal fun BaseKotlinScope.runner(fn: Runner.() -> Unit) {
     this.runner = runner
 }
 
-internal fun AppendableScope.resolve(fileName: String) {
+internal fun AppendableScope.resolve(@Language("file-reference") fileName: String) {
     this.files.add(fileName)
 }
 
@@ -149,8 +149,8 @@ internal class Runner {
     val arguments: MutableList<String> = mutableListOf("--configuration-cache")
 }
 
-internal fun readFileList(fileName: String): String {
-    val resource = BaseKotlinGradleTest::class.java.classLoader.getResource(fileName)
+internal fun readFileList(@Language("file-reference") fileName: String): String {
+    val resource = BaseKotlinGradleTest::class.java.getResource(fileName)
         ?: throw IllegalStateException("Could not find resource '$fileName'")
     return File(resource.toURI()).readText()
 }
