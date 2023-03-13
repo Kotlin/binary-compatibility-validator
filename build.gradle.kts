@@ -65,7 +65,7 @@ dependencies {
     implementation(libs.ow2.asm)
     implementation(libs.ow2.asmTree)
     implementation(libs.javaDiffUtils)
-    compileOnly(libs.gradlePlugin.android)
+    //compileOnly(libs.gradlePlugin.android)
     compileOnly(libs.gradlePlugin.kotlin)
 
     // The test needs the full kotlin multiplatform plugin loaded as it has no visibility of previously loaded plugins,
