@@ -1,7 +1,10 @@
 import com.gradle.publish.*
+import java.io.*
 import kotlinx.validation.build.*
 import org.gradle.api.attributes.TestSuiteType.FUNCTIONAL_TEST
+import org.gradle.api.internal.tasks.testing.*
 import org.jetbrains.kotlin.gradle.tasks.*
+
 
 plugins {
     kotlin("jvm")
@@ -43,7 +46,11 @@ val createClasspathManifest = tasks.register("createClasspathManifest") {
         .withPropertyName("outputDir")
 
     doLast {
-        file(outputDir.resolve("plugin-classpath.txt")).writeText(testPluginRuntimeConfiguration.joinToString("\n"))
+        file(outputDir.resolve("plugin-classpath.txt")).writeText(
+            testPluginRuntimeConfiguration.joinToString(
+                "\n"
+            )
+        )
     }
 }
 
@@ -136,7 +143,8 @@ gradlePlugin {
             id = "org.jetbrains.kotlinx.binary-compatibility-validator"
             implementationClass = "kotlinx.validation.BinaryCompatibilityValidatorPlugin"
             displayName = "Binary compatibility validator"
-            description = "Produces binary API dumps and compares them in order to verify that binary API is preserved"
+            description =
+                "Produces binary API dumps and compares them in order to verify that binary API is preserved"
         }
     }
 }
