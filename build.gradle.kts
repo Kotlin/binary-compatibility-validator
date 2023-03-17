@@ -3,6 +3,8 @@ import java.io.*
 import kotlinx.validation.build.*
 import org.gradle.api.attributes.TestSuiteType.FUNCTIONAL_TEST
 import org.gradle.api.internal.tasks.testing.*
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import org.jetbrains.kotlin.gradle.tasks.*
 
 
@@ -79,28 +81,31 @@ dependencies {
 }
 
 tasks.compileKotlin {
-    kotlinOptions.apply {
-        allWarningsAsErrors = true
-
-        languageVersion = "1.4"
-        apiVersion = "1.4"
-        jvmTarget = "1.8"
-
+    compilerOptions {
+        allWarningsAsErrors.set(true)
+        @Suppress("DEPRECATION") // Compatibility with Gradle 7 requires Kotlin 1.4
+        languageVersion.set(KotlinVersion.KOTLIN_1_4)
+        apiVersion.set(languageVersion)
+        jvmTarget.set(JvmTarget.JVM_1_8)
         // Suppressing "w: Language version 1.4 is deprecated and its support will be removed" message
         // because LV=1.4 in practice is mandatory as it is a default language version in Gradle 7.0+ for users' kts scripts.
-        freeCompilerArgs += "-Xsuppress-version-warnings"
+        freeCompilerArgs.addAll(
+            "-Xsuppress-version-warnings"
+        )
     }
 }
 
 java {
+    withJavadocJar()
+    withSourcesJar()
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(8))
     }
 }
 
 tasks.compileTestKotlin {
-    kotlinOptions {
-        languageVersion = "1.6"
+    compilerOptions {
+        languageVersion.set(KotlinVersion.KOTLIN_1_6)
     }
 }
 
@@ -113,20 +118,14 @@ tasks.withType<Test>().configureEach {
 properties["DeployVersion"]?.let { version = it }
 
 publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            from(components["java"])
-            mavenCentralMetadata()
-            mavenCentralArtifacts(project, project.sourceSets.main.get().allSource)
-        }
-
-        mavenRepositoryPublishing(project)
-        mavenCentralMetadata()
-    }
+    mavenRepositoryPublishing(project)
+    mavenCentralMetadata()
 
     publications.withType<MavenPublication>().all {
         signPublicationIfKeyPresent(this)
     }
+
+    // a publication will be created automatically by com.gradle.plugin-publish
 }
 
 @Suppress("UnstableApiUsage")
@@ -189,4 +188,8 @@ testing {
             dependsOn(functionalTest)
         }
     }
+}
+
+tasks.withType<Sign>().configureEach {
+    onlyIf("only sign if signatory is present") { signatory?.keyId != null }
 }
