@@ -6,7 +6,7 @@
 package kotlinx.validation.api
 
 import kotlinx.validation.API_DIR
-import org.gradle.testkit.runner.*
+import org.gradle.testkit.runner.GradleRunner
 import org.intellij.lang.annotations.Language
 import java.io.*
 
@@ -31,6 +31,7 @@ internal fun BaseKotlinGradleTest.test(fn: BaseKotlinScope.() -> Unit): GradleRu
         .withProjectDir(rootProjectDir)
         .withPluginClasspath()
         .withArguments(baseKotlinScope.runner.arguments)
+        .withGradleVersion("7.4.2")
         .addPluginTestRuntimeClasspath()
     // disabled because of: https://github.com/gradle/gradle/issues/6862
     // .withDebug(baseKotlinScope.runner.debug)
