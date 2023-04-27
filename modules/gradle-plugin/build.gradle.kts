@@ -1,7 +1,4 @@
-import com.gradle.publish.*
-import kotlinx.validation.build.*
 import org.gradle.api.attributes.TestSuiteType.FUNCTIONAL_TEST
-import org.jetbrains.kotlin.gradle.tasks.*
 
 plugins {
     kotlinx.validation.build.conventions.`kotlin-gradle-plugin`
@@ -34,7 +31,8 @@ val createClasspathManifest = tasks.register("createClasspathManifest") {
         .withPropertyName("outputDir")
 
     doLast {
-        file(outputDir.resolve("plugin-classpath.txt")).writeText(testPluginRuntimeConfiguration.joinToString("\n"))
+        file(outputDir.resolve("plugin-classpath.txt"))
+            .writeText(testPluginRuntimeConfiguration.joinToString("\n"))
     }
 }
 
@@ -48,8 +46,10 @@ dependencies {
     implementation(gradleApi())
     implementation(project(":modules:signatures-generator"))
     implementation(libs.javaDiffUtils)
-    compileOnly(libs.gradlePlugin.android)
     compileOnly(libs.gradlePlugin.kotlin)
+
+    // Android support is not yet implemented https://github.com/Kotlin/binary-compatibility-validator/issues/94
+    //compileOnly(libs.gradlePlugin.android)
 
     // The test needs the full kotlin multiplatform plugin loaded as it has no visibility of previously loaded plugins,
     // unlike the regular way gradle loads plugins.
@@ -72,7 +72,8 @@ gradlePlugin {
             id = "org.jetbrains.kotlinx.binary-compatibility-validator"
             implementationClass = "kotlinx.validation.BinaryCompatibilityValidatorPlugin"
             displayName = "Binary compatibility validator"
-            description = "Produces binary API dumps and compares them in order to verify that binary API is preserved"
+            description =
+                "Produces binary API dumps and compares them in order to verify that binary API is preserved"
         }
     }
 }
@@ -111,7 +112,7 @@ testing {
             }
         }
 
-        gradlePlugin.testSourceSets += functionalTest.sources
+        gradlePlugin.testSourceSets(functionalTest.sources)
 
         tasks.check {
             dependsOn(functionalTest)
