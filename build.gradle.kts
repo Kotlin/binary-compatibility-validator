@@ -1,7 +1,7 @@
-import com.gradle.publish.*
-import kotlinx.validation.build.*
+import kotlinx.validation.build.mavenCentralMetadata
+import kotlinx.validation.build.mavenRepositoryPublishing
+import kotlinx.validation.build.signPublicationIfKeyPresent
 import org.gradle.api.attributes.TestSuiteType.FUNCTIONAL_TEST
-import org.jetbrains.kotlin.gradle.tasks.*
 
 plugins {
     kotlin("jvm")
@@ -49,7 +49,8 @@ val createClasspathManifest = tasks.register("createClasspathManifest") {
         .withPropertyName("outputDir")
 
     doLast {
-        file(outputDir.resolve("plugin-classpath.txt")).writeText(testPluginRuntimeConfiguration.joinToString("\n"))
+        file(outputDir.resolve("plugin-classpath.txt"))
+            .writeText(testPluginRuntimeConfiguration.joinToString("\n"))
     }
 }
 
@@ -65,8 +66,10 @@ dependencies {
     implementation(libs.ow2.asm)
     implementation(libs.ow2.asmTree)
     implementation(libs.javaDiffUtils)
-    //compileOnly(libs.gradlePlugin.android)
     compileOnly(libs.gradlePlugin.kotlin)
+
+    // Android support is not yet implemented https://github.com/Kotlin/binary-compatibility-validator/issues/94
+    //compileOnly(libs.gradlePlugin.android)
 
     // The test needs the full kotlin multiplatform plugin loaded as it has no visibility of previously loaded plugins,
     // unlike the regular way gradle loads plugins.
@@ -131,7 +134,8 @@ gradlePlugin {
             id = "org.jetbrains.kotlinx.binary-compatibility-validator"
             implementationClass = "kotlinx.validation.BinaryCompatibilityValidatorPlugin"
             displayName = "Binary compatibility validator"
-            description = "Produces binary API dumps and compares them in order to verify that binary API is preserved"
+            description =
+                "Produces binary API dumps and compares them in order to verify that binary API is preserved"
         }
     }
 }
