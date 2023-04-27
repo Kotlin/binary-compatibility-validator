@@ -51,7 +51,8 @@ val createClasspathManifest = tasks.register("createClasspathManifest") {
         .withPropertyName("outputDir")
 
     doLast {
-        file(outputDir.resolve("plugin-classpath.txt")).writeText(
+        file(outputDir.resolve("plugin-classpath.txt"))
+            .writeText(
             testPluginRuntimeConfiguration.joinToString(
                 "\n"
             )
@@ -71,8 +72,10 @@ dependencies {
     implementation(libs.ow2.asm)
     implementation(libs.ow2.asmTree)
     implementation(libs.javaDiffUtils)
-    //compileOnly(libs.gradlePlugin.android)
     compileOnly(libs.gradlePlugin.kotlin)
+
+    // Android support is not yet implemented https://github.com/Kotlin/binary-compatibility-validator/issues/94
+    //compileOnly(libs.gradlePlugin.android)
 
     // The test needs the full kotlin multiplatform plugin loaded as it has no visibility of previously loaded plugins,
     // unlike the regular way gradle loads plugins.
