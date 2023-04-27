@@ -13,6 +13,7 @@ plugins {
 dependencies {
     implementation(libs.gradlePlugin.kotlin)
     implementation(libs.gradlePlugin.pluginPublishing)
+    implementation(libs.gradlePlugin.bcv)
 }
 
 tasks.withType<KotlinCompile>().configureEach {
