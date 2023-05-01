@@ -5,12 +5,10 @@
 
 package kotlinx.validation.api
 
+import java.io.*
 import kotlinx.validation.API_DIR
 import org.gradle.testkit.runner.GradleRunner
 import org.intellij.lang.annotations.Language
-import java.io.*
-import java.io.File
-import java.io.InputStreamReader
 
 internal fun BaseKotlinGradleTest.test(fn: BaseKotlinScope.() -> Unit): GradleRunner {
     val baseKotlinScope = BaseKotlinScope()
@@ -42,7 +40,11 @@ internal fun BaseKotlinGradleTest.test(fn: BaseKotlinScope.() -> Unit): GradleRu
 /**
  * same as [file][FileContainer.file], but prepends "src/${sourceSet}/kotlin" before given `classFileName`
  */
-internal fun FileContainer.kotlin(classFileName: String, sourceSet: String = "main", fn: AppendableScope.() -> Unit) {
+internal fun FileContainer.kotlin(
+    classFileName: String,
+    sourceSet: String = "main",
+    fn: AppendableScope.() -> Unit,
+) {
     require(classFileName.endsWith(".kt")) {
         "ClassFileName must end with '.kt'"
     }
@@ -54,7 +56,11 @@ internal fun FileContainer.kotlin(classFileName: String, sourceSet: String = "ma
 /**
  * same as [file][FileContainer.file], but prepends "src/${sourceSet}/java" before given `classFileName`
  */
-internal fun FileContainer.java(classFileName: String, sourceSet: String = "main", fn: AppendableScope.() -> Unit) {
+internal fun FileContainer.java(
+    classFileName: String,
+    sourceSet: String = "main",
+    fn: AppendableScope.() -> Unit,
+) {
     require(classFileName.endsWith(".java")) {
         "ClassFileName must end with '.java'"
     }

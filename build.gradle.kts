@@ -52,11 +52,7 @@ val createClasspathManifest = tasks.register("createClasspathManifest") {
 
     doLast {
         file(outputDir.resolve("plugin-classpath.txt"))
-            .writeText(
-            testPluginRuntimeConfiguration.joinToString(
-                "\n"
-            )
-        )
+            .writeText(testPluginRuntimeConfiguration.joinToString("\n"))
     }
 }
 
@@ -164,8 +160,8 @@ testing {
             useJUnit()
             dependencies {
                 implementation(project())
-                implementation("org.assertj:assertj-core:3.18.1")
-                implementation(project.dependencies.kotlin("test-junit").toString())
+                implementation(libs.assertJ.core)
+                implementation(libs.kotlin.test)
             }
         }
 
@@ -201,46 +197,4 @@ testing {
 
 tasks.withType<Sign>().configureEach {
     onlyIf("only sign if signatory is present") { signatory?.keyId != null }
-}
-
-@Suppress("UnstableApiUsage")
-testing {
-    suites {
-        withType<JvmTestSuite>().configureEach {
-            useJUnit()
-            dependencies {
-                implementation(project())
-                implementation(libs.assertJ.core)
-                implementation(libs.kotlin.test)
-            }
-        }
-
-        val test by getting(JvmTestSuite::class) {
-            description = "Regular unit tests"
-        }
-
-        val functionalTest by creating(JvmTestSuite::class) {
-            testType.set(FUNCTIONAL_TEST)
-            description = "Functional Plugin tests using Gradle TestKit"
-
-            dependencies {
-                implementation(files(createClasspathManifest))
-
-                implementation(gradleApi())
-                implementation(gradleTestKit())
-            }
-
-            targets.configureEach {
-                testTask.configure {
-                    shouldRunAfter(test)
-                }
-            }
-        }
-
-        gradlePlugin.testSourceSets(functionalTest.sources)
-
-        tasks.check {
-            dependsOn(functionalTest)
-        }
-    }
 }
