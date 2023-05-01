@@ -14,6 +14,7 @@ dependencies {
     implementation("org.gradle.kotlin:gradle-kotlin-dsl-plugins:$expectedKotlinDslPluginsVersion")
     implementation(libs.gradlePlugin.kotlin)
     implementation(libs.gradlePlugin.pluginPublishing)
+    implementation(libs.gradlePlugin.bcv)
 }
 
 tasks.withType<KotlinCompile>().configureEach {
