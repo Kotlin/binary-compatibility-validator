@@ -44,7 +44,7 @@ configurations.implementation {
 
 dependencies {
     implementation(gradleApi())
-    implementation(project(":modules:signatures-generator"))
+    implementation(projects.modules.signaturesGenerator)
     implementation(libs.javaDiffUtils)
     compileOnly(libs.gradlePlugin.kotlin)
 
