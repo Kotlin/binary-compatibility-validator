@@ -12,7 +12,7 @@ plugins {
 
 dependencies {
     implementation("org.gradle.kotlin:gradle-kotlin-dsl-plugins:$expectedKotlinDslPluginsVersion") {
-        because("allows applying the `kotlin-dsl` plugin in buildSrc convention plugins")
+        because("allows applying the `kotlin-dsl` / `embedded-kotlin` plugins in buildSrc convention plugins")
     }
     implementation(libs.gradlePlugin.kotlin)
     implementation(libs.gradlePlugin.pluginPublishing)
