@@ -12,7 +12,7 @@ import org.gradle.kotlin.dsl.invoke
  */
 plugins {
     id("kotlinx.validation.build.conventions.java-base")
-    //id("org.gradle.kotlin.kotlin-dsl") // TODO remove 'embedded-kotlin', add 'kotlin-dsl'
+    //id("org.gradle.kotlin.kotlin-dsl") // TODO remove 'embedded-kotlin', add 'kotlin-dsl' https://github.com/Kotlin/binary-compatibility-validator/pull/125
     id("org.gradle.kotlin.embedded-kotlin")
     id("com.gradle.plugin-publish")
 }
