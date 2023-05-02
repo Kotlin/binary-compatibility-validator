@@ -1,20 +1,23 @@
-import com.gradle.publish.*
-import java.io.*
-import kotlinx.validation.build.*
+import kotlinx.validation.build.mavenCentralMetadata
+import kotlinx.validation.build.mavenRepositoryPublishing
+import kotlinx.validation.build.signPublicationIfKeyPresent
 import org.gradle.api.attributes.TestSuiteType.FUNCTIONAL_TEST
-import org.gradle.api.internal.tasks.testing.*
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
-import org.jetbrains.kotlin.gradle.tasks.*
-
 
 plugins {
     kotlin("jvm")
     `java-gradle-plugin`
     id("com.gradle.plugin-publish")
+    kotlinx.validation.build.conventions.`java-base`
     signing
     `maven-publish`
     `jvm-test-suite`
+}
+
+group = "org.jetbrains.kotlinx"
+providers.gradleProperty("DeployVersion").orNull?.let {
+    version = it
 }
 
 sourceSets {
@@ -48,16 +51,10 @@ val createClasspathManifest = tasks.register("createClasspathManifest") {
         .withPropertyName("outputDir")
 
     doLast {
-        file(outputDir.resolve("plugin-classpath.txt")).writeText(
-            testPluginRuntimeConfiguration.joinToString(
-                "\n"
-            )
-        )
+        file(outputDir.resolve("plugin-classpath.txt"))
+            .writeText(testPluginRuntimeConfiguration.joinToString("\n"))
     }
 }
-
-val kotlinVersion: String by project
-val androidGradlePluginVersion: String = "7.2.2"
 
 configurations.implementation {
     exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
@@ -67,17 +64,19 @@ configurations.implementation {
 
 dependencies {
     implementation(gradleApi())
-    implementation("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.6.0")
-    implementation("org.ow2.asm:asm:9.2")
-    implementation("org.ow2.asm:asm-tree:9.2")
-    implementation("com.googlecode.java-diff-utils:diffutils:1.3.0")
-    compileOnly("org.jetbrains.kotlin.multiplatform:org.jetbrains.kotlin.multiplatform.gradle.plugin:1.8.10")
-    //compileOnly("com.android.tools.build:gradle:${androidGradlePluginVersion}")
+    implementation(libs.kotlinx.metadata)
+    implementation(libs.ow2.asm)
+    implementation(libs.ow2.asmTree)
+    implementation(libs.javaDiffUtils)
+    compileOnly(libs.gradlePlugin.kotlin)
+
+    // Android support is not yet implemented https://github.com/Kotlin/binary-compatibility-validator/issues/94
+    //compileOnly(libs.gradlePlugin.android)
 
     // The test needs the full kotlin multiplatform plugin loaded as it has no visibility of previously loaded plugins,
     // unlike the regular way gradle loads plugins.
-    testPluginRuntimeConfiguration("org.jetbrains.kotlin.multiplatform:org.jetbrains.kotlin.multiplatform.gradle.plugin:$kotlinVersion")
-    testPluginRuntimeConfiguration("com.android.tools.build:gradle:${androidGradlePluginVersion}")
+    testPluginRuntimeConfiguration(libs.gradlePlugin.android)
+    testPluginRuntimeConfiguration(libs.gradlePlugin.kotlin)
 }
 
 tasks.compileKotlin {
@@ -115,11 +114,17 @@ tasks.withType<Test>().configureEach {
     jvmArgs("-ea")
 }
 
-properties["DeployVersion"]?.let { version = it }
-
 publishing {
-    mavenRepositoryPublishing(project)
-    mavenCentralMetadata()
+    publications {
+        create<MavenPublication>("maven") {
+            from(components["java"])
+            artifact(tasks.javadocJar)
+            artifact(tasks.sourcesJar)
+        }
+
+        mavenRepositoryPublishing(project)
+        mavenCentralMetadata()
+    }
 
     publications.withType<MavenPublication>().all {
         signPublicationIfKeyPresent(this)
@@ -155,8 +160,8 @@ testing {
             useJUnit()
             dependencies {
                 implementation(project())
-                implementation("org.assertj:assertj-core:3.18.1")
-                implementation(project.dependencies.kotlin("test-junit").toString())
+                implementation(libs.assertJ.core)
+                implementation(libs.kotlin.test)
             }
         }
 
