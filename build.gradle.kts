@@ -13,6 +13,7 @@ plugins {
     signing
     `maven-publish`
     `jvm-test-suite`
+    id("org.jetbrains.kotlinx.binary-compatibility-validator")
 }
 
 group = "org.jetbrains.kotlinx"
