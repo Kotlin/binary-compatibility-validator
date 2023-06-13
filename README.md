@@ -88,6 +88,11 @@ apiValidation {
      * Flag to programmatically disable compatibility validator
      */
     validationDisabled = true
+
+    /**
+     * flavour to be tested in flavoured Android modules
+     */
+    testedFlavourName = "blue"
 }
 ```
 
@@ -122,6 +127,11 @@ apiValidation {
      * Flag to programmatically disable compatibility validator
      */
     validationDisabled = false
+
+    /**
+     * flavour to be tested in flavoured Android modules
+     */
+    testedFlavourName = "blue"
 }
 ```
 
