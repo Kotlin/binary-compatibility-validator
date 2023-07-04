@@ -110,7 +110,8 @@ java {
 tasks {
     compileTestKotlin {
         kotlinOptions {
-            languageVersion = "1.6"
+            languageVersion = "1.9"
+            freeCompilerArgs += "-Xsuppress-version-warnings"
         }
     }
     test {
