@@ -5,4 +5,9 @@ fun test() {
     EnumClass.entries.forEach {
         println(it)
     }
+
+    JavaEnum.entries.forEach {
+        println(it)
+    }
 }
+

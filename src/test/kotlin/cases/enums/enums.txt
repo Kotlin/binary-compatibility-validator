@@ -11,3 +11,11 @@ public final class cases/enums/EnumClass : java/lang/Enum {
 	public static fun values ()[Lcases/enums/EnumClass;
 }
 
+public final class cases/enums/JavaEnum : java/lang/Enum {
+	public static final field JA Lcases/enums/JavaEnum;
+	public static final field JB Lcases/enums/JavaEnum;
+	public static final field JC Lcases/enums/JavaEnum;
+	public static fun valueOf (Ljava/lang/String;)Lcases/enums/JavaEnum;
+	public static fun values ()[Lcases/enums/JavaEnum;
+}
+
