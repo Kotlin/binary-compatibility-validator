@@ -6,8 +6,8 @@ fun test() {
         println(it)
     }
 
-    JavaEnum.entries.forEach {
-        println(it)
-    }
+//    JavaEnum.entries.forEach {
+//        println(it)
+//    }
 }
 

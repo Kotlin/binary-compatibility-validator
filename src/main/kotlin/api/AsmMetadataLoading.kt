@@ -32,7 +32,7 @@ fun ClassNode.isEffectivelyPublic(classVisibility: ClassVisibility?) =
             && !isLocal()
             && !isWhenMappings()
             && !isSyntheticAnnotationClass()
-            && !isEnumEntriesMappings()
+//            && !isEnumEntriesMappings()
             && (classVisibility?.isPublic(isPublishedApi()) ?: true)
 
 
