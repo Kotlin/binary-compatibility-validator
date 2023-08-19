@@ -163,7 +163,7 @@ private enum class DirConfig {
      */
     COMMON,
     /**
-     * Target-based directory, used in multitarget setups.
+     * Target-based directory, used in multipart setups.
      * E.g. for the project with targets jvm and android,
      * the resulting paths will be
      * `/api/jvm/project.api` and `/api/android/project.api`
