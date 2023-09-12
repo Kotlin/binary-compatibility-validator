@@ -16,6 +16,8 @@ import javax.inject.Inject
 
 open class KotlinApiCompareTask @Inject constructor(private val objects: ObjectFactory): DefaultTask() {
 
+    private var ignoreAdditions: Boolean = false
+
     /*
      * Nullability and optionality is a workaround for
      * https://github.com/gradle/gradle/issues/2016
@@ -32,7 +34,7 @@ open class KotlinApiCompareTask @Inject constructor(private val objects: ObjectF
     @Optional
     var nonExistingProjectApiDir: String? = null
 
-    fun compareApiDumps(apiReferenceDir: File, apiBuildDir: File) {
+    fun compareApiDumps(apiReferenceDir: File, apiBuildDir: File, ignoreAdditions: Boolean) {
         if (apiReferenceDir.exists()) {
             projectApiDir = apiReferenceDir
         } else {
@@ -40,6 +42,7 @@ open class KotlinApiCompareTask @Inject constructor(private val objects: ObjectF
             nonExistingProjectApiDir = apiReferenceDir.toString()
         }
         this.apiBuildDir = apiBuildDir
+        this.ignoreAdditions = ignoreAdditions
     }
 
     @InputDirectory
@@ -122,7 +125,16 @@ open class KotlinApiCompareTask @Inject constructor(private val objects: ObjectF
         if (checkLines == builtLines)
             return null
 
-        val patch = DiffUtils.diff(checkLines, builtLines)
+        val patchWithAdditions = DiffUtils.diff(checkLines, builtLines)
+        val patch = if (ignoreAdditions) {
+            val pathWithoutAdditions = Patch<String>()
+            patchWithAdditions.deltas.filterNot { it.type == Delta.TYPE.INSERT }.forEach {
+                pathWithoutAdditions.addDelta(it)
+            }
+            pathWithoutAdditions
+        } else patchWithAdditions
+        if (patch.deltas.isEmpty()) return null
+
         val diff = DiffUtils.generateUnifiedDiff(checkFile.toString(), builtFile.toString(), checkLines, patch, 3)
         return diff.joinToString("\n")
     }

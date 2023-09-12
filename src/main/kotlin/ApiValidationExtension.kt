@@ -64,4 +64,9 @@ open class ApiValidationExtension {
      * By default, only the `main` source set is checked.
      */
     public var additionalSourceSets: MutableSet<String> = HashSet()
+
+    /**
+     * Only fail on API deletion and changes, and not on additions.
+     */
+    public var ignoreAdditions = false
 }
