@@ -1,6 +1,6 @@
 [versions]
 
-kotlin = "1.8.10"
+kotlin = "1.8.20"
 
 javaDiffUtils = "1.3.0"
 junit = "5.9.2"
@@ -14,7 +14,7 @@ androidGradlePlugin = "7.2.2"
 [libraries]
 
 ## region Application libraries
-kotlinx-metadata = { module = "org.jetbrains.kotlinx:kotlinx-metadata-jvm", version = "0.6.0" }
+kotlinx-metadata = { module = "org.jetbrains.kotlinx:kotlinx-metadata-jvm", version = "0.6.2" }
 
 javaDiffUtils = { module = "com.googlecode.java-diff-utils:diffutils", version.ref = "javaDiffUtils" }
 # update Java Diff Utils versions https://github.com/Kotlin/binary-compatibility-validator/issues/130

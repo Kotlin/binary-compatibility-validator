@@ -103,6 +103,7 @@ public final class kotlinx/validation/api/AsmMetadataLoadingKt {
 	public static final fun getOuterClassName (Lorg/objectweb/asm/tree/ClassNode;)Ljava/lang/String;
 	public static final fun isDefaultImpls (Lorg/objectweb/asm/tree/ClassNode;Lkotlinx/metadata/jvm/KotlinClassMetadata;)Z
 	public static final fun isEffectivelyPublic (Lorg/objectweb/asm/tree/ClassNode;Lkotlinx/validation/api/ClassVisibility;)Z
+	public static final fun isEnumEntriesMappings (Lorg/objectweb/asm/tree/ClassNode;)Z
 	public static final fun isFinal (I)Z
 	public static final fun isInner (Lorg/objectweb/asm/tree/ClassNode;)Z
 	public static final fun isLocal (Lorg/objectweb/asm/tree/ClassNode;)Z
