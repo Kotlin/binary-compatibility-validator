@@ -69,6 +69,7 @@ val androidGradlePluginVersion: String = "7.2.2"
 dependencies {
     implementation(gradleApi())
     implementation("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.6.2")
+    implementation("org.jetbrains.kotlin:kotlin-compiler-embeddable")
     implementation("org.ow2.asm:asm:9.2")
     implementation("org.ow2.asm:asm-tree:9.2")
     implementation("com.googlecode.java-diff-utils:diffutils:1.3.0")

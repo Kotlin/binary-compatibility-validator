@@ -78,9 +78,11 @@ class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
             }
         }
 
+        // TODO: not sure how better handle it
         val dirConfig = jvmTargetCountProvider.map {
-            if (it == 1) DirConfig.COMMON else DirConfig.TARGET_DIR
+            /*if (it == 1) DirConfig.COMMON else */DirConfig.TARGET_DIR
         }
+        val nativeDirConfig = project.provider { DirConfig.NATIVE_TARGET_DIR }
 
         kotlin.targets.matching {
             it.platformType == KotlinPlatformType.jvm || it.platformType == KotlinPlatformType.androidJvm
@@ -101,6 +103,12 @@ class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
                         useOutput = true
                     )
                 }
+            }
+        }
+        kotlin.targets.matching { it.platformType == KotlinPlatformType.native }.all { target ->
+            val targetConfig = TargetConfig(project, target.name, nativeDirConfig)
+            target.compilations.matching { it.name == "main" }.all {
+                project.configureNativeCompilation(it, extension, targetConfig, commonApiDump, commonApiCheck)
             }
         }
     }
@@ -169,6 +177,7 @@ private enum class DirConfig {
      * `/api/jvm/project.api` and `/api/android/project.api`
      */
     TARGET_DIR,
+    NATIVE_TARGET_DIR
 }
 
 private fun Project.configureKotlinCompilation(
@@ -202,6 +211,30 @@ private fun Project.configureKotlinCompilation(
             inputDependencies =
                 files(provider<Any> { if (isEnabled) compilation.compileDependencyFiles else emptyList<Any>() })
         }
+        outputApiDir = apiBuildDir.get()
+    }
+    configureCheckTasks(apiBuildDir, apiBuild, extension, targetConfig, commonApiDump, commonApiCheck)
+}
+
+private fun Project.configureNativeCompilation(
+    compilation: KotlinCompilation<KotlinCommonOptions>,
+    extension: ApiValidationExtension,
+    targetConfig: TargetConfig = TargetConfig(this),
+    commonApiDump: TaskProvider<Task>? = null,
+    commonApiCheck: TaskProvider<Task>? = null
+) {
+    val projectName = project.name
+    val apiDirProvider = targetConfig.apiDir
+    val apiBuildDir = apiDirProvider.map { buildDir.resolve(it) }
+
+    val apiBuild = task<KotlinKlibAbiBuildTask>(targetConfig.apiTaskName("Build")) {
+        // Do not enable task for empty umbrella modules
+        isEnabled =
+            apiCheckEnabled(projectName, extension) && compilation.allKotlinSourceSets.any { it.kotlin.srcDirs.any { it.exists() } }
+        // 'group' is not specified deliberately, so it will be hidden from ./gradlew tasks
+        description =
+            "Builds Kotlin Klib ABI for 'main' compilations of $projectName. Complementary task and shouldn't be called manually"
+        klibFile.from(compilation.output.classesDirs)
         outputApiDir = apiBuildDir.get()
     }
     configureCheckTasks(apiBuildDir, apiBuild, extension, targetConfig, commonApiDump, commonApiCheck)
@@ -246,7 +279,7 @@ private fun Project.configureApiTasks(
 
 private fun Project.configureCheckTasks(
     apiBuildDir: Provider<File>,
-    apiBuild: TaskProvider<KotlinApiBuildTask>,
+    apiBuild: TaskProvider<*>,
     extension: ApiValidationExtension,
     targetConfig: TargetConfig,
     commonApiDump: TaskProvider<Task>? = null,
