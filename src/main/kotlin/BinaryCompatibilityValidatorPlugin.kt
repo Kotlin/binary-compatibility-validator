@@ -11,6 +11,8 @@ import org.gradle.api.provider.*
 import org.gradle.api.tasks.*
 import org.jetbrains.kotlin.gradle.dsl.*
 import org.jetbrains.kotlin.gradle.plugin.*
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+import org.jetbrains.kotlin.konan.target.HostManager
 import java.io.*
 
 const val API_DIR = "api"
@@ -106,9 +108,12 @@ class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
             }
         }
         kotlin.targets.matching { it.platformType == KotlinPlatformType.native }.all { target ->
-            val targetConfig = TargetConfig(project, target.name, nativeDirConfig)
-            target.compilations.matching { it.name == "main" }.all {
-                project.configureNativeCompilation(it, extension, targetConfig, commonApiDump, commonApiCheck)
+            target as KotlinNativeTarget
+            if (HostManager().isEnabled(target.konanTarget)) {
+                val targetConfig = TargetConfig(project, target.name, nativeDirConfig)
+                target.compilations.matching { it.name == "main" }.all {
+                    project.configureNativeCompilation(it, extension, targetConfig, commonApiDump, commonApiCheck)
+                }
             }
         }
     }
