@@ -12,7 +12,7 @@ import org.gradle.api.tasks.OutputDirectory
 import java.io.File
 
 abstract class BuildTaskBase : DefaultTask() {
-    protected val extension = project.apiValidationExtensionOrNull
+    private val extension = project.apiValidationExtensionOrNull
 
     @OutputDirectory
     lateinit var outputApiDir: File
