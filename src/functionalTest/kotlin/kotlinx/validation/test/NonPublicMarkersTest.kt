@@ -35,4 +35,36 @@ class NonPublicMarkersTest : BaseKotlinGradleTest() {
             assertTaskSuccess(":apiCheck")
         }
     }
+
+    @Test
+    fun testIgnoredMarkersOnPropertiesForNativeTargets() {
+        val runner = test {
+            settingsGradleKts {
+                resolve("examples/gradle/settings/settings-name-testproject.gradle.kts")
+            }
+
+            buildGradleKts {
+                resolve("examples/gradle/base/withNativePlugin.gradle.kts")
+                resolve("examples/gradle/configuration/nonPublicMarkers/markers.gradle.kts")
+            }
+
+            kotlin("Properties.kt", sourceSet = "commonMain") {
+                resolve("examples/classes/Properties.kt")
+            }
+
+            nativeTargets.forEach {
+                abiFile(projectName = "testproject", target = it) {
+                    resolve("examples/classes/Properties.klib.dump")
+                }
+            }
+
+            runner {
+                arguments.add(":apiCheck")
+            }
+        }
+
+        runner.build().apply {
+            assertTaskSuccess(":apiCheck")
+        }
+    }
 }

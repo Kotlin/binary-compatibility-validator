@@ -95,6 +95,15 @@ internal fun FileContainer.apiFile(projectName: String, fn: AppendableScope.() -
     }
 }
 
+// TODO
+internal fun FileContainer.abiFile(projectName: String, target: String, fn: AppendableScope.() -> Unit) {
+    dir(API_DIR) {
+        dir(target) {
+            file("$projectName.api", fn)
+        }
+    }
+}
+
 // not using default argument in apiFile for clarity in tests (explicit "empty" in the name)
 /**
  * Shortcut for creating an empty `api/<project>.api` descriptor by using [file][FileContainer.file]
@@ -161,3 +170,26 @@ private fun GradleRunner.addPluginTestRuntimeClasspath() = apply {
     val pluginClasspath = pluginClasspath + cpResource.readLines().map { File(it) }
     withPluginClasspath(pluginClasspath)
 }
+
+internal val nativeTargets = listOf(
+    "linuxX64",
+    "linuxArm64",
+    "mingwX64",
+    "macosX64",
+    "macosArm64",
+    "iosX64",
+    "iosArm64",
+    "iosSimulatorArm64",
+    "tvosX64",
+    "tvosArm64",
+    "tvosSimulatorArm64",
+    "watchosArm32",
+    "watchosArm64",
+    "watchosX64",
+    "watchosSimulatorArm64",
+    "watchosDeviceArm64",
+    "androidNativeArm32",
+    "androidNativeArm64",
+    "androidNativeX64",
+    "androidNativeX86"
+)

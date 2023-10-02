@@ -37,12 +37,15 @@ abstract class KotlinKlibAbiBuildTask constructor(
             }
             if (ignoredClasses.isNotEmpty()) {
                 add(AbiReadingFilter.ExcludedClasses(ignoredClasses.flatMap {
-                    generateQualifiedName(it)
+                    generateQualifiedNames(it)
                 }))
             }
             if (nonPublicMarkers.isNotEmpty()) {
+                println(nonPublicMarkers.flatMap {
+                    generateQualifiedNames(it)
+                })
                 add(AbiReadingFilter.NonPublicMarkerAnnotations(nonPublicMarkers.flatMap {
-                    generateQualifiedName(it)
+                    generateQualifiedNames(it)
                 }))
             }
         }
@@ -62,20 +65,20 @@ abstract class KotlinKlibAbiBuildTask constructor(
             LibraryAbiRenderer.render(parsedAbi, it, AbiRenderingSettings(sigVersion))
         }
     }
+}
 
-    @ExperimentalStdlibApi
-    @ExperimentalLibraryAbiReader
-    private fun generateQualifiedName(name: String) : List<AbiQualifiedName> {
-        if (!name.contains('.')) {
-            return listOf(AbiQualifiedName(AbiCompoundName(""), AbiCompoundName(name)))
-        }
-        val parts = name.split('.')
-        return buildList {
-            for (packageLength in 0 until parts.size - 1) {
-                val packageName = AbiCompoundName(parts.subList(0, packageLength).joinToString("."))
-                val className = AbiCompoundName(parts.subList(packageLength, parts.size).joinToString("."))
-                add(AbiQualifiedName(packageName, className))
-            }
+@ExperimentalStdlibApi
+@ExperimentalLibraryAbiReader
+internal fun generateQualifiedNames(name: String) : List<AbiQualifiedName> {
+    if (!name.contains('.')) {
+        return listOf(AbiQualifiedName(AbiCompoundName(""), AbiCompoundName(name)))
+    }
+    val parts = name.split('.')
+    return buildList {
+        for (packageLength in parts.indices) {
+            val packageName = AbiCompoundName(parts.subList(0, packageLength).joinToString("."))
+            val className = AbiCompoundName(parts.subList(packageLength, parts.size).joinToString("."))
+            add(AbiQualifiedName(packageName, className))
         }
     }
 }

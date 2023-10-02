@@ -10,6 +10,7 @@ import kotlinx.validation.api.buildGradleKts
 import kotlinx.validation.api.kotlin
 import kotlinx.validation.api.resolve
 import kotlinx.validation.api.test
+import org.jetbrains.kotlin.konan.target.HostManager
 import org.junit.Test
 
 class PublicMarkersTest : BaseKotlinGradleTest() {
@@ -32,6 +33,42 @@ class PublicMarkersTest : BaseKotlinGradleTest() {
 
             apiFile(projectName = rootProjectDir.name) {
                 resolve("examples/classes/ClassWithPublicMarkers.dump")
+            }
+
+            runner {
+                arguments.add(":apiCheck")
+            }
+        }
+
+        runner.withDebug(true).build().apply {
+            assertTaskSuccess(":apiCheck")
+        }
+    }
+
+    @Test
+    fun testPublicMarkersForNativeTargets() {
+        val runner = test {
+            settingsGradleKts {
+                resolve("examples/gradle/settings/settings-name-testproject.gradle.kts")
+            }
+
+            buildGradleKts {
+                resolve("examples/gradle/base/withNativePlugin.gradle.kts")
+                resolve("examples/gradle/configuration/publicMarkers/markers.gradle.kts")
+            }
+
+            kotlin("ClassWithPublicMarkers.kt", sourceSet = "commonMain") {
+                resolve("examples/classes/ClassWithPublicMarkers.kt")
+            }
+
+            kotlin("ClassInPublicPackage.kt", sourceSet = "commonMain") {
+                resolve("examples/classes/ClassInPublicPackage.kt")
+            }
+
+            nativeTargets.forEach {
+                abiFile(target = it, projectName = "testproject") {
+                    resolve("examples/classes/ClassWithPublicMarkers.klib.dump")
+                }
             }
 
             runner {
