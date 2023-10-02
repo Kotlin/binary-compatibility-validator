@@ -5,20 +5,12 @@
 
 package kotlinx.validation
 
-import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.FileCollection
-import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.jetbrains.kotlin.library.abi.*
-import java.io.File
 
 abstract class KotlinKlibAbiBuildTask constructor(
 
@@ -66,7 +58,7 @@ abstract class KotlinKlibAbiBuildTask constructor(
                 ?: throw IllegalStateException("Can't choose abiSignatureVersion")
         }
 
-        outputApiDir.resolve(project.name + ".api").bufferedWriter().use {
+        outputApiDir.resolve("$projectName.api").bufferedWriter().use {
             LibraryAbiRenderer.render(parsedAbi, it, AbiRenderingSettings(sigVersion))
         }
     }

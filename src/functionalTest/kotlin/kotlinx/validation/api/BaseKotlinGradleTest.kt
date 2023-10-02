@@ -18,4 +18,6 @@ public open class BaseKotlinGradleTest {
     internal val rootProjectDir: File get() = testProjectDir.root
 
     internal val rootProjectApiDump: File get() = rootProjectDir.resolve("$API_DIR/${rootProjectDir.name}.api")
+    internal fun rootProjectAbiDump(target: String, project: String = rootProjectDir.name): File =
+        rootProjectDir.resolve("api/$target/$project.api")
 }
