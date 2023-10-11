@@ -19,7 +19,6 @@ abstract class KotlinKlibAbiBuildTask constructor(
     @get:InputFiles
     abstract val klibFile: ConfigurableFileCollection
 
-    // TODO: configure
     @Optional
     @get:Input
     var signatureVersion: Int? = null
@@ -50,14 +49,18 @@ abstract class KotlinKlibAbiBuildTask constructor(
             }
         }
 
-        // Ooops, publicPackages, publicClasses and publicMarkers are not supported
-
         val parsedAbi = LibraryAbiReader.readAbiInfo(klibFile.singleFile, filters)
 
+        val supportedVersions = parsedAbi.signatureVersions.asSequence()
         val sigVersion = if (signatureVersion != null) {
+            val versionNumbers = supportedVersions.map { it.versionNumber }.toSortedSet()
+            if (signatureVersion !in versionNumbers) {
+                throw IllegalArgumentException("Unsupported signature version '$signatureVersion'. " +
+                        "Supported versions are: $versionNumbers")
+            }
             AbiSignatureVersion.resolveByVersionNumber(signatureVersion!!)
         } else {
-            parsedAbi.signatureVersions.maxByOrNull(AbiSignatureVersion::versionNumber)
+            supportedVersions.maxByOrNull(AbiSignatureVersion::versionNumber)
                 ?: throw IllegalStateException("Can't choose abiSignatureVersion")
         }
 

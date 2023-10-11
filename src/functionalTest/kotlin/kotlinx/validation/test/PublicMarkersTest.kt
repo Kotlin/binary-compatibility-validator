@@ -45,6 +45,7 @@ class PublicMarkersTest : BaseKotlinGradleTest() {
         }
     }
 
+    // Public markers are not supported in KLIB ABI dumps
     @Test
     fun testPublicMarkersForNativeTargets() {
         val runner = test {

@@ -13,6 +13,11 @@ open class ApiValidationExtension {
     public var validationDisabled = false
 
     /**
+     * Enables KLIB ABI validation checks completely.
+     */
+    public var klibValidationEnabled = false
+
+    /**
      * Fully qualified package names that are not consider public API.
      * For example, it could be `kotlinx.coroutines.internal` or `kotlinx.serialization.implementation`.
      */
@@ -64,4 +69,9 @@ open class ApiValidationExtension {
      * By default, only the `main` source set is checked.
      */
     public var additionalSourceSets: MutableSet<String> = HashSet()
+
+    /**
+     * Specify which version of signature KLIB ABI dump should contain.
+     */
+    public var klibSignatureVersion: Int = 2
 }
