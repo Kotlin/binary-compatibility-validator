@@ -79,12 +79,9 @@ class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
                 )
             }
         }
-        val nativeTargetProvider = project.provider {
-            kotlin.targets.count { it.platformType == KotlinPlatformType.native }
-        }
 
         val dirConfig = jvmTargetCountProvider.map {
-            if (it == 1 && nativeTargetProvider.get() == 0) DirConfig.COMMON else DirConfig.TARGET_DIR
+            if (it == 1 && !extension.klibValidationEnabled) DirConfig.COMMON else DirConfig.TARGET_DIR
         }
         val nativeDirConfig = project.provider { DirConfig.NATIVE_TARGET_DIR }
 
@@ -184,6 +181,8 @@ private enum class DirConfig {
      * `/api/jvm/project.api` and `/api/android/project.api`
      */
     TARGET_DIR,
+    // TODO
+    // Currently, has the same meaning as TARGET_DIR
     NATIVE_TARGET_DIR
 }
 
