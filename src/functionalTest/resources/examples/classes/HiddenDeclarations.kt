@@ -34,3 +34,10 @@ public class VC @HiddenCtor constructor() {
     @HiddenFunction
     public fun m() = Unit
 }
+
+@HiddenClass
+public class HiddenOuterClass {
+    public class HiddenInnerClass {
+
+    }
+}
