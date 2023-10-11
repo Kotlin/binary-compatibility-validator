@@ -24,8 +24,8 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
             buildGradleKts {
                 resolve("examples/gradle/base/withNativePlugin.gradle.kts")
             }
-            kotlin("AnotherBuildConfig.kt", "commonMain") {
-                resolve("examples/classes/AnotherBuildConfig.kt")
+            kotlin("TopLevelDeclarations.kt", "commonMain") {
+                resolve("examples/classes/TopLevelDeclarations.kt")
             }
             runner {
                 arguments.add(":apiDump")
@@ -40,7 +40,7 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
                 .filter(File::exists)
             assertTrue(generatedDumps.isNotEmpty(), "There are no dumps generated for KLibs")
 
-            val expected = readFileList("examples/classes/AnotherBuildConfig.klib.dump")
+            val expected = readFileList("examples/classes/TopLevelDeclarations.klib.dump")
 
             generatedDumps.forEach {
                 Assertions.assertThat(it.readText()).isEqualToIgnoringNewLines(expected)
@@ -157,7 +157,8 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
 
             val expectedCommon = readFileList("examples/classes/AnotherBuildConfig.klib.dump")
             val expectedSpecialized = readFileList(
-                "examples/classes/AnotherBuildConfigLinuxArm64Extra.klib.dump")
+                "examples/classes/AnotherBuildConfigLinuxArm64Extra.klib.dump"
+            )
 
             Assertions.assertThat(commonFile.readText()).isEqualToIgnoringNewLines(expectedCommon)
             Assertions.assertThat(specializedFile.readText()).isEqualToIgnoringNewLines(expectedSpecialized)
@@ -201,6 +202,189 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
 
             val jvmExpected = readFileList("examples/classes/AnotherBuildConfig.dump")
             Assertions.assertThat(jvmApiDump.readText()).isEqualToIgnoringNewLines(jvmExpected)
+        }
+    }
+
+    @Test
+    fun `apiDump should ignore a class listed in ignoredClasses`() {
+        val runner = test {
+            settingsGradleKts {
+                resolve("examples/gradle/settings/settings-name-testproject.gradle.kts")
+            }
+            buildGradleKts {
+                resolve("examples/gradle/base/withNativePlugin.gradle.kts")
+                resolve("examples/gradle/configuration/ignoredClasses/oneValidFullyQualifiedClass.gradle.kts")
+            }
+            kotlin("BuildConfig.kt", "commonMain") {
+                resolve("examples/classes/BuildConfig.kt")
+            }
+            kotlin("AnotherBuildConfig.kt", "commonMain") {
+                resolve("examples/classes/AnotherBuildConfig.kt")
+            }
+
+            runner {
+                arguments.add(":apiDump")
+            }
+        }
+
+        runner.build().apply {
+            assertTaskSuccess(":apiDump")
+
+            val generatedDumps = nativeTargets
+                .map { rootProjectAbiDump(target = it, project = "testproject") }
+                .filter(File::exists)
+            assertTrue(generatedDumps.isNotEmpty(), "There are no dumps generated for KLibs")
+
+            val expected = readFileList("examples/classes/AnotherBuildConfig.klib.dump")
+
+            generatedDumps.forEach {
+                Assertions.assertThat(it.readText()).isEqualToIgnoringNewLines(expected)
+            }
+        }
+    }
+
+    @Test
+    fun `apiDump should succeed if a class listed in ignoredClasses is not found`() {
+        val runner = test {
+            settingsGradleKts {
+                resolve("examples/gradle/settings/settings-name-testproject.gradle.kts")
+            }
+            buildGradleKts {
+                resolve("examples/gradle/base/withNativePlugin.gradle.kts")
+                resolve("examples/gradle/configuration/ignoredClasses/oneValidFullyQualifiedClass.gradle.kts")
+            }
+            kotlin("AnotherBuildConfig.kt", "commonMain") {
+                resolve("examples/classes/AnotherBuildConfig.kt")
+            }
+
+            runner {
+                arguments.add(":apiDump")
+            }
+        }
+
+        runner.build().apply {
+            assertTaskSuccess(":apiDump")
+
+            val generatedDumps = nativeTargets
+                .map { rootProjectAbiDump(target = it, project = "testproject") }
+                .filter(File::exists)
+            assertTrue(generatedDumps.isNotEmpty(), "There are no dumps generated for KLibs")
+
+            val expected = readFileList("examples/classes/AnotherBuildConfig.klib.dump")
+
+            generatedDumps.forEach {
+                Assertions.assertThat(it.readText()).isEqualToIgnoringNewLines(expected)
+            }
+        }
+    }
+
+    @Test
+    fun `apiDump should ignore all entities from a package listed in ingoredPacakges`() {
+        val runner = test {
+            settingsGradleKts {
+                resolve("examples/gradle/settings/settings-name-testproject.gradle.kts")
+            }
+            buildGradleKts {
+                resolve("examples/gradle/base/withNativePlugin.gradle.kts")
+                resolve("examples/gradle/configuration/ignoredPackages/oneValidPackage.gradle.kts")
+            }
+            kotlin("BuildConfig.kt", "commonMain") {
+                resolve("examples/classes/BuildConfig.kt")
+            }
+            kotlin("AnotherBuildConfig.kt", "commonMain") {
+                resolve("examples/classes/AnotherBuildConfig.kt")
+            }
+
+            runner {
+                arguments.add(":apiDump")
+            }
+        }
+
+        runner.build().apply {
+            assertTaskSuccess(":apiDump")
+
+            val generatedDumps = nativeTargets
+                .map { rootProjectAbiDump(target = it, project = "testproject") }
+                .filter(File::exists)
+            assertTrue(generatedDumps.isNotEmpty(), "There are no dumps generated for KLibs")
+
+            val expected = readFileList("examples/classes/AnotherBuildConfig.klib.dump")
+
+            generatedDumps.forEach {
+                Assertions.assertThat(it.readText()).isEqualToIgnoringNewLines(expected)
+            }
+        }
+    }
+
+    @Test
+    fun `apiDump should ignore all entities annotated with non-public markers`() {
+        val runner = test {
+            settingsGradleKts {
+                resolve("examples/gradle/settings/settings-name-testproject.gradle.kts")
+            }
+            buildGradleKts {
+                resolve("examples/gradle/base/withNativePlugin.gradle.kts")
+                resolve("examples/gradle/configuration/nonPublicMarkers/klib.gradle.kts")
+            }
+            kotlin("HiddenDeclarations.kt", "commonMain") {
+                resolve("examples/classes/HiddenDeclarations.kt")
+            }
+            kotlin("NonPublicMarkers.kt", "commonMain") {
+                resolve("examples/classes/NonPublicMarkers.kt")
+            }
+
+            runner {
+                arguments.add(":apiDump")
+            }
+        }
+
+        runner.build().apply {
+            assertTaskSuccess(":apiDump")
+
+            val generatedDumps = nativeTargets
+                .map { rootProjectAbiDump(target = it, project = "testproject") }
+                .filter(File::exists)
+            assertTrue(generatedDumps.isNotEmpty(), "There are no dumps generated for KLibs")
+
+            val expected = readFileList("examples/classes/HiddenDeclarations.klib.dump")
+
+            generatedDumps.forEach {
+                Assertions.assertThat(it.readText()).isEqualToIgnoringNewLines(expected)
+            }
+        }
+    }
+
+    @Test
+    fun `apiDump should not dump subclasses excluded via ignoredClasses`() {
+        val runner = test {
+            settingsGradleKts {
+                resolve("examples/gradle/settings/settings-name-testproject.gradle.kts")
+            }
+            buildGradleKts {
+                resolve("examples/gradle/base/withNativePlugin.gradle.kts")
+                resolve("examples/gradle/configuration/ignoreSubclasses/ignore.gradle.kts")
+            }
+            kotlin("Subclasses.kt", "commonMain") {
+                resolve("examples/classes/Subclasses.kt")
+            }
+
+            runner {
+                arguments.add(":apiDump")
+            }
+        }
+
+        runner.build().apply {
+            assertTaskSuccess(":apiDump")
+
+            val generatedDumps = nativeTargets
+                .map { rootProjectAbiDump(target = it, project = "testproject") }
+                .filter(File::exists)
+            assertTrue(generatedDumps.isNotEmpty(), "There are no dumps generated for KLibs")
+
+            val expected = readFileList("examples/classes/Subclasses.klib.dump")
+            generatedDumps.forEach {
+                Assertions.assertThat(it.readText()).isEqualToIgnoringNewLines(expected)
+            }
         }
     }
 }
