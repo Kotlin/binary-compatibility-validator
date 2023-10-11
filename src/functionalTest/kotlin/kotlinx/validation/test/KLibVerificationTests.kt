@@ -279,7 +279,7 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
     }
 
     @Test
-    fun `apiDump should ignore all entities from a package listed in ingoredPacakges`() {
+    fun `apiDump should ignore all entities from a package listed in ingoredPackages`() {
         val runner = test {
             settingsGradleKts {
                 resolve("examples/gradle/settings/settings-name-testproject.gradle.kts")
@@ -293,6 +293,9 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
             }
             kotlin("AnotherBuildConfig.kt", "commonMain") {
                 resolve("examples/classes/AnotherBuildConfig.kt")
+            }
+            kotlin("SubPackage.kt", "commonMain") {
+                resolve("examples/classes/SubPackage.kt")
             }
 
             runner {
