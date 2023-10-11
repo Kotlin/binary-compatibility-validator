@@ -95,7 +95,9 @@ internal fun FileContainer.apiFile(projectName: String, fn: AppendableScope.() -
     }
 }
 
-// TODO
+/**
+ * Shortcut for creating a `api/<target>/<project>.api` descriptor using [file][FileContainer.file]
+ */
 internal fun FileContainer.abiFile(projectName: String, target: String, fn: AppendableScope.() -> Unit) {
     dir(API_DIR) {
         dir(target) {
