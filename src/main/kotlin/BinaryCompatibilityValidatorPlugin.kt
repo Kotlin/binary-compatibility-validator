@@ -79,10 +79,12 @@ class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
                 )
             }
         }
+        val nativeTargetProvider = project.provider {
+            kotlin.targets.count { it.platformType == KotlinPlatformType.native }
+        }
 
-        // TODO: not sure how better handle it
         val dirConfig = jvmTargetCountProvider.map {
-            /*if (it == 1) DirConfig.COMMON else */DirConfig.TARGET_DIR
+            if (it == 1 && nativeTargetProvider.get() == 0) DirConfig.COMMON else DirConfig.TARGET_DIR
         }
         val nativeDirConfig = project.provider { DirConfig.NATIVE_TARGET_DIR }
 
@@ -235,11 +237,12 @@ private fun Project.configureNativeCompilation(
     val apiBuild = task<KotlinKlibAbiBuildTask>(targetConfig.apiTaskName("Build")) {
         // Do not enable task for empty umbrella modules
         isEnabled =
-            apiCheckEnabled(projectName, extension) && compilation.allKotlinSourceSets.any { it.kotlin.srcDirs.any { it.exists() } }
+            klibAbiCheckEnabled(projectName, extension) && compilation.allKotlinSourceSets.any { it.kotlin.srcDirs.any { it.exists() } }
         // 'group' is not specified deliberately, so it will be hidden from ./gradlew tasks
         description =
             "Builds Kotlin Klib ABI for 'main' compilations of $projectName. Complementary task and shouldn't be called manually"
         klibFile.from(compilation.output.classesDirs)
+        signatureVersion = extension.klibSignatureVersion
         outputApiDir = apiBuildDir.get()
     }
     configureCheckTasks(apiBuildDir, apiBuild, extension, targetConfig, commonApiDump, commonApiCheck)
@@ -256,6 +259,9 @@ internal val Project.apiValidationExtensionOrNull: ApiValidationExtension?
 
 fun apiCheckEnabled(projectName: String, extension: ApiValidationExtension): Boolean =
     projectName !in extension.ignoredProjects && !extension.validationDisabled
+
+fun klibAbiCheckEnabled(projectName: String, extension: ApiValidationExtension): Boolean =
+    projectName !in extension.ignoredProjects && !extension.validationDisabled && extension.klibValidationEnabled
 
 private fun Project.configureApiTasks(
     extension: ApiValidationExtension,

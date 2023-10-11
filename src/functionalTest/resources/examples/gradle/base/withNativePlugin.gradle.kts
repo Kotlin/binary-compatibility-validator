@@ -50,5 +50,8 @@ kotlin {
             }
         }
     }
+}
 
+apiValidation {
+    klibValidationEnabled = true
 }

@@ -27,4 +27,4 @@ class AbiTest {
             generateQualifiedNames("Class")
         )
     }
-Ъ
+}

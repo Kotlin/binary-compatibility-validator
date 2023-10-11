@@ -57,13 +57,13 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
             buildGradleKts {
                 resolve("examples/gradle/base/withNativePlugin.gradle.kts")
             }
-            kotlin("AnotherBuildConfig.kt", "commonMain") {
-                resolve("examples/classes/AnotherBuildConfig.kt")
+            kotlin("TopLevelDeclarations.kt", "commonMain") {
+                resolve("examples/classes/TopLevelDeclarations.kt")
             }
 
             nativeTargets.forEach {
                 abiFile(projectName = "testproject", target = it) {
-                    resolve("examples/classes/AnotherBuildConfig.klib.dump")
+                    resolve("examples/classes/TopLevelDeclarations.klib.dump")
                 }
             }
 
@@ -386,5 +386,57 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
                 Assertions.assertThat(it.readText()).isEqualToIgnoringNewLines(expected)
             }
         }
+    }
+
+    @Test
+    fun `apiCheck for native targets using v1 signatures`() {
+        val runner = test {
+            settingsGradleKts {
+                resolve("examples/gradle/settings/settings-name-testproject.gradle.kts")
+            }
+            buildGradleKts {
+                resolve("examples/gradle/base/withNativePlugin.gradle.kts")
+                resolve("examples/gradle/configuration/signatures/v1.gradle.kts")
+            }
+            kotlin("TopLevelDeclarations.kt", "commonMain") {
+                resolve("examples/classes/TopLevelDeclarations.kt")
+            }
+
+            nativeTargets.forEach {
+                abiFile(projectName = "testproject", target = it) {
+                    resolve("examples/classes/TopLevelDeclarations.klib.v1.dump")
+                }
+            }
+
+            runner {
+                arguments.add(":apiCheck")
+            }
+        }
+
+        runner.build().apply {
+            assertTaskSuccess(":apiCheck")
+        }
+    }
+
+    @Test
+    fun `apiDump for native targets should fail when using invalid signature version`() {
+        val runner = test {
+            settingsGradleKts {
+                resolve("examples/gradle/settings/settings-name-testproject.gradle.kts")
+            }
+            buildGradleKts {
+                resolve("examples/gradle/base/withNativePlugin.gradle.kts")
+                resolve("examples/gradle/configuration/signatures/invalid.gradle.kts")
+            }
+            kotlin("TopLevelDeclarations.kt", "commonMain") {
+                resolve("examples/classes/TopLevelDeclarations.kt")
+            }
+
+            runner {
+                arguments.add(":apiDump")
+            }
+        }
+
+        runner.buildAndFail()
     }
 }

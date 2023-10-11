@@ -37,6 +37,7 @@ class NonPublicMarkersTest : BaseKotlinGradleTest() {
     }
 
     @Test
+    @Ignore("https://youtrack.jetbrains.com/issue/KT-62259")
     fun testIgnoredMarkersOnPropertiesForNativeTargets() {
         val runner = test {
             settingsGradleKts {
