@@ -12,9 +12,7 @@ import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 import org.jetbrains.kotlin.library.abi.*
 
-abstract class KotlinKlibAbiBuildTask constructor(
-
-) : BuildTaskBase() {
+abstract class KotlinKlibAbiBuildTask : BuildTaskBase() {
 
     @get:InputFiles
     abstract val klibFile: ConfigurableFileCollection
@@ -55,8 +53,10 @@ abstract class KotlinKlibAbiBuildTask constructor(
         val sigVersion = if (signatureVersion != null) {
             val versionNumbers = supportedVersions.map { it.versionNumber }.toSortedSet()
             if (signatureVersion !in versionNumbers) {
-                throw IllegalArgumentException("Unsupported signature version '$signatureVersion'. " +
-                        "Supported versions are: $versionNumbers")
+                throw IllegalArgumentException(
+                    "Unsupported signature version '$signatureVersion'. " +
+                            "Supported versions are: $versionNumbers"
+                )
             }
             AbiSignatureVersion.resolveByVersionNumber(signatureVersion!!)
         } else {
@@ -72,7 +72,7 @@ abstract class KotlinKlibAbiBuildTask constructor(
 
 @ExperimentalStdlibApi
 @ExperimentalLibraryAbiReader
-internal fun generateQualifiedNames(name: String) : List<AbiQualifiedName> {
+internal fun generateQualifiedNames(name: String): List<AbiQualifiedName> {
     if (!name.contains('.')) {
         return listOf(AbiQualifiedName(AbiCompoundName(""), AbiCompoundName(name)))
     }
