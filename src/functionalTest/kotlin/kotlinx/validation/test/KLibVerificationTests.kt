@@ -10,9 +10,25 @@ import kotlinx.validation.api.buildGradleKts
 import kotlinx.validation.api.resolve
 import kotlinx.validation.api.test
 import org.assertj.core.api.Assertions
+import org.gradle.testkit.runner.BuildResult
 import org.junit.Test
 import java.io.File
 import kotlin.test.assertTrue
+
+private fun KLibVerificationTests.checkKlibDump(buildResult: BuildResult, expectedDumpFileName: String, projectName: String = "testproject") {
+    buildResult.assertTaskSuccess(":apiDump")
+
+    val generatedDumps = nativeTargets
+        .map { rootProjectAbiDump(target = it, project = projectName) }
+        .filter(File::exists)
+    assertTrue(generatedDumps.isNotEmpty(), "There are no dumps generated for KLibs")
+
+    val expected = readFileList(expectedDumpFileName)
+
+    generatedDumps.forEach {
+        Assertions.assertThat(it.readText()).isEqualToIgnoringNewLines(expected)
+    }
+}
 
 internal class KLibVerificationTests : BaseKotlinGradleTest() {
     @Test
@@ -32,20 +48,7 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
             }
         }
 
-        runner.build().apply {
-            assertTaskSuccess(":apiDump")
-
-            val generatedDumps = nativeTargets
-                .map { rootProjectAbiDump(target = it, project = "testproject") }
-                .filter(File::exists)
-            assertTrue(generatedDumps.isNotEmpty(), "There are no dumps generated for KLibs")
-
-            val expected = readFileList("examples/classes/TopLevelDeclarations.klib.dump")
-
-            generatedDumps.forEach {
-                Assertions.assertThat(it.readText()).isEqualToIgnoringNewLines(expected)
-            }
-        }
+        checkKlibDump(runner.build(), "examples/classes/TopLevelDeclarations.klib.dump")
     }
 
     @Test
@@ -184,18 +187,7 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
         }
 
         runner.build().apply {
-            assertTaskSuccess(":apiDump")
-
-            val generatedDumps = nativeTargets
-                .map { rootProjectAbiDump(target = it, project = "testproject") }
-                .filter(File::exists)
-            assertTrue(generatedDumps.isNotEmpty(), "There are no dumps generated for KLibs")
-
-            val expected = readFileList("examples/classes/AnotherBuildConfig.klib.dump")
-
-            generatedDumps.forEach {
-                Assertions.assertThat(it.readText()).isEqualToIgnoringNewLines(expected)
-            }
+            checkKlibDump(this, "examples/classes/AnotherBuildConfig.klib.dump")
 
             val jvmApiDump = rootProjectAbiDump("jvm", "testproject")
             assertTrue(jvmApiDump.exists(), "No API dump for JVM")
@@ -227,20 +219,7 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
             }
         }
 
-        runner.build().apply {
-            assertTaskSuccess(":apiDump")
-
-            val generatedDumps = nativeTargets
-                .map { rootProjectAbiDump(target = it, project = "testproject") }
-                .filter(File::exists)
-            assertTrue(generatedDumps.isNotEmpty(), "There are no dumps generated for KLibs")
-
-            val expected = readFileList("examples/classes/AnotherBuildConfig.klib.dump")
-
-            generatedDumps.forEach {
-                Assertions.assertThat(it.readText()).isEqualToIgnoringNewLines(expected)
-            }
-        }
+        checkKlibDump(runner.build(), "examples/classes/AnotherBuildConfig.klib.dump")
     }
 
     @Test
@@ -262,20 +241,7 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
             }
         }
 
-        runner.build().apply {
-            assertTaskSuccess(":apiDump")
-
-            val generatedDumps = nativeTargets
-                .map { rootProjectAbiDump(target = it, project = "testproject") }
-                .filter(File::exists)
-            assertTrue(generatedDumps.isNotEmpty(), "There are no dumps generated for KLibs")
-
-            val expected = readFileList("examples/classes/AnotherBuildConfig.klib.dump")
-
-            generatedDumps.forEach {
-                Assertions.assertThat(it.readText()).isEqualToIgnoringNewLines(expected)
-            }
-        }
+        checkKlibDump(runner.build(), "examples/classes/AnotherBuildConfig.klib.dump")
     }
 
     @Test
@@ -303,20 +269,7 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
             }
         }
 
-        runner.build().apply {
-            assertTaskSuccess(":apiDump")
-
-            val generatedDumps = nativeTargets
-                .map { rootProjectAbiDump(target = it, project = "testproject") }
-                .filter(File::exists)
-            assertTrue(generatedDumps.isNotEmpty(), "There are no dumps generated for KLibs")
-
-            val expected = readFileList("examples/classes/AnotherBuildConfig.klib.dump")
-
-            generatedDumps.forEach {
-                Assertions.assertThat(it.readText()).isEqualToIgnoringNewLines(expected)
-            }
-        }
+        checkKlibDump(runner.build(), "examples/classes/AnotherBuildConfig.klib.dump")
     }
 
     @Test
@@ -341,20 +294,7 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
             }
         }
 
-        runner.build().apply {
-            assertTaskSuccess(":apiDump")
-
-            val generatedDumps = nativeTargets
-                .map { rootProjectAbiDump(target = it, project = "testproject") }
-                .filter(File::exists)
-            assertTrue(generatedDumps.isNotEmpty(), "There are no dumps generated for KLibs")
-
-            val expected = readFileList("examples/classes/HiddenDeclarations.klib.dump")
-
-            generatedDumps.forEach {
-                Assertions.assertThat(it.readText()).isEqualToIgnoringNewLines(expected)
-            }
-        }
+        checkKlibDump(runner.build(), "examples/classes/HiddenDeclarations.klib.dump")
     }
 
     @Test
@@ -376,19 +316,7 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
             }
         }
 
-        runner.build().apply {
-            assertTaskSuccess(":apiDump")
-
-            val generatedDumps = nativeTargets
-                .map { rootProjectAbiDump(target = it, project = "testproject") }
-                .filter(File::exists)
-            assertTrue(generatedDumps.isNotEmpty(), "There are no dumps generated for KLibs")
-
-            val expected = readFileList("examples/classes/Subclasses.klib.dump")
-            generatedDumps.forEach {
-                Assertions.assertThat(it.readText()).isEqualToIgnoringNewLines(expected)
-            }
-        }
+        checkKlibDump(runner.build(), "examples/classes/Subclasses.klib.dump")
     }
 
     @Test
