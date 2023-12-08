@@ -5,7 +5,7 @@
 
 package kotlinx.validation
 
-import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
@@ -14,8 +14,11 @@ import org.jetbrains.kotlin.library.abi.*
 
 abstract class KotlinKlibAbiBuildTask : BuildTaskBase() {
 
-    @get:InputFiles
-    abstract val klibFile: ConfigurableFileCollection
+    @InputFiles
+    lateinit var klibFile: FileCollection
+
+    @InputFiles
+    lateinit var compilationDependencies: FileCollection
 
     @Optional
     @get:Input
@@ -38,9 +41,6 @@ abstract class KotlinKlibAbiBuildTask : BuildTaskBase() {
                 }))
             }
             if (nonPublicMarkers.isNotEmpty()) {
-                println(nonPublicMarkers.flatMap {
-                    generateQualifiedNames(it)
-                })
                 add(AbiReadingFilter.NonPublicMarkerAnnotations(nonPublicMarkers.flatMap {
                     generateQualifiedNames(it)
                 }))
@@ -64,7 +64,7 @@ abstract class KotlinKlibAbiBuildTask : BuildTaskBase() {
                 ?: throw IllegalStateException("Can't choose abiSignatureVersion")
         }
 
-        outputApiDir.resolve("$projectName.api").bufferedWriter().use {
+        outputApiDir.resolve("$projectName.abi").bufferedWriter().use {
             LibraryAbiRenderer.render(parsedAbi, it, AbiRenderingSettings(sigVersion))
         }
     }
