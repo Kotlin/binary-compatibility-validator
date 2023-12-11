@@ -131,36 +131,44 @@ class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
             it.dependsOn(mergeKlibsTask)
         }
 
-        val unsupportedTargets = mutableListOf<String>()
-        kotlin.targets.matching { it.platformType == KotlinPlatformType.native }.all { target ->
+        val mergeUnsupported = project.task<KotlinKlibMergeAbiTask>(
+            klibDumpConfig.apiTaskName("MergeSubstituted")) {
+
+            isEnabled = klibAbiCheckEnabled(project.name, extension)
+            description = "Merges multiple klib ABI dump files generated for " +
+                    "different targets (including files substituting dumps for unsupported target) " +
+                    "into a single multi-target dump"
+            inputImageDir = klibApiDir
+            mergedFile = klibMergeDir
+        }
+
+        kotlin.targets.matching { it.platformType == KotlinPlatformType.native }.configureEach { target ->
             val mainCompilations = target.compilations.matching { it.name == "main" }
             if (mainCompilations.none()) {
-                return@all
+                return@configureEach
             }
             var supportedTarget = false
+            val targetConfig = TargetConfig(project, target.name, dirConfig)
             if (target is KotlinNativeTarget) {
                 if (HostManager().isEnabled(target.konanTarget)) {
                     supportedTarget = true
                 } else {
-                    unsupportedTargets.add(target.name)
-                    return@all
+                    project.logger.warn(
+                        "Current host does not support following native target: ${target.name}. " +
+                                "Klib ABI dump will not be generated and/or verified for this target."
+                    )
+                    project.configureUnsupportedTarget(targetConfig, extension, kotlin.targets.toList(),
+                        mergeUnsupported)
+                    return@configureEach
                 }
             } else if (target.platformType == KotlinPlatformType.wasm) {
                 supportedTarget = true
             }
             if (supportedTarget) {
-                val targetConfig = TargetConfig(project, target.name, dirConfig)
                 mainCompilations.all {
                     project.configureKlibCompilation(it, extension, targetConfig, mergeKlibsTask)
                 }
             }
-        }
-        if (unsupportedTargets.isNotEmpty()) {
-            project.logger.warn(
-                "Current host does not support some following native targets: " +
-                        "${unsupportedTargets.joinToString(", ")}. " +
-                        "Klib ABI dump will not be generated and/or verified for these targets."
-            )
         }
 
         val dumpKlibTasks = project.task<Sync>(klibDumpConfig.apiTaskName("Dump")) {
@@ -175,10 +183,26 @@ class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
             it.dependsOn(dumpKlibTasks)
         }
 
+        mergeUnsupported.configure {
+            it.dependsOn(dumpKlibTasks)
+        }
+
+        project.task<Sync>(klibDumpConfig.apiTaskName("DumpAll")) {
+            isEnabled = klibAbiCheckEnabled(project.name, extension)
+            description = "Syncs klib ABI dump generated for all targets " +
+                    "(including targets not supported by the host compiler) " +
+                    "from build dir to ${klibDumpConfig.apiDir} dir for ${project.name}"
+            group = "other"
+            from(klibMergeDir)
+            into(klibApiDir)
+            dependsOn(mergeUnsupported)
+        }
+
         val checkKlibTasks = project.task<KotlinApiCompareTask>(klibDumpConfig.apiTaskName("Check")) {
             isEnabled = klibAbiCheckEnabled(project.name, extension)
             group = "verification"
-            description = "Checks signatures of public klib ABI against the golden value in ABI folder for ${project.name}"
+            description = "Checks signatures of public klib ABI against the golden value in ABI folder for " +
+                    project.name
             compareApiDumps(apiReferenceDir = klibApiDir, apiBuildDir = klibMergeDir)
             dependsOn(mergeKlibsTask)
         }
@@ -297,12 +321,13 @@ private fun Project.configureKlibCompilation(
     extension: ApiValidationExtension,
     targetConfig: TargetConfig = TargetConfig(this),
     mergeKlibsTask: TaskProvider<KotlinKlibMergeAbiTask>
-) {
+): TaskProvider<KotlinKlibAbiBuildTask> {
     val projectName = project.name
     val apiDirProvider = targetConfig.apiDir
     val apiBuildDir = apiDirProvider.map { buildDir.resolve(it) }
 
     val buildTask = task<KotlinKlibAbiBuildTask>(targetConfig.apiTaskName("Build")) {
+        target = targetConfig.targetName!!
         // Do not enable task for empty umbrella modules
         isEnabled =
             klibAbiCheckEnabled(projectName, extension) && compilation.allKotlinSourceSets.any { it.kotlin.srcDirs.any { it.exists() } }
@@ -317,6 +342,33 @@ private fun Project.configureKlibCompilation(
     mergeKlibsTask.configure {
         it.addInput(targetConfig.targetName!!, apiBuildDir.get())
         it.dependsOn(buildTask)
+    }
+    return buildTask
+}
+
+private fun Project.configureUnsupportedTarget(
+    targetConfig: TargetConfig,
+    extension: ApiValidationExtension,
+    targets: List<KotlinTarget>,
+    mergeUnsupported: TaskProvider<KotlinKlibMergeAbiTask>
+) {
+    val apiBuildDir = targetConfig.apiDir.map { buildDir.resolve(it) }.get()
+    val generateForUnsupported = project.tasks.register(targetConfig.apiTaskName("SubstituteAbiDump"),
+        KotlinKlibReuseSharedAbiTask::class.java, targets)
+    val target = targetConfig.targetName!!
+    generateForUnsupported.configure {
+        it.isEnabled = klibAbiCheckEnabled(project.name, extension)
+        it.description = "Try to replace the dump for unsupported target $target with the dump " +
+                "generated for one of the supported targets."
+        it.group = "other"
+        it.outputApiDir = apiBuildDir.resolve(target)
+        it.unsupportedTarget = target
+        it.dependsOn(project.tasks.withType(KotlinKlibAbiBuildTask::class.java))
+    }
+
+    mergeUnsupported.configure {
+        it.addInput(target, apiBuildDir.resolve(target))
+        it.dependsOn(generateForUnsupported)
     }
 }
 

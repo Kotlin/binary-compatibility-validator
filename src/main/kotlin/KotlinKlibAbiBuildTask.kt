@@ -24,6 +24,9 @@ abstract class KotlinKlibAbiBuildTask : BuildTaskBase() {
     @get:Input
     var signatureVersion: Int? = null
 
+    @Input
+    lateinit var target: String
+
     @ExperimentalStdlibApi
     @ExperimentalLibraryAbiReader
     @TaskAction
