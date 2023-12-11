@@ -13,11 +13,6 @@ open class ApiValidationExtension {
     public var validationDisabled = false
 
     /**
-     * Enables KLIB ABI validation checks completely.
-     */
-    public var klibValidationEnabled = false
-
-    /**
      * Fully qualified package names that are not consider public API.
      * For example, it could be `kotlinx.coroutines.internal` or `kotlinx.serialization.implementation`.
      */
@@ -71,7 +66,62 @@ open class ApiValidationExtension {
     public var additionalSourceSets: MutableSet<String> = HashSet()
 
     /**
+     * KLIB ABI validation settings.
+     *
+     * @see KlibValidationSettings
+     */
+    public val klib: KlibValidationSettings = KlibValidationSettings()
+
+    /**
+     * Configure KLIB AVI validation settings.
+     */
+    public inline fun klib(block: KlibValidationSettings.() -> Unit) {
+        block(this.klib)
+    }
+}
+
+/**
+ * Settings affecting KLIB ABI validation.
+ */
+open class KlibValidationSettings {
+    /**
+     * Enables KLIB ABI validation checks.
+     */
+    public var enabled: Boolean = false
+    /**
      * Specify which version of signature KLIB ABI dump should contain.
      */
-    public var klibSignatureVersion: Int = 2
+    public var signatureVersion: Int = 2
+    /**
+     * Allow KLIB ABI dump substitution.
+     *
+     * **This option aimed to ease the multiplatform development on hosts where not all native targets are
+     * supported. It should not be considered as a replacement of validation on a host supporting all required
+     * native targets.**
+     *
+     * If the host compiler does not support a particular target compilation, it would be impossible to update or
+     * validate KLIB ABI dump for such a target. However, if the unsupported target does not have target-specific
+     * sources then it could be optimistically assumed that the ABI for such a target should be the same as the ABI
+     * dumped for the targets having exactly the same source sets. Such assumption will not always hold, so the
+     * validation may fail on a host supporting a target whose dump was previously substituted.
+     */
+    public var substituteUnsupportedTargets: Boolean = false
+    /**
+     * Allow inexact KLIB ABI dump substitution.
+     *
+     * **This option aimed to ease the multiplatform development on hosts where not all native targets are
+     * supported. It should not be considered as a replacement of validation on a host supporting all required
+     * native targets.**
+     *
+     * This option extends [substituteUnsupportedTargets] behaviour by substituting the dump of a target not supported
+     * by the host compiler with a dump of target whose source sets intersects with the unsupported target source sets
+     * at most.
+     *
+     * To use this option, [substituteUnsupportedTargets] should be first enabled.
+     */
+    public var allowInexactDumpSubstitution: Boolean = false
+    /**
+     * Suppress validation failure for targets not supported by the host compiler.
+     */
+    public var dontFailValidationIfTargetIsNotSupported: Boolean = false
 }

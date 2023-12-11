@@ -41,14 +41,19 @@ abstract class KotlinKlibReuseSharedAbiTask @Inject constructor(private val targ
         val matchingTargets = target2SourceSets.filter {
             it.value == thisSourceSets
         }.keys
-        if (matchingTargets.isEmpty()) {
-            throw IllegalStateException("There are no targets sharing the same source sets with ${unsupportedTarget}.")
+        val matchingTarget = if (matchingTargets.isEmpty()) {
+            if (!project.apiValidationExtensionOrNull!!.klib.allowInexactDumpSubstitution) {
+                throw IllegalStateException("There are no targets sharing the same source sets with ${unsupportedTarget}.")
+            }
+            target2SourceSets.mapValues { it.value.intersect(thisSourceSets).size }.toList()
+                .sortedByDescending { it.second }.map { it.first }.first()
+        } else {
+            project.logger.info(
+                "Following compilation targets supported by the host compiler have the same source sets " +
+                        "as the $unsupportedTarget target: [${matchingTargets.joinToString(", ")}]"
+            )
+            matchingTargets.first()
         }
-        project.logger.info(
-            "Following compilation targets supported by the host compiler have the same source sets " +
-                    "as the $unsupportedTarget target: [${matchingTargets.joinToString(", ")}]"
-        )
-        val matchingTarget = matchingTargets.first()
         project.logger.info(
             "Using a dump for the target $matchingTarget as a dump for unsupported " +
                     "compilation target $unsupportedTarget"
