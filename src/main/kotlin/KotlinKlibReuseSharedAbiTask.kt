@@ -7,8 +7,10 @@ package kotlinx.validation
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.*
+import org.jetbrains.kotlin.gradle.dsl.kotlinExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import org.jetbrains.kotlin.gradle.plugin.KotlinTarget
+import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.util.targets
 import java.io.File
 import java.nio.file.*
 import java.nio.file.attribute.BasicFileAttributes
@@ -21,8 +23,7 @@ import javax.inject.Inject
  * A dump made for some supported target could be used as a substitution for [unsupportedTarget]'s dump if
  * both targets have the same non-empty source sets (i.e. source sets consisting of at least one file).
  */
-abstract class KotlinKlibReuseSharedAbiTask @Inject constructor(private val targets: List<KotlinTarget>) :
-    DefaultTask() {
+abstract class KotlinKlibReuseSharedAbiTask : DefaultTask() {
     @get:Internal
     internal val projectName = project.name
 
@@ -73,7 +74,7 @@ abstract class KotlinKlibReuseSharedAbiTask @Inject constructor(private val targ
 
     private fun collectSourceSetsMapping(target2outDir: MutableMap<String, File>): MutableMap<String, Set<String>> {
         val targetToSourceSets = mutableMapOf<String, Set<String>>()
-        targets.forEach {
+        project.kotlinExtension.targets.forEach {
             if (target2outDir.containsKey(it.name) || it.name == unsupportedTarget) {
                 val sourceSets = mutableSetOf<String>()
                 it.compilations.first { it.name == "main" }.allKotlinSourceSets.forEach {
