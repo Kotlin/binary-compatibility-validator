@@ -46,23 +46,38 @@ public fun Sequence<InputStream>.loadApiFromJvmClasses(visibilityFilter: (String
                     .map {
                         val annotationHolders =
                             mVisibility?.members?.get(JvmFieldSignature(it.name, it.desc))?.propertyAnnotation
-                        val foundAnnotations = methods.annotationsFor(annotationHolders?.method)
-                        it.toFieldBinarySignature(foundAnnotations)
+                        val foundAnnotations = mutableListOf<AnnotationNode>()
+                        foundAnnotations.addAll(methods.annotationsFor(annotationHolders?.method))
+
+                        var companionClass: ClassNode? = null
+                        if (it.isCompanionField(classNode.kotlinMetadata)) {
+                            /*
+                             * If the field was generated to hold the reference to a companion class's instance,
+                             * then we have to also take all annotations from the companion class an associate it with
+                             * the field. Otherwise, all these annotations will be lost and if the class was marked
+                             * as non-public API using some annotation, then we won't be able to filter out
+                             * the companion field.
+                             */
+                            val companionName = companionName(classNode.kotlinMetadata)
+                            companionClass = classNodeMap[companionName]
+                            foundAnnotations.addAll(companionClass?.visibleAnnotations.orEmpty())
+                            foundAnnotations.addAll(companionClass?.invisibleAnnotations.orEmpty())
+                        }
+
+                        it.toFieldBinarySignature(foundAnnotations) to companionClass
                     }.filter {
-                        it.isEffectivelyPublic(classAccess, mVisibility)
+                        it.first.isEffectivelyPublic(classAccess, mVisibility)
                     }.filter {
                         /*
                          * Filter out 'public static final Companion' field that doesn't constitute public API.
                          * For that we first check if field corresponds to the 'Companion' class and then
                          * if companion is effectively public by itself, so the 'Companion' field has the same visibility.
                          */
-                        if (!it.isCompanionField(classNode.kotlinMetadata)) return@filter true
-                        val outerKClass = (classNode.kotlinMetadata as KotlinClassMetadata.Class).toKmClass()
-                        val companionName = name + "$" + outerKClass.companionObject
-                        // False positive is better than the crash here
-                        val companionClass = classNodeMap[companionName] ?: return@filter true
-                        val visibility = visibilityMap[companionName] ?: return@filter true
+                        val companionClass = it.second ?: return@filter true
+                        val visibility = visibilityMap[companionClass.name] ?: return@filter true
                         companionClass.isEffectivelyPublic(visibility)
+                    }.map {
+                        it.first
                     }
 
                 // NB: this 'map' is O(methods + properties * methods) which may accidentally be quadratic
