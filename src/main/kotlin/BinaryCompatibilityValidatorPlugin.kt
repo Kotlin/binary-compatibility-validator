@@ -299,6 +299,7 @@ inline fun <reified T : Task> Project.task(
     noinline configuration: T.() -> Unit,
 ): TaskProvider<T> = tasks.register(name, T::class.java, Action(configuration))
 
+const val BANNED_TARGETS_PROPERTY_NAME = "binary.compatibility.validator.klib.targets.blacklist.for.testing"
 
 private class KlibValidationPipelineBuilder(
     val project: Project,
@@ -420,9 +421,21 @@ private class KlibValidationPipelineBuilder(
         mergedFile = klibMergeDir
     }
 
+    fun bannedTargets(): Set<String> {
+        val prop = project.properties[BANNED_TARGETS_PROPERTY_NAME] as String?
+        prop ?: return emptySet()
+        return prop.split(",").map { it.trim() }.toSet().also {
+            if (it.isNotEmpty()) {
+                project.logger.warn("WARNING: Following property is not empty: $BANNED_TARGETS_PROPERTY_NAME. " +
+                        "If you're don't know what it means, please make sure that its value is empty.")
+            }
+        }
+    }
+
     fun configureTargets(mergeTask: TaskProvider<KotlinKlibMergeAbiTask>,
                          mergeFakeTask: TaskProvider<KotlinKlibMergeAbiTask>?) {
         val hostManager = HostManager()
+        val bannedTargets = bannedTargets()
         kotlin.targets.matching { it.emitsKlib }.configureEach { currentTarget ->
             val mainCompilations = currentTarget.compilations.matching { it.name == "main" }
             if (mainCompilations.none()) {
@@ -433,7 +446,11 @@ private class KlibValidationPipelineBuilder(
             val targetConfig = TargetConfig(project, targetName, dirConfig)
             val apiBuildDir = targetConfig.apiDir.map { project.buildDir.resolve(it) }.get()
 
-            if (currentTarget !is KotlinNativeTarget || (hostManager.isEnabled(currentTarget.konanTarget))) {
+            val targetSupported = (currentTarget !is KotlinNativeTarget
+                    || (hostManager.isEnabled(currentTarget.konanTarget)))
+                    && !bannedTargets.contains(targetName) // the last check is only for testing purposes
+
+            if (targetSupported) {
                 mainCompilations.all {
                     val buildTargetAbi = configureKlibCompilation(it, extension, targetConfig,
                         apiBuildDir.resolve(targetName))
