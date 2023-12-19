@@ -81,6 +81,7 @@ dependencies {
     add(testPluginRuntimeConfiguration.name, "com.android.tools.build:gradle:${androidGradlePluginVersion}")
 
     testImplementation(kotlin("test-junit"))
+    testImplementation("org.jetbrains.kotlin:kotlin-compiler-embeddable:$kotlinVersion")
     "functionalTestImplementation"(files(createClasspathManifest))
 
     "functionalTestImplementation"("org.assertj:assertj-core:3.18.1")
