@@ -101,7 +101,7 @@ internal fun FileContainer.apiFile(projectName: String, fn: AppendableScope.() -
 internal fun FileContainer.abiFile(projectName: String, target: String, fn: AppendableScope.() -> Unit) {
     dir(API_DIR) {
         dir(target) {
-            file("$projectName.api", fn)
+            file("$projectName.abi", fn)
         }
     }
 }
@@ -173,10 +173,17 @@ private fun GradleRunner.addPluginTestRuntimeClasspath() = apply {
     withPluginClasspath(pluginClasspath)
 }
 
-internal val nativeTargets = listOf(
+internal val commonNativeTargets = listOf(
     "linuxX64",
     "linuxArm64",
     "mingwX64",
+    "androidNativeArm32",
+    "androidNativeArm64",
+    "androidNativeX64",
+    "androidNativeX86"
+)
+
+internal val appleNativeTarget = listOf(
     "macosX64",
     "macosArm64",
     "iosX64",
@@ -190,8 +197,4 @@ internal val nativeTargets = listOf(
     "watchosX64",
     "watchosSimulatorArm64",
     "watchosDeviceArm64",
-    "androidNativeArm32",
-    "androidNativeArm64",
-    "androidNativeX64",
-    "androidNativeX86"
 )

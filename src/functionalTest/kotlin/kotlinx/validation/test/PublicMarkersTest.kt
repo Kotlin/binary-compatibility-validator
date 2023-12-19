@@ -5,6 +5,7 @@
 
 package kotlinx.validation.test
 
+import kotlinx.validation.KLIB_PHONY_TARGET_NAME
 import kotlinx.validation.api.*
 import kotlinx.validation.api.buildGradleKts
 import kotlinx.validation.api.kotlin
@@ -66,10 +67,8 @@ class PublicMarkersTest : BaseKotlinGradleTest() {
                 resolve("examples/classes/ClassInPublicPackage.kt")
             }
 
-            nativeTargets.forEach {
-                abiFile(target = it, projectName = "testproject") {
-                    resolve("examples/classes/ClassWithPublicMarkers.klib.dump")
-                }
+            abiFile(target = KLIB_PHONY_TARGET_NAME, projectName = "testproject") {
+                resolve("examples/classes/ClassWithPublicMarkers.klib.dump")
             }
 
             runner {

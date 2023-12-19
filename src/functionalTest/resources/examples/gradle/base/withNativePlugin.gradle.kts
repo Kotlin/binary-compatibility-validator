@@ -15,9 +15,9 @@ repositories {
 kotlin {
     linuxX64()
     linuxArm64()
-
     mingwX64()
 
+    /*
     macosX64()
     macosArm64()
 
@@ -34,7 +34,7 @@ kotlin {
     watchosX64()
     watchosSimulatorArm64()
     watchosDeviceArm64()
-
+    */
     androidNativeArm32()
     androidNativeArm64()
     androidNativeX64()
@@ -53,5 +53,5 @@ kotlin {
 }
 
 apiValidation {
-    klibValidationEnabled = true
+    klib.enabled = true
 }

@@ -5,6 +5,7 @@
 
 package kotlinx.validation.test
 
+import kotlinx.validation.KLIB_PHONY_TARGET_NAME
 import kotlinx.validation.api.*
 import kotlinx.validation.api.buildGradleKts
 import kotlinx.validation.api.resolve
@@ -18,16 +19,12 @@ import kotlin.test.assertTrue
 private fun KLibVerificationTests.checkKlibDump(buildResult: BuildResult, expectedDumpFileName: String, projectName: String = "testproject") {
     buildResult.assertTaskSuccess(":apiDump")
 
-    val generatedDumps = nativeTargets
-        .map { rootProjectAbiDump(target = it, project = projectName) }
-        .filter(File::exists)
-    assertTrue(generatedDumps.isNotEmpty(), "There are no dumps generated for KLibs")
+    val generatedDump = rootProjectAbiDump(target = KLIB_PHONY_TARGET_NAME, project = projectName)
+    assertTrue(generatedDump.exists(), "There are no dumps generated for KLibs")
 
     val expected = readFileList(expectedDumpFileName)
 
-    generatedDumps.forEach {
-        Assertions.assertThat(it.readText()).isEqualToIgnoringNewLines(expected)
-    }
+    Assertions.assertThat(generatedDump.readText()).isEqualToIgnoringNewLines(expected)
 }
 
 internal class KLibVerificationTests : BaseKotlinGradleTest() {
@@ -64,10 +61,8 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
                 resolve("examples/classes/TopLevelDeclarations.kt")
             }
 
-            nativeTargets.forEach {
-                abiFile(projectName = "testproject", target = it) {
-                    resolve("examples/classes/TopLevelDeclarations.klib.dump")
-                }
+            abiFile(projectName = "testproject", target = KLIB_PHONY_TARGET_NAME) {
+                resolve("examples/classes/TopLevelDeclarations.klib.dump")
             }
 
             runner {
@@ -93,9 +88,7 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
                 resolve("examples/classes/BuildConfig.kt")
             }
 
-            nativeTargets.forEach {
-                abiFile(projectName = "testproject", target = it) {}
-            }
+            abiFile(projectName = "testproject", target = KLIB_PHONY_TARGET_NAME) {}
 
             runner {
                 arguments.add(":apiCheck")
@@ -103,22 +96,8 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
         }
 
         runner.buildAndFail().apply {
-            val dumpOutput =
-                "  @@ -1,1 +1,13 @@\n" +
-                        "  +// Rendering settings:\n" +
-                        "  +// - Signature version: 2\n" +
-                        "  +// - Show manifest properties: false\n" +
-                        "  +// - Show declarations: true\n" +
-                        "   \n" +
-                        "  +// Library unique name: <testproject>\n" +
-                        "  +final class com.company/BuildConfig { // com.company/BuildConfig|null[0]\n" +
-                        "  +    final val property // com.company/BuildConfig.property|{}property[0]\n" +
-                        "  +        final fun <get-property>(): kotlin/Int // com.company/BuildConfig.property.<get-property>|<get-property>(){}[0]\n" +
-                        "  +    constructor <init>() // com.company/BuildConfig.<init>|<init>(){}[0]\n" +
-                        "  +    final fun function(): kotlin/Int // com.company/BuildConfig.function|function(){}[0]\n" +
-                        "  +}\n" +
-                        "  +"
-            Assertions.assertThat(output).contains(dumpOutput)
+
+            Assertions.assertThat(output).contains("+final class com.company/BuildConfig { // com.company/BuildConfig|null[0]")
             tasks.filter { it.path.endsWith("ApiCheck") }
                 .forEach {
                     assertTaskFailure(it.path)
@@ -151,20 +130,11 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
             assertTaskSuccess(":apiDump")
 
             // not common, but built from the common source set
-            val commonFile = rootProjectAbiDump("linuxX64", "testproject")
-            val specializedFile = rootProjectAbiDump("linuxArm64", "testproject")
+            val dump = rootProjectAbiDump(KLIB_PHONY_TARGET_NAME, "testproject")
+            assertTrue(dump.exists(), "Dump does not exist")
 
-            // all hosts support Linux target, that's why the test is using them
-            assertTrue(commonFile.exists(), "No dump for linuxX64")
-            assertTrue(specializedFile.exists(), "No dump for linuxArm64")
-
-            val expectedCommon = readFileList("examples/classes/AnotherBuildConfig.klib.dump")
-            val expectedSpecialized = readFileList(
-                "examples/classes/AnotherBuildConfigLinuxArm64Extra.klib.dump"
-            )
-
-            Assertions.assertThat(commonFile.readText()).isEqualToIgnoringNewLines(expectedCommon)
-            Assertions.assertThat(specializedFile.readText()).isEqualToIgnoringNewLines(expectedSpecialized)
+            val expectedDump = readFileList("examples/classes/AnotherBuildConfigLinuxArm64Extra.klib.dump")
+            Assertions.assertThat(dump.readText()).isEqualToIgnoringNewLines(expectedDump)
         }
     }
 
@@ -333,10 +303,8 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
                 resolve("examples/classes/TopLevelDeclarations.kt")
             }
 
-            nativeTargets.forEach {
-                abiFile(projectName = "testproject", target = it) {
-                    resolve("examples/classes/TopLevelDeclarations.klib.v1.dump")
-                }
+            abiFile(projectName = "testproject", target = KLIB_PHONY_TARGET_NAME) {
+                resolve("examples/classes/TopLevelDeclarations.klib.v1.dump")
             }
 
             runner {
@@ -369,5 +337,15 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
         }
 
         runner.buildAndFail()
+    }
+
+    @Test
+    fun `tests for apple targets`() {
+        TODO()
+    }
+
+    @Test
+    fun `tests for targets not supported by the host`() {
+        TODO()
     }
 }

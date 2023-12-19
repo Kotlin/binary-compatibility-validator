@@ -53,7 +53,7 @@ class NonPublicMarkersTest : BaseKotlinGradleTest() {
                 resolve("examples/classes/Properties.kt")
             }
 
-            nativeTargets.forEach {
+            commonNativeTargets.forEach {
                 abiFile(projectName = "testproject", target = it) {
                     resolve("examples/classes/Properties.klib.dump")
                 }
