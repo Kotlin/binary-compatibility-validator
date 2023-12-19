@@ -121,7 +121,12 @@ open class KlibValidationSettings {
      */
     public var allowInexactDumpSubstitution: Boolean = false
     /**
-     * Suppress validation failure for targets not supported by the host compiler.
+     * Print a warning instead of failing Klib ABI dump and validation tasks when host compiler does not support
+     * one of the compilation targets.
+     *
+     * Klib ABI dumps for unsupported target will not be used to update the merged dump (i.e. for these targets ABI
+     * will remain the same as before executing update task) and during the validation these targets will be skipped.
+     *
      */
-    public var dontFailValidationIfTargetIsNotSupported: Boolean = false
+    public var ignoreUnsupportedTargets: Boolean = false
 }
