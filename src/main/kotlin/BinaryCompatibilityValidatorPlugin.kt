@@ -19,6 +19,20 @@ import java.io.*
 const val API_DIR = "api"
 const val KLIB_PHONY_TARGET_NAME = "klib"
 
+private val KotlinTarget.emitsKlib: Boolean
+    get() {
+        val platformType = this.platformType
+        return platformType == KotlinPlatformType.native ||
+                platformType == KotlinPlatformType.wasm ||
+                platformType == KotlinPlatformType.js
+    }
+
+private val KotlinTarget.jvmBased: Boolean
+    get() {
+        val platformType = this.platformType
+        return platformType == KotlinPlatformType.jvm || platformType == KotlinPlatformType.androidJvm
+    }
+
 class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
 
     override fun apply(target: Project): Unit = with(target) {
@@ -86,9 +100,7 @@ class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
             if (it == 1 && !extension.klib.enabled) DirConfig.COMMON else DirConfig.TARGET_DIR
         }
 
-        kotlin.targets.matching {
-            it.platformType == KotlinPlatformType.jvm || it.platformType == KotlinPlatformType.androidJvm
-        }.all { target ->
+        kotlin.targets.matching { it.jvmBased }.all { target ->
             val targetConfig = TargetConfig(project, target.name, dirConfig)
             if (target.platformType == KotlinPlatformType.jvm) {
                 target.compilations.matching { it.name == "main" }.all {
@@ -168,9 +180,8 @@ class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
             it.dependsOn(checkKlibTasks)
         }
 
-        // TODO: wasm & js
         kotlin.targets
-            .matching { it.platformType == KotlinPlatformType.native || it.platformType == KotlinPlatformType.wasm }
+            .matching { it.emitsKlib }
             .configureEach { target ->
                 val mainCompilations = target.compilations.matching { it.name == "main" }
                 if (mainCompilations.none()) {
