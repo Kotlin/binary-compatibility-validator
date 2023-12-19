@@ -345,13 +345,11 @@ private class KlibValidationPipelineBuilder(
         klibApiDir: File,
         klibMergeDir: File
     ) = project.task<Sync>(klibDumpConfig.apiTaskName("DumpAll")) {
-        isEnabled = klibAbiCheckEnabled(project.name, extension) && extension.klib.substituteUnsupportedTargets
+        isEnabled = klibAbiCheckEnabled(project.name, extension)
         description = "Syncs klib ABI dump generated for all targets " +
                 "(including targets not supported by the host compiler) " +
                 "from build dir to ${klibDumpConfig.apiDir} dir for ${project.name}"
-        if (extension.klib.substituteUnsupportedTargets) {
-            group = "other"
-        }
+        group = "other"
         from(klibMergeDir)
         into(klibApiDir)
     }
@@ -397,11 +395,10 @@ private class KlibValidationPipelineBuilder(
         klibApiDir: File,
         klibMergeDir: File
     ) = project.task<KotlinKlibMergeAbiTask>(
-        klibDumpConfig.apiTaskName("MergeSubstituted")
+        klibDumpConfig.apiTaskName("MergeAll")
     )
     {
-
-        isEnabled = klibAbiCheckEnabled(project.name, extension) && extension.klib.substituteUnsupportedTargets
+        isEnabled = klibAbiCheckEnabled(project.name, extension)
         description = "Merges multiple klib ABI dump files generated for " +
                 "different targets (including files substituting dumps for unsupported target) " +
                 "into a single multi-target dump"
@@ -516,9 +513,9 @@ private class KlibValidationPipelineBuilder(
                     // TODO: change the options part of the message
                     throw UnsupportedOperationException(
                         "Target ${targetConfig.targetName} is not supported by the host compiler and the " +
-                                "KLIB ABI dump could not be generated for it. Consider running the task on host where all" +
-                                " targets are supported or enabling the " +
-                                "\"apiValidation.klib.substituteUnsupportedTargets\" option.")
+                                "KLIB ABI dump could not be generated for it. Consider running the task on a host " +
+                                "where all targets are supported. For other possible solutions please check the " +
+                                "https://github.com/Kotlin/binary-compatibility-validator#binary-compatibility-validator")
                 }
             }
         }
@@ -528,8 +525,8 @@ private class KlibValidationPipelineBuilder(
             TaskProvider<KotlinKlibReuseSharedAbiTask>
     {
         val targetName = targetConfig.targetName!!
-        return project.task<KotlinKlibReuseSharedAbiTask>(targetConfig.apiTaskName("SubstituteAbiDump")) {
-            isEnabled = klibAbiCheckEnabled(project.name, extension) && extension.klib.substituteUnsupportedTargets
+        return project.task<KotlinKlibReuseSharedAbiTask>(targetConfig.apiTaskName("FakeAbiDump")) {
+            isEnabled = klibAbiCheckEnabled(project.name, extension)
             description = "Try to replace the dump for unsupported target $targetName with the dump " +
                     "generated for one of the supported targets."
             group = "other"

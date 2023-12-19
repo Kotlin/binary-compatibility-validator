@@ -93,6 +93,7 @@ open class KlibValidationSettings {
      */
     public var signatureVersion: Int = 2
     /**
+     * TODO: rewrite
      * Allow KLIB ABI dump substitution.
      *
      * **This option aimed to ease the multiplatform development on hosts where not all native targets are
@@ -105,7 +106,7 @@ open class KlibValidationSettings {
      * dumped for the targets having exactly the same source sets. Such assumption will not always hold, so the
      * validation may fail on a host supporting a target whose dump was previously substituted.
      */
-    public var substituteUnsupportedTargets: Boolean = false
+    // public var substituteUnsupportedTargets: Boolean = false
     /**
      * Allow inexact KLIB ABI dump substitution.
      *
