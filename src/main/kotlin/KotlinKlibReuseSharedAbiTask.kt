@@ -45,7 +45,9 @@ abstract class KotlinKlibReuseSharedAbiTask : DefaultTask() {
         }.keys
         val matchingTarget = if (matchingTargets.isEmpty()) {
             if (!allowInexactDumpSubstitution) {
-                throw IllegalStateException("There are no targets sharing the same source sets with ${unsupportedTarget}.")
+                throw IllegalStateException(
+                    "There are no targets sharing the same source sets with ${unsupportedTarget}."
+                )
             }
             target2SourceSets.mapValues { it.value.intersect(thisSourceSets).size }.toList()
                 .sortedByDescending { it.second }.map { it.first }.first()
@@ -67,10 +69,12 @@ abstract class KotlinKlibReuseSharedAbiTask : DefaultTask() {
             srcDir.resolve(fileName).toPath(), outputApiDir.resolve(fileName).toPath(),
             StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES
         )
-        logger.warn("An ABI dump for target $unsupportedTarget was copied from the target $matchingTarget " +
-                "as the former target is not supported by the host compiler. Copied dump may not reflect actual ABI " +
-                "for the target $unsupportedTarget. It is recommended to regenerate the dump on the host supporting " +
-                "all required compilation target.")
+        logger.warn(
+            "An ABI dump for target $unsupportedTarget was copied from the target $matchingTarget " +
+                    "as the former target is not supported by the host compiler. Copied dump may not reflect actual ABI " +
+                    "for the target $unsupportedTarget. It is recommended to regenerate the dump on the host supporting " +
+                    "all required compilation target."
+        )
     }
 
     private fun collectSourceSetsMapping(target2outDir: MutableMap<String, File>): MutableMap<String, Set<String>> {
@@ -86,8 +90,7 @@ abstract class KotlinKlibReuseSharedAbiTask : DefaultTask() {
     private fun collectOutputDirectories(): MutableMap<String, File> {
         val target2outDir = mutableMapOf<String, File>()
         targetInfoProvider.get().keys.forEach {
-            // TODO: fix the path
-            target2outDir[it] = File(File(outputApiDir.parentFile.parentFile, it), it)
+            target2outDir[it] = outputApiDir.parentFile.resolve(it)
         }
         return target2outDir
     }
