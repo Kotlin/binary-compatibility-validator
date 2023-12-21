@@ -5,11 +5,8 @@
 
 package kotlinx.validation.api
 
-<<<<<<< HEAD
 import kotlinx.validation.API_DIR
-=======
 import kotlinx.validation.KLIB_PHONY_TARGET_NAME
->>>>>>> c3e2d52 (Updated tests to work with merged dumps)
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
 import java.io.File
@@ -26,11 +23,11 @@ public open class BaseKotlinGradleTest {
     internal fun rootProjectAbiDump(target: String, project: String = rootProjectDir.name): File {
         // TODO: rewrite
         val suffix = if (target != KLIB_PHONY_TARGET_NAME) "api" else "abi"
-        return rootProjectDir.resolve("api/$target/$project.$suffix")
+        return rootProjectDir.resolve("$API_DIR/$target/$project.$suffix")
     }
 
     internal fun rootProjectAbiDump(project: String = rootProjectDir.name): File {
         // TODO: rewrite
-        return rootProjectDir.resolve("api/$project.abi")
+        return rootProjectDir.resolve("$API_DIR/$project.abi")
     }
 }
