@@ -38,7 +38,7 @@ internal fun BaseKotlinGradleTest.test(fn: BaseKotlinScope.() -> Unit): GradleRu
 /**
  * same as [file][FileContainer.file], but prepends "src/${sourceSet}/kotlin" before given `classFileName`
  */
-internal fun FileContainer.kotlin(classFileName: String, sourceSet:String = "main", fn: AppendableScope.() -> Unit) {
+internal fun FileContainer.kotlin(classFileName: String, sourceSet: String = "main", fn: AppendableScope.() -> Unit) {
     require(classFileName.endsWith(".kt")) {
         "ClassFileName must end with '.kt'"
     }
@@ -50,7 +50,7 @@ internal fun FileContainer.kotlin(classFileName: String, sourceSet:String = "mai
 /**
  * same as [file][FileContainer.file], but prepends "src/${sourceSet}/java" before given `classFileName`
  */
-internal fun FileContainer.java(classFileName: String, sourceSet:String = "main", fn: AppendableScope.() -> Unit) {
+internal fun FileContainer.java(classFileName: String, sourceSet: String = "main", fn: AppendableScope.() -> Unit) {
     require(classFileName.endsWith(".java")) {
         "ClassFileName must end with '.java'"
     }
@@ -106,6 +106,12 @@ internal fun FileContainer.abiFile(projectName: String, target: String, fn: Appe
     }
 }
 
+internal fun FileContainer.abiFile(projectName: String, fn: AppendableScope.() -> Unit) {
+    dir(API_DIR) {
+        file("$projectName.abi", fn)
+    }
+}
+
 // not using default argument in apiFile for clarity in tests (explicit "empty" in the name)
 /**
  * Shortcut for creating an empty `api/<project>.api` descriptor by using [file][FileContainer.file]
@@ -143,7 +149,7 @@ internal class BaseKotlinScope : FileContainer {
 internal class DirectoryScope(
     val dirPath: String,
     val parent: FileContainer
-): FileContainer {
+) : FileContainer {
 
     override fun file(fileName: String, fn: AppendableScope.() -> Unit) {
         parent.file("$dirPath/$fileName", fn)

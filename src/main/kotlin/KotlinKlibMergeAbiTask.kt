@@ -9,6 +9,7 @@ import kotlinx.validation.klib.KlibDumpFileBuilder
 import kotlinx.validation.klib.LinesProvider
 import kotlinx.validation.klib.Target
 import org.gradle.api.DefaultTask
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.*
 import java.io.File
 import java.nio.file.Files
@@ -31,7 +32,7 @@ abstract class KotlinKlibMergeAbiTask : DefaultTask() {
     lateinit var mergedFile: File
 
     @InputFiles
-    lateinit var inputImageDir: File
+    lateinit var inputImageDir: Provider<File>
 
     @Input
     var updateImage: Boolean = true
@@ -45,7 +46,7 @@ abstract class KotlinKlibMergeAbiTask : DefaultTask() {
         val filename = "$projectName.abi"
         val builder = KlibDumpFileBuilder()
         if (updateImage) {
-            val inputImage = inputImageDir.resolve(filename)
+            val inputImage = inputImageDir.get().resolve(filename)
             if (inputImage.exists()) {
                 Files.lines(inputImage.toPath()).use {
                     builder.mergeFile(emptySet(), LinesProvider(it.iterator()))

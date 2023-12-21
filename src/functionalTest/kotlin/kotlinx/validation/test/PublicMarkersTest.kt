@@ -5,13 +5,11 @@
 
 package kotlinx.validation.test
 
-import kotlinx.validation.KLIB_PHONY_TARGET_NAME
 import kotlinx.validation.api.*
 import kotlinx.validation.api.buildGradleKts
 import kotlinx.validation.api.kotlin
 import kotlinx.validation.api.resolve
 import kotlinx.validation.api.test
-import org.jetbrains.kotlin.konan.target.HostManager
 import org.junit.Test
 
 class PublicMarkersTest : BaseKotlinGradleTest() {
@@ -67,7 +65,7 @@ class PublicMarkersTest : BaseKotlinGradleTest() {
                 resolve("examples/classes/ClassInPublicPackage.kt")
             }
 
-            abiFile(target = KLIB_PHONY_TARGET_NAME, projectName = "testproject") {
+            abiFile(projectName = "testproject") {
                 resolve("examples/classes/ClassWithPublicMarkers.klib.dump")
             }
 

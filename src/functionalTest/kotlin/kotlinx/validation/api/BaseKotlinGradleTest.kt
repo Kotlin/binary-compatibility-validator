@@ -28,4 +28,9 @@ public open class BaseKotlinGradleTest {
         val suffix = if (target != KLIB_PHONY_TARGET_NAME) "api" else "abi"
         return rootProjectDir.resolve("api/$target/$project.$suffix")
     }
+
+    internal fun rootProjectAbiDump(project: String = rootProjectDir.name): File {
+        // TODO: rewrite
+        return rootProjectDir.resolve("api/$project.abi")
+    }
 }

@@ -90,7 +90,9 @@ class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
         val jvmDirConfig = jvmTargetCountProvider.map {
             if (it == 1 && !extension.klib.enabled) DirConfig.COMMON else DirConfig.TARGET_DIR
         }
-        val klibDirConfig = project.provider { DirConfig.TARGET_DIR }
+        val klibDirConfig = jvmTargetCountProvider.map {
+            if (it == 0) DirConfig.COMMON else DirConfig.TARGET_DIR
+        }
 
         kotlin.targets.matching { it.jvmBased }.all { target ->
             val targetConfig = TargetConfig(project, target.name, jvmDirConfig)
@@ -314,12 +316,17 @@ private class KlibValidationPipelineBuilder(
     lateinit var intermediateFilesConfig: Provider<DirConfig>
 
     fun configureTasks(project: Project, commonApiDump: TaskProvider<Task>, commonApiCheck: TaskProvider<Task>) {
+        // In the intermediate phase of Klib dump generation there are always multiple targets, thus we need
+        // target-based directory tree.
         intermediateFilesConfig = project.provider { DirConfig.TARGET_DIR }
-        val klibApiDirConfig = TargetConfig(project, KLIB_PHONY_TARGET_NAME, dirConfig)
+        val klibApiDirConfig = dirConfig?.map { TargetConfig(project, KLIB_PHONY_TARGET_NAME, dirConfig) }
         val klibDumpConfig = TargetConfig(project, KLIB_PHONY_TARGET_NAME, intermediateFilesConfig)
         val klibDumpAllConfig = TargetConfig(project, KLIB_ALL_PHONY_TARGET_NAME, intermediateFilesConfig)
 
-        val klibApiDir = project.projectDir.resolve(klibApiDirConfig.apiDir.get())
+        val projectDir = project.projectDir
+        val klibApiDir = klibApiDirConfig?.map {
+            projectDir.resolve(it.apiDir.get())
+        }!!
         val klibMergeDir = project.buildDir.resolve(klibDumpConfig.apiDir.get())
         val klibMergeAllDir = project.buildDir.resolve(klibDumpAllConfig.apiDir.get())
 
@@ -343,7 +350,7 @@ private class KlibValidationPipelineBuilder(
 
     private fun Project.dumpAllKlibsTask(
         klibDumpConfig: TargetConfig,
-        klibApiDir: File,
+        klibApiDir: Provider<File>,
         klibMergeDir: File
     ) = project.task<Sync>(klibDumpConfig.apiTaskName("DumpAll")) {
         isEnabled = klibAbiCheckEnabled(project.name, extension)
@@ -357,31 +364,31 @@ private class KlibValidationPipelineBuilder(
 
     private fun Project.checkKlibsTask(
         klibDumpConfig: TargetConfig,
-        klibApiDir: File,
+        klibApiDir: Provider<File>,
         klibMergeDir: File
     ) = project.task<KotlinApiCompareTask>(klibDumpConfig.apiTaskName("Check")) {
         isEnabled = klibAbiCheckEnabled(project.name, extension)
         group = "verification"
         description = "Checks signatures of public klib ABI against the golden value in ABI folder for " +
                 project.name
-        compareApiDumps(apiReferenceDir = klibApiDir, apiBuildDir = klibMergeDir)
+        compareApiDumps(apiReferenceDir = klibApiDir.get(), apiBuildDir = klibMergeDir)
     }
 
     private fun Project.checkAllKlibsTask(
         klibDumpConfig: TargetConfig,
-        klibApiDir: File,
+        klibApiDir: Provider<File>,
         klibMergeDir: File
     ) = project.task<KotlinApiCompareTask>(klibDumpConfig.apiTaskName("CheckAll")) {
         isEnabled = klibAbiCheckEnabled(project.name, extension)
         group = "verification"
         description = "Checks signatures of public klib ABI against the golden value in ABI folder for " +
                 project.name
-        compareApiDumps(apiReferenceDir = klibApiDir, apiBuildDir = klibMergeDir)
+        compareApiDumps(apiReferenceDir = klibApiDir.get(), apiBuildDir = klibMergeDir)
     }
 
     private fun Project.dumpKlibsTask(
         klibDumpConfig: TargetConfig,
-        klibApiDir: File,
+        klibApiDir: Provider<File>,
         klibMergeDir: File
     ) = project.task<Sync>(klibDumpConfig.apiTaskName("Dump")) {
         isEnabled = klibAbiCheckEnabled(project.name, extension)
@@ -393,7 +400,7 @@ private class KlibValidationPipelineBuilder(
 
     private fun Project.mergeAllKlibsUmbrellaTask(
         klibDumpConfig: TargetConfig,
-        klibApiDir: File,
+        klibApiDir: Provider<File>,
         klibMergeDir: File
     ) = project.task<KotlinKlibMergeAbiTask>(
         klibDumpConfig.apiTaskName("MergeAll")
@@ -409,7 +416,7 @@ private class KlibValidationPipelineBuilder(
 
     private fun Project.mergeKlibsUmbrellaTask(
         klibDumpConfig: TargetConfig,
-        klibApiDir: File,
+        klibApiDir: Provider<File>,
         klibMergeDir: File
     ) = project.task<KotlinKlibMergeAbiTask>(klibDumpConfig.apiTaskName("Merge")) {
         isEnabled = klibAbiCheckEnabled(project.name, extension)
