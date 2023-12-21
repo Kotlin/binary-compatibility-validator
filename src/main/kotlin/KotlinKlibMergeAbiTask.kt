@@ -11,7 +11,6 @@ import kotlinx.validation.klib.Target
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.*
 import java.io.File
-import java.io.FileWriter
 import java.nio.file.Files
 
 abstract class KotlinKlibMergeAbiTask : DefaultTask() {
@@ -63,6 +62,6 @@ abstract class KotlinKlibMergeAbiTask : DefaultTask() {
                 builder.mergeFile(setOf(target), LinesProvider(it.iterator()))
             }
         }
-        FileWriter(mergedFile.resolve(filename)).use { builder.dump(it) }
+        mergedFile.resolve(filename).bufferedWriter().use { builder.dump(it) }
     }
 }
