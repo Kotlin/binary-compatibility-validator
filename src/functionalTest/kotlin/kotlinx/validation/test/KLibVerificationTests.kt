@@ -658,4 +658,65 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
             assertTaskSuccess(":klibApiCheckAll")
         }
     }
+
+    @Test
+    fun `klibDumpAll should fail when the only target in the project is disabled`() {
+        val runner = test {
+            settingsGradleKts {
+                resolve("examples/gradle/settings/settings-name-testproject.gradle.kts")
+            }
+            buildGradleKts {
+                resolve("examples/gradle/base/withNativePluginAndSingleTarget.gradle.kts")
+                resolve("examples/gradle/configuration/unsupported/ignore.gradle.kts")
+                resolve("examples/gradle/configuration/unsupported/inexact.gradle.kts")
+            }
+            kotlin("TopLevelDeclarations.kt", "commonMain") {
+                resolve("examples/classes/TopLevelDeclarations.kt")
+            }
+            kotlin("AnotherBuildConfigLinuxArm64.kt", "linuxArm64Main") {
+                resolve("examples/classes/AnotherBuildConfigLinuxArm64.kt")
+            }
+            runner {
+                arguments.add("-P$BANNED_TARGETS_PROPERTY_NAME=linuxArm64")
+                arguments.add(":klibApiDumpAll")
+            }
+        }
+
+        runner.buildAndFail().apply {
+            assertTaskFailure(":linuxArm64ApiFakeAbiDump")
+            assertTrue(output.contains("The target linuxArm64 is not supported by the host compiler " +
+                    "and there are no other enabled targets to steal a dump form."))
+        }
+    }
+
+    @Test
+    fun `klibDumpAll should fail when the only klib-target in the project is disabled`() {
+        val runner = test {
+            settingsGradleKts {
+                resolve("examples/gradle/settings/settings-name-testproject.gradle.kts")
+            }
+            buildGradleKts {
+                resolve("examples/gradle/base/withNativePluginAndSingleTarget.gradle.kts")
+                resolve("examples/gradle/configuration/unsupported/ignore.gradle.kts")
+                resolve("examples/gradle/configuration/unsupported/inexact.gradle.kts")
+                resolve("examples/gradle/base/enableJvmInWithNativePlugin.gradle.kts")
+            }
+            kotlin("TopLevelDeclarations.kt", "commonMain") {
+                resolve("examples/classes/TopLevelDeclarations.kt")
+            }
+            kotlin("AnotherBuildConfigLinuxArm64.kt", "linuxArm64Main") {
+                resolve("examples/classes/AnotherBuildConfigLinuxArm64.kt")
+            }
+            runner {
+                arguments.add("-P$BANNED_TARGETS_PROPERTY_NAME=linuxArm64")
+                arguments.add(":klibApiDumpAll")
+            }
+        }
+
+        runner.buildAndFail().apply {
+            assertTaskFailure(":linuxArm64ApiFakeAbiDump")
+            assertTrue(output.contains("The target linuxArm64 is not supported by the host compiler " +
+                    "and there are no other enabled targets to steal a dump form."))
+        }
+    }
 }

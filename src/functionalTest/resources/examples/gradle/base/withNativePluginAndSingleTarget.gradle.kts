@@ -13,13 +13,7 @@ repositories {
 }
 
 kotlin {
-    linuxX64()
     linuxArm64()
-    mingwX64()
-    androidNativeArm32()
-    androidNativeArm64()
-    androidNativeX64()
-    androidNativeX86()
 
     sourceSets {
         val commonMain by getting

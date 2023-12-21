@@ -46,11 +46,22 @@ abstract class KotlinKlibReuseSharedAbiTask : DefaultTask() {
         val matchingTarget = if (matchingTargets.isEmpty()) {
             if (!allowInexactDumpSubstitution) {
                 throw IllegalStateException(
-                    "There are no targets sharing the same source sets with ${unsupportedTarget}."
+                    "There are no targets sharing the same source sets with $unsupportedTarget."
                 )
             }
-            target2SourceSets.mapValues { it.value.intersect(thisSourceSets).size }.toList()
-                .sortedByDescending { it.second }.map { it.first }.first()
+            val similarTargets = target2SourceSets.mapValues { it.value.intersect(thisSourceSets).size }.toList()
+                .sortedWith(compareByDescending<Pair<String, Int>> { it.second }
+                    .thenComparing { it: Pair<String, Int> -> it.first })
+                .map { it.first }
+
+            if (similarTargets.isEmpty()) {
+                throw IllegalStateException(
+                    "The target $unsupportedTarget is not supported by the host compiler " +
+                            "and there are no other enabled targets to steal a dump form."
+                )
+            }
+
+            similarTargets.first()
         } else {
             logger.info(
                 "Following compilation targets supported by the host compiler have the same source sets " +

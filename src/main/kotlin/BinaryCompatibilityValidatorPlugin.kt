@@ -498,7 +498,7 @@ private class KlibValidationPipelineBuilder(
     private fun Project.targetInfoProvider(): Provider<Map<String, Set<String>>> =
         project.provider {
             val target2srcSet = mutableMapOf<String, Set<String>>()
-            val targets = kotlinMultiplatform.targets
+            val targets = kotlinMultiplatform.targets.matching { it.emitsKlib }
             targets.forEach { target ->
                 val mainCompilations = target.mainCompilations
                 val flattenedTargets = mutableSetOf<String>()
