@@ -5,28 +5,26 @@
 
 package kotlinx.validation
 
-import kotlinx.validation.klib.KlibDumpFileBuilder
-import kotlinx.validation.klib.LinesProvider
+import kotlinx.validation.klib.KlibAbiDumpMerger
 import kotlinx.validation.klib.Target
 import org.gradle.api.DefaultTask
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.*
 import java.io.File
-import java.nio.file.Files
 
 abstract class KotlinKlibMergeAbiTask : DefaultTask() {
-    private val targetToFile_ = mutableMapOf<String, File>()
+    private val targetToFile = mutableMapOf<String, File>()
 
     @get:Internal
     internal val projectName = project.name
 
     @get:InputFiles
     val inputFiles: Collection<File>
-        get() = targetToFile_.values
+        get() = targetToFile.values
 
     @get:Input
     val targets: Set<String>
-        get() = targetToFile_.keys
+        get() = targetToFile.keys
 
     @OutputDirectory
     lateinit var mergedFile: File
@@ -38,18 +36,20 @@ abstract class KotlinKlibMergeAbiTask : DefaultTask() {
     var updateImage: Boolean = true
 
     fun addInput(target: String, file: File) {
-        targetToFile_[target] = file
+        targetToFile[target] = file
     }
 
     @TaskAction
     fun merge() {
         val filename = "$projectName.abi"
-        val builder = KlibDumpFileBuilder()
+        val builder = KlibAbiDumpMerger()
         if (updateImage) {
             val inputImage = inputImageDir.get().resolve(filename)
             if (inputImage.exists()) {
-                Files.lines(inputImage.toPath()).use {
-                    builder.mergeFile(emptySet(), LinesProvider(it.iterator()))
+                if (inputImage.length() == 0L) {
+                    logger.warn("merged dump file is empty: $inputImage")
+                } else {
+                    builder.loadMergedDump(inputImage)
                 }
             }
         }
@@ -59,9 +59,7 @@ abstract class KotlinKlibMergeAbiTask : DefaultTask() {
             if (updateImage) {
                 builder.remove(target)
             }
-            Files.lines(targetToFile_[targetName]!!.resolve(filename).toPath()).use {
-                builder.mergeFile(setOf(target), LinesProvider(it.iterator()))
-            }
+            builder.addIndividualDump(target, targetToFile[targetName]!!.resolve(filename))
         }
         mergedFile.resolve(filename).bufferedWriter().use { builder.dump(it) }
     }
