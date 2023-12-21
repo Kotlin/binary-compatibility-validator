@@ -6,12 +6,14 @@
 package kotlinx.validation
 
 import org.gradle.api.*
+import org.gradle.api.file.FileCollection
 import org.gradle.api.plugins.*
 import org.gradle.api.provider.*
 import org.gradle.api.tasks.*
 import org.jetbrains.kotlin.gradle.dsl.*
 import org.jetbrains.kotlin.gradle.plugin.*
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompileTool
 import org.jetbrains.kotlin.konan.target.HostManager
 import java.io.*
 import java.nio.file.FileVisitResult
@@ -446,7 +448,7 @@ private class KlibValidationPipelineBuilder(
         val hostManager = HostManager()
         val bannedTargets = bannedTargets()
         val kotlin = project.kotlinMultiplatform
-        val targetsProvider: Provider<Map<String, Set<String>>> = targetInfoProvider()
+        val targetsProvider = targetInfoProvider()
 
         kotlin.targets.matching { it.emitsKlib }.configureEach { currentTarget ->
             val mainCompilations = currentTarget.mainCompilations
@@ -495,18 +497,16 @@ private class KlibValidationPipelineBuilder(
         }
     }
 
-    private fun Project.targetInfoProvider(): Provider<Map<String, Set<String>>> =
+    private fun Project.targetInfoProvider(): Provider<Map<String, FileCollection>> =
         project.provider {
-            val target2srcSet = mutableMapOf<String, Set<String>>()
+            val target2srcSet = mutableMapOf<String, FileCollection>()
             val targets = kotlinMultiplatform.targets.matching { it.emitsKlib }
             targets.forEach { target ->
                 val mainCompilations = target.mainCompilations
-                val flattenedTargets = mutableSetOf<String>()
-
-                if (mainCompilations.any()) {
-                    mainCompilations.first().allKotlinSourceSets.forEach { it.flattenSourceSetsTree(flattenedTargets) }
-                }
-                target2srcSet[target.name] = flattenedTargets
+                val altSources = mainCompilations.first()
+                    .compileTaskProvider
+                    .map { (it as KotlinCompileTool).sources }
+                target2srcSet[target.name] = altSources.getOrElse(files())
             }
             target2srcSet
         }
@@ -564,7 +564,7 @@ private class KlibValidationPipelineBuilder(
 
     private fun Project.unsupportedTargetDumpProxy(
         targetConfig: TargetConfig, apiBuildDir: File,
-        targetInfoProvider: Provider<Map<String, Set<String>>>
+        targetInfoProvider: Provider<Map<String, FileCollection>>
     ):
             TaskProvider<KotlinKlibReuseSharedAbiTask> {
         val targetName = targetConfig.targetName!!
@@ -573,7 +573,7 @@ private class KlibValidationPipelineBuilder(
             description = "Try to replace the dump for unsupported target $targetName with the dump " +
                     "generated for one of the supported targets."
             group = "other"
-            this.targetInfoProvider = targetInfoProvider
+            this.targetSourcesProvider = targetInfoProvider
             allowInexactDumpSubstitution = project.apiValidationExtensionOrNull!!.klib.allowInexactDumpSubstitution
             outputApiDir = apiBuildDir
             unsupportedTarget = targetConfig.targetName
@@ -601,26 +601,3 @@ private val Project.kotlinMultiplatform
 
 private val KotlinTarget.mainCompilations
     get() = compilations.matching { it.name == "main" }
-
-// Collects a set of all non empty source sets this particular source set depends on
-private fun KotlinSourceSet.flattenSourceSetsTree(dst: MutableSet<String>) {
-    val isNotEmpty = this.kotlin.srcDirs.any {
-        if (!it.exists()) {
-            return@any false
-        }
-        var hasFiles = false
-        Files.walkFileTree(it.toPath(), object : SimpleFileVisitor<Path>() {
-            override fun visitFile(file: Path?, attrs: BasicFileAttributes?): FileVisitResult {
-                hasFiles = true
-                return FileVisitResult.TERMINATE
-            }
-        })
-        hasFiles
-    }
-    if (isNotEmpty) {
-        dst.add(this.name)
-    }
-    dependsOn.forEach {
-        it.flattenSourceSetsTree(dst)
-    }
-}

@@ -6,8 +6,10 @@
 package kotlinx.validation
 
 import org.gradle.api.DefaultTask
+import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.*
+import org.jetbrains.kotlin.utils.keysToMap
 import java.io.File
 import java.nio.file.*
 
@@ -32,12 +34,16 @@ abstract class KotlinKlibReuseSharedAbiTask : DefaultTask() {
     lateinit var outputApiDir: File
 
     @Input
-    lateinit var targetInfoProvider: Provider<Map<String, Set<String>>>
+    lateinit var targetSourcesProvider: Provider<Map<String, FileCollection>>
 
     @TaskAction
     fun generate() {
-        val target2outDir = collectOutputDirectories()
-        val target2SourceSets = collectSourceSetsMapping(target2outDir)
+        val target2SourceSets = targetSourcesProvider.get().asSequence().map {
+            it.key to it.value.files.asSequence().map { it.absolutePath }.toSet()
+        }.toMap(mutableMapOf())
+        val target2outDir = target2SourceSets.keys.keysToMap {
+            outputApiDir.parentFile.resolve(it)
+        }
 
         val thisSourceSets = target2SourceSets.remove(unsupportedTarget)!!
         val matchingTargets = target2SourceSets.filter {
@@ -86,23 +92,5 @@ abstract class KotlinKlibReuseSharedAbiTask : DefaultTask() {
                     "for the target $unsupportedTarget. It is recommended to regenerate the dump on the host supporting " +
                     "all required compilation target."
         )
-    }
-
-    private fun collectSourceSetsMapping(target2outDir: MutableMap<String, File>): MutableMap<String, Set<String>> {
-        val targetToSourceSets = mutableMapOf<String, Set<String>>()
-        targetInfoProvider.get().forEach { targetName, allSourceSets ->
-            if (target2outDir.containsKey(targetName) || targetName == unsupportedTarget) {
-                targetToSourceSets[targetName] = allSourceSets
-            }
-        }
-        return targetToSourceSets
-    }
-
-    private fun collectOutputDirectories(): MutableMap<String, File> {
-        val target2outDir = mutableMapOf<String, File>()
-        targetInfoProvider.get().keys.forEach {
-            target2outDir[it] = outputApiDir.parentFile.resolve(it)
-        }
-        return target2outDir
     }
 }
