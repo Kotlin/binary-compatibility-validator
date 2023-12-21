@@ -106,6 +106,7 @@ internal class KlibAbiDumpMerger {
 
         while (lines.hasNext()) {
             val line = lines.peek()!!
+            // TODO: wrap the line and cache the depth inside that wrapper?
             val lineDepth = line.depth()
             when {
                 // The depth is the same as before, we encountered a sibling
@@ -159,7 +160,7 @@ internal class KlibAbiDumpMerger {
         val header = mutableListOf<String>()
         while (hasNext()) {
             val next = peek()!!
-            if (next.startsWith(COMMENT_PREFIX) || next.isBlank()) {
+            if ((next.startsWith(COMMENT_PREFIX) && !next.startsWith(TARGETS_LIST_PREFIX)) || next.isBlank()) {
                 header.add(next)
                 next()
             } else {
@@ -200,7 +201,26 @@ internal class KlibAbiDumpMerger {
         headerContent.forEach {
             appendable.append(it).append('\n')
         }
-        topLevelDeclaration.children.sortedBy { it.text }.forEach {
+        // TODO: optimize
+        val childComparator = Comparator<DeclarationContainer> { c0, c1 ->
+            if (c0.targets == c1.targets) {
+                c0.text.compareTo(c1.text)
+            } else {
+                if (c0.targets.size == c1.targets.size) {
+                    val c0targets = c0.targets.asSequence().map { it.name }.sorted().iterator()
+                    val c1targets = c1.targets.asSequence().map { it.name }.sorted().iterator()
+                    var result = 0
+                    while (c1targets.hasNext() && c0targets.hasNext() && result == 0) {
+                        result = c0targets.next().compareTo(c1targets.next())
+                    }
+                    result
+                } else {
+                    // longer the target list, earlier the declaration would appear
+                    c1.targets.size.compareTo(c0.targets.size)
+                }
+            }
+        }
+        topLevelDeclaration.children.sortedWith(childComparator).forEach {
             it.dump(appendable, targets)
         }
     }
