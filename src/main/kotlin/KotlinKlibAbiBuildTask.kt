@@ -50,7 +50,11 @@ abstract class KotlinKlibAbiBuildTask : BuildTaskBase() {
             }
         }
 
-        val parsedAbi = LibraryAbiReader.readAbiInfo(klibFile.singleFile, filters)
+        val parsedAbi = try {
+            LibraryAbiReader.readAbiInfo(klibFile.singleFile, filters)
+        } catch (e: Exception) {
+            throw IllegalStateException("Can't read a KLIB: ${klibFile.singleFile}", e)
+        }
 
         val supportedVersions = parsedAbi.signatureVersions.asSequence()
         val sigVersion = if (signatureVersion != null) {
