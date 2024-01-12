@@ -9,7 +9,6 @@ import kotlinx.validation.api.*
 import org.gradle.api.*
 import org.gradle.api.file.*
 import org.gradle.api.tasks.*
-import java.io.*
 import java.util.jar.JarFile
 import javax.inject.Inject
 
@@ -32,8 +31,8 @@ open class KotlinApiBuildTask @Inject constructor(
 
     @TaskAction
     fun generate() {
-        cleanup(outputApiDir)
-        outputApiDir.mkdirs()
+        outputApiFile.delete()
+        outputApiFile.parentFile.mkdirs()
 
         val inputClassesDirs = inputClassesDirs
         val signatures = when {
@@ -57,7 +56,7 @@ open class KotlinApiBuildTask @Inject constructor(
             .filterOutNonPublic(ignoredPackages, ignoredClasses)
             .filterOutAnnotated(nonPublicMarkers.map(::replaceDots).toSet())
 
-        outputApiDir.resolve("$projectName.api").bufferedWriter().use { writer ->
+        outputApiFile.bufferedWriter().use { writer ->
             filteredSignatures
                 .sortedBy { it.name }
                 .forEach { api ->
@@ -67,18 +66,6 @@ open class KotlinApiBuildTask @Inject constructor(
                         .forEach { writer.append("\t").appendLine(it.signature) }
                     writer.appendLine("}\n")
                 }
-        }
-    }
-
-    private fun cleanup(file: File) {
-        if (file.exists()) {
-            val listing = file.listFiles()
-            if (listing != null) {
-                for (sub in listing) {
-                    cleanup(sub)
-                }
-            }
-            file.delete()
         }
     }
 }

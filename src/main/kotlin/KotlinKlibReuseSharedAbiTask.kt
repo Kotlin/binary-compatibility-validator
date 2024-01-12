@@ -36,6 +36,9 @@ abstract class KotlinKlibReuseSharedAbiTask : DefaultTask() {
     @Input
     lateinit var targetSourcesProvider: Provider<Map<String, FileCollection>>
 
+    @Input
+    lateinit var dumpFileName: String
+
     @TaskAction
     fun generate() {
         val target2SourceSets = targetSourcesProvider.get().asSequence().map {
@@ -81,9 +84,8 @@ abstract class KotlinKlibReuseSharedAbiTask : DefaultTask() {
         )
 
         val srcDir = target2outDir[matchingTarget]!!
-        val fileName = "$projectName.abi"
         Files.copy(
-            srcDir.resolve(fileName).toPath(), outputApiDir.resolve(fileName).toPath(),
+            srcDir.resolve(dumpFileName).toPath(), outputApiDir.resolve(dumpFileName).toPath(),
             StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES
         )
         logger.warn(

@@ -8,7 +8,6 @@ package kotlinx.validation
 import kotlinx.validation.klib.KlibAbiDumpMerger
 import kotlinx.validation.klib.Target
 import org.gradle.api.DefaultTask
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.*
 import java.io.File
 
@@ -26,14 +25,17 @@ abstract class KotlinKlibMergeAbiTask : DefaultTask() {
     val targets: Set<String>
         get() = targetToFile.keys
 
-    @OutputDirectory
+    @OutputFile
     lateinit var mergedFile: File
 
-    @InputFiles
-    lateinit var inputImageDir: Provider<File>
+    @InputFiles // it's not an InputFile, because an input file my not exist yet
+    lateinit var inputImageFile: File
 
     @Input
     var updateImage: Boolean = true
+
+    @Input
+    lateinit var dumpFileName: String
 
     fun addInput(target: String, file: File) {
         targetToFile[target] = file
@@ -41,15 +43,13 @@ abstract class KotlinKlibMergeAbiTask : DefaultTask() {
 
     @TaskAction
     fun merge() {
-        val filename = "$projectName.abi"
         val builder = KlibAbiDumpMerger()
         if (updateImage) {
-            val inputImage = inputImageDir.get().resolve(filename)
-            if (inputImage.exists()) {
-                if (inputImage.length() == 0L) {
-                    logger.warn("merged dump file is empty: $inputImage")
+            if (inputImageFile.exists()) {
+                if (inputImageFile.length() == 0L) {
+                    logger.warn("merged dump file is empty: $inputImageFile")
                 } else {
-                    builder.loadMergedDump(inputImage)
+                    builder.loadMergedDump(inputImageFile)
                 }
             }
         }
@@ -59,8 +59,8 @@ abstract class KotlinKlibMergeAbiTask : DefaultTask() {
             if (updateImage) {
                 builder.remove(target)
             }
-            builder.addIndividualDump(target, targetToFile[targetName]!!.resolve(filename))
+            builder.addIndividualDump(target, targetToFile[targetName]!!.resolve(dumpFileName))
         }
-        mergedFile.resolve(filename).bufferedWriter().use { builder.dump(it) }
+        mergedFile.bufferedWriter().use { builder.dump(it) }
     }
 }

@@ -101,14 +101,14 @@ internal fun FileContainer.apiFile(projectName: String, fn: AppendableScope.() -
 internal fun FileContainer.abiFile(projectName: String, target: String, fn: AppendableScope.() -> Unit) {
     dir(API_DIR) {
         dir(target) {
-            file("$projectName.abi", fn)
+            file("$projectName.klib.abi", fn)
         }
     }
 }
 
 internal fun FileContainer.abiFile(projectName: String, fn: AppendableScope.() -> Unit) {
     dir(API_DIR) {
-        file("$projectName.abi", fn)
+        file("$projectName.klib.abi", fn)
     }
 }
 

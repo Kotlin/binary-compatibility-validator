@@ -31,8 +31,8 @@ abstract class KotlinKlibAbiBuildTask : BuildTaskBase() {
     @ExperimentalLibraryAbiReader
     @TaskAction
     fun generate() {
-        outputApiDir.deleteRecursively()
-        outputApiDir.mkdirs()
+        outputApiFile.delete()
+        outputApiFile.parentFile.mkdirs()
 
         val filters = buildList {
             if (ignoredPackages.isNotEmpty()) {
@@ -71,7 +71,7 @@ abstract class KotlinKlibAbiBuildTask : BuildTaskBase() {
                 ?: throw IllegalStateException("Can't choose abiSignatureVersion")
         }
 
-        outputApiDir.resolve("$projectName.abi").bufferedWriter().use {
+        outputApiFile.bufferedWriter().use {
             LibraryAbiRenderer.render(parsedAbi, it, AbiRenderingSettings(sigVersion))
         }
     }

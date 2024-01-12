@@ -5,6 +5,7 @@
 
 package kotlinx.validation.test
 
+import kotlinx.validation.API_DIR
 import kotlinx.validation.BANNED_TARGETS_PROPERTY_NAME
 import kotlinx.validation.KLIB_PHONY_TARGET_NAME
 import kotlinx.validation.api.*
@@ -169,9 +170,9 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
 
         runner.build().apply {
             checkKlibDump(this, "examples/classes/AnotherBuildConfig.klib.dump",
-                projectWithMultipleDumps = true)
+                projectWithMultipleDumps = false)
 
-            val jvmApiDump = rootProjectAbiDump("jvm", "testproject")
+            val jvmApiDump = rootProjectDir.resolve("$API_DIR/testproject.api")
             assertTrue(jvmApiDump.exists(), "No API dump for JVM")
 
             val jvmExpected = readFileList("examples/classes/AnotherBuildConfig.dump")
