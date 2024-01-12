@@ -86,7 +86,11 @@ internal class KlibAbiDumpMerger {
         val isMergedFile = targets.isEmpty()
         if (isMergedFile) check(this.targets.isEmpty()) { "Merged dump could only be loaded once." }
 
-        val bcvTargets = if (isMergedFile) { lines.parseTargets() } else { targets }
+        val bcvTargets = if (isMergedFile) {
+            lines.parseTargets()
+        } else {
+            targets
+        }
         val header = lines.parseFileHeader()
         if (isMergedFile || this.targets.isEmpty()) {
             headerContent.addAll(header)
@@ -170,9 +174,11 @@ internal class KlibAbiDumpMerger {
         return header
     }
 
-    private fun LinesProvider.parseDeclaration(parent: DeclarationContainer,
-                                               allTargets: Set<Target>,
-                                               isMergedFile: Boolean) : DeclarationContainer {
+    private fun LinesProvider.parseDeclaration(
+        parent: DeclarationContainer,
+        allTargets: Set<Target>,
+        isMergedFile: Boolean
+    ): DeclarationContainer {
         val line = peek()!!
         return if (line.startsWith(TARGETS_LIST_PREFIX)) {
             check(isMergedFile) {
@@ -201,26 +207,7 @@ internal class KlibAbiDumpMerger {
         headerContent.forEach {
             appendable.append(it).append('\n')
         }
-        // TODO: optimize
-        val childComparator = Comparator<DeclarationContainer> { c0, c1 ->
-            if (c0.targets == c1.targets) {
-                c0.text.compareTo(c1.text)
-            } else {
-                if (c0.targets.size == c1.targets.size) {
-                    val c0targets = c0.targets.asSequence().map { it.name }.sorted().iterator()
-                    val c1targets = c1.targets.asSequence().map { it.name }.sorted().iterator()
-                    var result = 0
-                    while (c1targets.hasNext() && c0targets.hasNext() && result == 0) {
-                        result = c0targets.next().compareTo(c1targets.next())
-                    }
-                    result
-                } else {
-                    // longer the target list, earlier the declaration would appear
-                    c1.targets.size.compareTo(c0.targets.size)
-                }
-            }
-        }
-        topLevelDeclaration.children.sortedWith(childComparator).forEach {
+        topLevelDeclaration.children.sortedWith(DeclarationsComparator).forEach {
             it.dump(appendable, targets)
         }
     }
@@ -261,7 +248,7 @@ private class DeclarationContainer(val text: String, val parent: DeclarationCont
                 .append('\n')
         }
         appendable.append(text).append('\n')
-        children.sortedBy { it.text }.forEach {
+        children.sortedWith(DeclarationsComparator).forEach {
             it.dump(appendable, this.targets)
         }
         if (delimiter != null) {
@@ -283,5 +270,27 @@ private class DeclarationContainer(val text: String, val parent: DeclarationCont
             shouldRemove
         }
         children.forEach { it.remove(target) }
+    }
+}
+
+// TODO: optimize
+private object DeclarationsComparator : Comparator<DeclarationContainer> {
+    override fun compare(c0: DeclarationContainer, c1: DeclarationContainer): Int {
+        return if (c0.targets == c1.targets) {
+            c0.text.compareTo(c1.text)
+        } else {
+            if (c0.targets.size == c1.targets.size) {
+                val c0targets = c0.targets.asSequence().map { it.name }.sorted().iterator()
+                val c1targets = c1.targets.asSequence().map { it.name }.sorted().iterator()
+                var result = 0
+                while (c1targets.hasNext() && c0targets.hasNext() && result == 0) {
+                    result = c0targets.next().compareTo(c1targets.next())
+                }
+                result
+            } else {
+                // longer the target list, earlier the declaration would appear
+                c1.targets.size.compareTo(c0.targets.size)
+            }
+        }
     }
 }
