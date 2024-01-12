@@ -11,6 +11,7 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 
 // Built-in Gradle's Copy/Sync tasks accepts only a destination directory (not a single file)
 // and registers it as an output dependency. If there's another task reading from that particular
@@ -25,6 +26,6 @@ internal open class CopyFile : DefaultTask() {
 
     @TaskAction
     fun copy() {
-        Files.copy(from.toPath(), to.toPath())
+        Files.copy(from.toPath(), to.toPath(), StandardCopyOption.REPLACE_EXISTING)
     }
 }
