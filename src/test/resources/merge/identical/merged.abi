@@ -1,4 +1,4 @@
-// BCV Targets: [linuxX64, macosArm64]
+// Targets: [linuxX64, macosArm64]
 // Rendering settings:
 // - Signature version: 2
 // - Show manifest properties: false

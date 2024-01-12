@@ -39,7 +39,7 @@ internal class LinesProvider(private val lines: Iterator<String>) : Iterator<Str
 }
 
 private const val COMMENT_PREFIX = "//"
-private const val TARGETS_LIST_PREFIX = "// BCV Targets: ["
+private const val TARGETS_LIST_PREFIX = "// Targets: ["
 private const val TARGETS_LIST_SUFFIX = "]"
 private const val TARGETS_DELIMITER = ", "
 private const val CLASS_DECLARATION_TERMINATOR = "}"
