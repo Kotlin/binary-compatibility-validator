@@ -54,10 +54,11 @@ private fun String.depth(): Int {
 }
 
 private fun parseBcvTargetsLine(line: String): Set<Target> {
-    check(line.startsWith(TARGETS_LIST_PREFIX) && line.endsWith(TARGETS_LIST_SUFFIX)) {
+    val trimmedLine = line.trimStart(' ')
+    check(trimmedLine.startsWith(TARGETS_LIST_PREFIX) && trimmedLine.endsWith(TARGETS_LIST_SUFFIX)) {
         "Not a BCV-targets line: \"$line\""
     }
-    return line.substring(TARGETS_LIST_PREFIX.length, line.length - 1)
+    return trimmedLine.substring(TARGETS_LIST_PREFIX.length, trimmedLine.length - 1)
         .split(TARGETS_DELIMITER)
         .map { Target(it) }
         .toSet()
@@ -115,7 +116,8 @@ internal class KlibAbiDumpMerger {
             when {
                 // The depth is the same as before, we encountered a sibling
                 depth == lineDepth -> {
-                    currentContainer = lines.parseDeclaration(currentContainer.parent!!, bcvTargets, isMergedFile)
+                    currentContainer =
+                        lines.parseDeclaration(lineDepth, currentContainer.parent!!, bcvTargets, isMergedFile)
                 }
                 // The depth is increasing, that means we encountered child declaration
                 depth < lineDepth -> {
@@ -123,7 +125,7 @@ internal class KlibAbiDumpMerger {
                         "The line has too big indentation relative to a previous line\nline: $line\n" +
                                 "previous: ${currentContainer.text}"
                     }
-                    currentContainer = lines.parseDeclaration(currentContainer, bcvTargets, isMergedFile)
+                    currentContainer = lines.parseDeclaration(lineDepth, currentContainer, bcvTargets, isMergedFile)
                     depth = lineDepth
                 }
                 // Otherwise, we're finishing all the declaration with greater depth compared to the depth of
@@ -175,12 +177,13 @@ internal class KlibAbiDumpMerger {
     }
 
     private fun LinesProvider.parseDeclaration(
+        depth: Int,
         parent: DeclarationContainer,
         allTargets: Set<Target>,
         isMergedFile: Boolean
     ): DeclarationContainer {
         val line = peek()!!
-        return if (line.startsWith(TARGETS_LIST_PREFIX)) {
+        return if (line.startsWith(" ".repeat(depth * INDENT_WIDTH) + TARGETS_LIST_PREFIX)) {
             check(isMergedFile) {
                 "Targets declaration should only be a part of merged file, " +
                         "and the current file claimed to be a regular dump file:\n$line"

@@ -116,4 +116,21 @@ class KlibAbiMergingTest {
             Files.readAllLines(written.toPath()).asSequence())
     }
 
+    @Test
+    fun readDeclarationWithNarrowerChildrenDeclarations() {
+        val klib = KlibAbiDumpMerger()
+        klib.loadMergedDump(file("/merge/parseNarrowChildrenDecls/merged.abi"))
+
+        klib.remove(Target("linuxArm64"))
+        val written1 = dumpToFile(klib)
+        assertContentEquals(
+            lines("/merge/parseNarrowChildrenDecls/withoutLinuxArm64.abi"),
+            Files.readAllLines(written1.toPath()).asSequence())
+
+        klib.remove(Target("linuxX64"))
+        val written2 = dumpToFile(klib)
+        assertContentEquals(
+            lines("/merge/parseNarrowChildrenDecls/withoutLinuxAll.abi"),
+            Files.readAllLines(written2.toPath()).asSequence())
+    }
 }
