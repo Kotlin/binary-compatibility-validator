@@ -16,6 +16,7 @@ import java.nio.file.Files
 import java.util.UUID
 import kotlin.random.Random
 import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class KlibAbiMergingTest {
@@ -132,5 +133,28 @@ class KlibAbiMergingTest {
         assertContentEquals(
             lines("/merge/parseNarrowChildrenDecls/withoutLinuxAll.abi"),
             Files.readAllLines(written2.toPath()).asSequence())
+    }
+
+    @Test
+    fun removeAllButApple() {
+        val klib = KlibAbiDumpMerger()
+        klib.loadMergedDump(file("/merge/diverging/merged.abi"))
+        klib.retainSpecific(Target("linuxArm64"))
+        println(buildString {
+            klib.dump(this)
+        })
+
+        val klib2 = KlibAbiDumpMerger()
+        klib2.loadMergedDump(file("/merge/diverging/merged.abi"))
+        klib2.retainCommon()
+        klib2.remove(Target("linuxArm64"))
+        println(buildString {
+            klib2.dump(this)
+        })
+
+        klib2.mergeTargetSpecific(klib)
+        println(buildString {
+            klib2.dump(this)
+        })
     }
 }

@@ -223,6 +223,33 @@ internal class KlibAbiDumpMerger {
         targets.remove(target)
         topLevelDeclaration.remove(target)
     }
+
+    fun retainSpecific(target: Target) {
+        if (!targets.contains(target)) {
+            targets.clear()
+            topLevelDeclaration.children.clear()
+            topLevelDeclaration.targets.clear()
+            return
+        }
+
+        topLevelDeclaration.retainSpecific(target, targets)
+        targets.retainAll(setOf(target))
+    }
+
+    fun retainCommon() {
+        topLevelDeclaration.retainCommon(targets)
+        if (topLevelDeclaration.children.isEmpty()) {
+            targets.clear()
+        }
+    }
+
+    fun mergeTargetSpecific(other: KlibAbiDumpMerger) {
+        require(other.targets.size == 1)
+        require(other.targets.first() !in targets)
+
+        targets.addAll(other.targets)
+        topLevelDeclaration.mergeTargetSpecific(other.topLevelDeclaration)
+    }
 }
 
 private class DeclarationContainer(val text: String, val parent: DeclarationContainer? = null) {
@@ -273,6 +300,60 @@ private class DeclarationContainer(val text: String, val parent: DeclarationCont
             shouldRemove
         }
         children.forEach { it.remove(target) }
+    }
+
+    fun retainSpecific(target: Target, allTargets: Set<Target>) {
+        if (parent != null && !targets.contains(target)) {
+            children.clear()
+            targets.clear()
+            return
+        }
+
+        children.forEach { it.retainSpecific(target, allTargets) }
+        children.removeIf { it.targets.isEmpty() }
+        if (targets == allTargets) {
+            if (children.isEmpty()) {
+                targets.clear()
+            } else {
+                targets.retainAll(setOf(target))
+            }
+        } else {
+            targets.retainAll(setOf(target))
+        }
+    }
+
+    fun retainCommon(commonTargets: Set<Target>) {
+        if (parent != null && targets != commonTargets) {
+            children.clear()
+            targets.clear()
+            return
+        }
+        children.forEach { it.retainCommon(commonTargets) }
+        children.removeIf { it.targets.isEmpty() }
+    }
+
+    fun mergeTargetSpecific(other: DeclarationContainer) {
+        targets.addAll(other.targets)
+        val newChildren = mutableListOf<DeclarationContainer>()
+        other.children.forEach { otherChild ->
+            val child = children.find { it.text == otherChild.text }
+            if (child != null) {
+                child.mergeTargetSpecific(otherChild)
+            } else {
+                newChildren.add(otherChild)
+            }
+        }
+        children.forEach {
+            if (other.targets.first() !in it.targets) {
+                it.addTargetRecursively(other.targets.first())
+            }
+        }
+        children.addAll(newChildren)
+    }
+
+    private fun addTargetRecursively(first: Target) {
+        targets.add(first)
+        children.forEach { it.addTargetRecursively(first) }
     }
 }
 
