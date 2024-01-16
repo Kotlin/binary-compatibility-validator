@@ -173,7 +173,7 @@ internal fun FieldNode.isCompanionField(outerClassMetadata: KotlinClassMetadata?
     return metadata.toKmClass().companionObject == name
 }
 
-fun ClassNode.companionName(outerClassMetadata: KotlinClassMetadata?): String {
+internal fun ClassNode.companionName(outerClassMetadata: KotlinClassMetadata?): String {
     val outerKClass = (outerClassMetadata as KotlinClassMetadata.Class).toKmClass()
     return name + "$" + outerKClass.companionObject
 }
