@@ -141,8 +141,8 @@ private class TargetConfig constructor(
     private val apiDirProvider = project.provider {
         val dir = extension.apiDumpDirectory
 
-        val root = project.layout.projectDirectory.asFile.toPath().toAbsolutePath()
-        val resolvedDir = root.resolve(dir).toAbsolutePath()
+        val root = project.layout.projectDirectory.asFile.toPath().toAbsolutePath().normalize()
+        val resolvedDir = root.resolve(dir).normalize()
         if (!resolvedDir.startsWith(root)) {
             throw IllegalArgumentException("apiDumpDirectory should be inside the project directory")
         }
