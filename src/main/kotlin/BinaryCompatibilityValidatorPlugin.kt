@@ -138,7 +138,17 @@ private class TargetConfig constructor(
     val targetName: String? = null,
     private val dirConfig: Provider<DirConfig>? = null,
 ) {
-    private val API_DIR_PROVIDER = project.provider { extension.apiDumpDirectory }
+    private val apiDirProvider = project.provider {
+        val dir = extension.apiDumpDirectory
+
+        val root = project.layout.projectDirectory.asFile.toPath().toAbsolutePath()
+        val resolvedDir = root.resolve(dir).toAbsolutePath()
+        if (!resolvedDir.startsWith(root)) {
+            throw IllegalArgumentException("apiDumpDirectory should be inside the project directory")
+        }
+
+        dir
+    }
 
     fun apiTaskName(suffix: String) = when (targetName) {
         null, "" -> "api$suffix"
@@ -148,10 +158,10 @@ private class TargetConfig constructor(
     val apiDir
         get() = dirConfig?.map { dirConfig ->
             when (dirConfig) {
-                DirConfig.COMMON -> API_DIR_PROVIDER.get()
-                else -> "${API_DIR_PROVIDER.get()}/$targetName"
+                DirConfig.COMMON -> apiDirProvider.get()
+                else -> "${apiDirProvider.get()}/$targetName"
             }
-        } ?: API_DIR_PROVIDER
+        } ?: apiDirProvider
 }
 
 private enum class DirConfig {

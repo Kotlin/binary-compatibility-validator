@@ -67,7 +67,8 @@ public open class ApiValidationExtension {
 
     /**
      * A path to a directory containing an API dump.
-     * The path should be relative to the project's root directory and by default it's `api`.
+     * The path should be relative to the project's root directory and should resolve to its subdirectory.
+     * By default, it's `api`.
      */
     public var apiDumpDirectory: String = "api"
 }

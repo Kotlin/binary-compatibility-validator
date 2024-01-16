@@ -135,4 +135,26 @@ class OutputDirectoryTests : BaseKotlinGradleTest() {
             assertTaskSuccess(":apiCheck")
         }
     }
+
+    @Test
+    fun dumpIntoParentDirectory() {
+        val runner = test {
+            buildGradleKts {
+                resolve("/examples/gradle/base/withPlugin.gradle.kts")
+                resolve("/examples/gradle/configuration/outputDirectory/outer.gradle.kts")
+            }
+
+            kotlin("AnotherBuildConfig.kt") {
+                resolve("/examples/classes/AnotherBuildConfig.kt")
+            }
+
+            runner {
+                arguments.add(":apiDump")
+            }
+        }
+
+        runner.buildAndFail().apply {
+            Assertions.assertThat(output).contains("apiDumpDirectory should be inside the project directory")
+        }
+    }
 }
