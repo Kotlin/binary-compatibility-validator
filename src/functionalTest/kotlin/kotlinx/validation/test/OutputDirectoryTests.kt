@@ -154,7 +154,7 @@ class OutputDirectoryTests : BaseKotlinGradleTest() {
         }
 
         runner.buildAndFail().apply {
-            Assertions.assertThat(output).contains("apiDumpDirectory should be inside the project directory")
+            Assertions.assertThat(output).contains("apiDumpDirectory (\"../api\") should be inside the project directory")
         }
     }
 }
