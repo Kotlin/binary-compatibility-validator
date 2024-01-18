@@ -91,7 +91,7 @@ apiValidation {
     validationDisabled = true
 
     /**
-     * A path to a subdirectory inside the project root directory, where dumps should be stored.
+     * A path to a subdirectory inside the project root directory where dumps should be stored.
      */
     apiDumpDirectory = "api"
 }
@@ -130,7 +130,7 @@ apiValidation {
     validationDisabled = false
 
     /**
-     * A path to a subdirectory inside the project root directory, where dumps should be stored.
+     * A path to a subdirectory inside the project root directory where dumps should be stored.
      */
     apiDumpDirectory = "aux/validation"
 }
