@@ -145,7 +145,8 @@ private class TargetConfig constructor(
         val resolvedDir = root.resolve(dir).normalize()
         if (!resolvedDir.startsWith(root)) {
             throw IllegalArgumentException("apiDumpDirectory (\"$dir\") should be inside the project directory, " +
-                    "but it resolves to a path outside the project root.")
+                    "but it resolves to a path outside the project root.\n" +
+                    "Project's root path: $root\nResolved apiDumpDirectory: $resolvedDir")
         }
 
         dir
