@@ -22,12 +22,12 @@ public open class BaseKotlinGradleTest {
 
     internal fun rootProjectAbiDump(target: String, project: String = rootProjectDir.name): File {
         // TODO: rewrite
-        val suffix = if (target != KLIB_PHONY_TARGET_NAME) "api" else "klib.abi"
+        val suffix = if (target != KLIB_PHONY_TARGET_NAME) "api" else "klib.api"
         return rootProjectDir.resolve("$API_DIR/$target/$project.$suffix")
     }
 
     internal fun rootProjectAbiDump(project: String = rootProjectDir.name): File {
         // TODO: rewrite
-        return rootProjectDir.resolve("$API_DIR/$project.klib.abi")
+        return rootProjectDir.resolve("$API_DIR/$project.klib.api")
     }
 }

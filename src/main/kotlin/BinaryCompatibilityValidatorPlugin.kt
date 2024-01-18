@@ -606,4 +606,4 @@ private val KotlinTarget.mainCompilations
 private val Project.jvmDumpFileName: String
     get() = "$name.api"
 private val Project.klibDumpFileName: String
-    get() = "$name.klib.abi"
+    get() = "$name.klib.api"
