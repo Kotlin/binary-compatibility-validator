@@ -15,16 +15,18 @@ import org.jetbrains.kotlin.gradle.plugin.*
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompileTool
 import org.jetbrains.kotlin.konan.target.HostManager
+import org.jetbrains.kotlin.library.abi.ExperimentalLibraryAbiReader
+import org.jetbrains.kotlin.library.abi.LibraryAbiReader
 import java.io.*
+import kotlin.text.split
 
 const val API_DIR = "api"
 const val KLIB_PHONY_TARGET_NAME = "klib"
 const val KLIB_ALL_PHONY_TARGET_NAME = "klib-all"
 
-
-
 class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
 
+    @ExperimentalLibraryAbiReader
     override fun apply(target: Project): Unit = with(target) {
         val extension = extensions.create("apiValidation", ApiValidationExtension::class.java)
         validateExtension(extension)
@@ -33,12 +35,21 @@ class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
         }
     }
 
+    @ExperimentalLibraryAbiReader
     private fun Project.validateExtension(extension: ApiValidationExtension) {
         afterEvaluate {
             val ignored = extension.ignoredProjects
             val all = allprojects.map { it.name }
             for (project in ignored) {
                 require(project in all) { "Cannot find excluded project $project in all projects: $all" }
+            }
+            if (extension.klib.enabled) {
+                try {
+                    LibraryAbiReader.javaClass
+                } catch (e: NoClassDefFoundError) {
+                    throw IllegalStateException("KLib validation is not available. " +
+                            "Make sure the project use at least Kotlin 1.9.20.", e)
+                }
             }
         }
     }
