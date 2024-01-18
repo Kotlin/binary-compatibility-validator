@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 JetBrains s.r.o.
+ * Copyright 2016-2023 JetBrains s.r.o.
  * Use of this source code is governed by the Apache 2.0 License that can be found in the LICENSE.txt file.
  */
 
@@ -13,9 +13,9 @@ import org.jetbrains.kotlin.gradle.dsl.*
 import org.jetbrains.kotlin.gradle.plugin.*
 import java.io.*
 
-const val API_DIR = "api"
+private const val API_DIR = "api" // Mirrored in functional tests
 
-class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
+public class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
 
     override fun apply(target: Project): Unit = with(target) {
         val extension = extensions.create("apiValidation", ApiValidationExtension::class.java)
@@ -181,7 +181,7 @@ private fun Project.configureKotlinCompilation(
 ) {
     val projectName = project.name
     val apiDirProvider = targetConfig.apiDir
-    val apiBuildDir = apiDirProvider.map { buildDir.resolve(it) }
+    val apiBuildDir = apiDirProvider.map { layout.buildDirectory.asFile.get().resolve(it) }
 
     val apiBuild = task<KotlinApiBuildTask>(targetConfig.apiTaskName("Build")) {
         // Do not enable task for empty umbrella modules
@@ -216,7 +216,7 @@ internal val Project.apiValidationExtensionOrNull: ApiValidationExtension?
             .map { it.extensions.findByType(ApiValidationExtension::class.java) }
             .firstOrNull { it != null }
 
-fun apiCheckEnabled(projectName: String, extension: ApiValidationExtension): Boolean =
+private fun apiCheckEnabled(projectName: String, extension: ApiValidationExtension): Boolean =
     projectName !in extension.ignoredProjects && !extension.validationDisabled
 
 private fun Project.configureApiTasks(
@@ -224,7 +224,7 @@ private fun Project.configureApiTasks(
     targetConfig: TargetConfig = TargetConfig(this),
 ) {
     val projectName = project.name
-    val apiBuildDir = targetConfig.apiDir.map { buildDir.resolve(it) }
+    val apiBuildDir = targetConfig.apiDir.map { layout.buildDirectory.asFile.get().resolve(it) }
     val sourceSetsOutputsProvider = project.provider {
         sourceSets
             .filter { it.name == SourceSet.MAIN_SOURCE_SET_NAME || it.name in extension.additionalSourceSets }
@@ -283,7 +283,7 @@ private fun Project.configureCheckTasks(
     }
 }
 
-inline fun <reified T : Task> Project.task(
+private inline fun <reified T : Task> Project.task(
     name: String,
     noinline configuration: T.() -> Unit,
 ): TaskProvider<T> = tasks.register(name, T::class.java, Action(configuration))

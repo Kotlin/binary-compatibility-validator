@@ -15,10 +15,10 @@ import java.io.InputStreamReader
 internal class MultipleJvmTargetsTest : BaseKotlinGradleTest() {
     private fun BaseKotlinScope.createProjectHierarchyWithPluginOnRoot() {
         settingsGradleKts {
-            resolve("examples/gradle/settings/settings-name-testproject.gradle.kts")
+            resolve("/examples/gradle/settings/settings-name-testproject.gradle.kts")
         }
         buildGradleKts {
-            resolve("examples/gradle/base/multiplatformWithJvmTargets.gradle.kts")
+            resolve("/examples/gradle/base/multiplatformWithJvmTargets.gradle.kts")
         }
     }
 
@@ -30,25 +30,25 @@ internal class MultipleJvmTargetsTest : BaseKotlinGradleTest() {
                 arguments.add(":apiCheck")
             }
 
-            dir("api/jvm/") {
+            dir("$API_DIR/jvm/") {
                 file("testproject.api") {
-                    resolve("examples/classes/Subsub1Class.dump")
-                    resolve("examples/classes/Subsub2Class.dump")
+                    resolve("/examples/classes/Subsub1Class.dump")
+                    resolve("/examples/classes/Subsub2Class.dump")
                 }
             }
 
-            dir("api/anotherJvm/") {
+            dir("$API_DIR/anotherJvm/") {
                 file("testproject.api") {
-                    resolve("examples/classes/Subsub1Class.dump")
+                    resolve("/examples/classes/Subsub1Class.dump")
                 }
             }
 
             dir("src/jvmMain/kotlin") {}
             kotlin("Subsub1Class.kt", "commonMain") {
-                resolve("examples/classes/Subsub1Class.kt")
+                resolve("/examples/classes/Subsub1Class.kt")
             }
             kotlin("Subsub2Class.kt", "jvmMain") {
-                resolve("examples/classes/Subsub2Class.kt")
+                resolve("/examples/classes/Subsub2Class.kt")
             }
 
         }
@@ -69,25 +69,25 @@ internal class MultipleJvmTargetsTest : BaseKotlinGradleTest() {
                 arguments.add(":check")
             }
 
-            dir("api/jvm/") {
+            dir("$API_DIR/jvm/") {
                 file("testproject.api") {
-                    resolve("examples/classes/Subsub2Class.dump")
-                    resolve("examples/classes/Subsub1Class.dump")
+                    resolve("/examples/classes/Subsub2Class.dump")
+                    resolve("/examples/classes/Subsub1Class.dump")
                 }
             }
 
-            dir("api/anotherJvm/") {
+            dir("$API_DIR/anotherJvm/") {
                 file("testproject.api") {
-                    resolve("examples/classes/Subsub2Class.dump")
+                    resolve("/examples/classes/Subsub2Class.dump")
                 }
             }
 
             dir("src/jvmMain/kotlin") {}
             kotlin("Subsub1Class.kt", "commonMain") {
-                resolve("examples/classes/Subsub1Class.kt")
+                resolve("/examples/classes/Subsub1Class.kt")
             }
             kotlin("Subsub2Class.kt", "jvmMain") {
-                resolve("examples/classes/Subsub2Class.kt")
+                resolve("/examples/classes/Subsub2Class.kt")
             }
 
         }
@@ -112,10 +112,10 @@ internal class MultipleJvmTargetsTest : BaseKotlinGradleTest() {
 
             dir("src/jvmMain/kotlin") {}
             kotlin("Subsub1Class.kt", "commonMain") {
-                resolve("examples/classes/Subsub1Class.kt")
+                resolve("/examples/classes/Subsub1Class.kt")
             }
             kotlin("Subsub2Class.kt", "jvmMain") {
-                resolve("examples/classes/Subsub2Class.kt")
+                resolve("/examples/classes/Subsub2Class.kt")
             }
 
         }
@@ -126,15 +126,15 @@ internal class MultipleJvmTargetsTest : BaseKotlinGradleTest() {
 
             System.err.println(output)
 
-            val anotherExpectedApi = readFileList("examples/classes/Subsub1Class.dump")
+            val anotherExpectedApi = readFileList("/examples/classes/Subsub1Class.dump")
             assertThat(anotherApiDump.readText()).isEqualToIgnoringNewLines(anotherExpectedApi)
 
-            val mainExpectedApi = anotherExpectedApi + "\n" + readFileList("examples/classes/Subsub2Class.dump")
+            val mainExpectedApi = anotherExpectedApi + "\n" + readFileList("/examples/classes/Subsub2Class.dump")
             assertThat(jvmApiDump.readText()).isEqualToIgnoringNewLines(mainExpectedApi)
         }
     }
 
-    private val jvmApiDump: File get() = rootProjectDir.resolve("api/jvm/testproject.api")
-    private val anotherApiDump: File get() = rootProjectDir.resolve("api/anotherJvm/testproject.api")
+    private val jvmApiDump: File get() = rootProjectDir.resolve("$API_DIR/jvm/testproject.api")
+    private val anotherApiDump: File get() = rootProjectDir.resolve("$API_DIR/anotherJvm/testproject.api")
 
 }

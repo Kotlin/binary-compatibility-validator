@@ -1,0 +1,78 @@
+public class kotlinx/validation/ApiValidationExtension {
+	public fun <init> ()V
+	public final fun getAdditionalSourceSets ()Ljava/util/Set;
+	public final fun getIgnoredClasses ()Ljava/util/Set;
+	public final fun getIgnoredPackages ()Ljava/util/Set;
+	public final fun getIgnoredProjects ()Ljava/util/Set;
+	public final fun getNonPublicMarkers ()Ljava/util/Set;
+	public final fun getPublicClasses ()Ljava/util/Set;
+	public final fun getPublicMarkers ()Ljava/util/Set;
+	public final fun getPublicPackages ()Ljava/util/Set;
+	public final fun getValidationDisabled ()Z
+	public final fun setAdditionalSourceSets (Ljava/util/Set;)V
+	public final fun setIgnoredClasses (Ljava/util/Set;)V
+	public final fun setIgnoredPackages (Ljava/util/Set;)V
+	public final fun setIgnoredProjects (Ljava/util/Set;)V
+	public final fun setNonPublicMarkers (Ljava/util/Set;)V
+	public final fun setPublicClasses (Ljava/util/Set;)V
+	public final fun setPublicMarkers (Ljava/util/Set;)V
+	public final fun setPublicPackages (Ljava/util/Set;)V
+	public final fun setValidationDisabled (Z)V
+}
+
+public final class kotlinx/validation/BinaryCompatibilityValidatorPlugin : org/gradle/api/Plugin {
+	public fun <init> ()V
+	public synthetic fun apply (Ljava/lang/Object;)V
+	public fun apply (Lorg/gradle/api/Project;)V
+}
+
+public abstract interface annotation class kotlinx/validation/ExternalApi : java/lang/annotation/Annotation {
+}
+
+public class kotlinx/validation/KotlinApiBuildTask : org/gradle/api/DefaultTask {
+	public field inputDependencies Lorg/gradle/api/file/FileCollection;
+	public field outputApiDir Ljava/io/File;
+	public fun <init> ()V
+	public final fun getInputClassesDirs ()Lorg/gradle/api/file/FileCollection;
+	public final fun getInputDependencies ()Lorg/gradle/api/file/FileCollection;
+	public final fun getInputJar ()Lorg/gradle/api/file/RegularFileProperty;
+	public final fun getOutputApiDir ()Ljava/io/File;
+	public final fun setInputClassesDirs (Lorg/gradle/api/file/FileCollection;)V
+	public final fun setInputDependencies (Lorg/gradle/api/file/FileCollection;)V
+	public final fun setOutputApiDir (Ljava/io/File;)V
+}
+
+public class kotlinx/validation/KotlinApiCompareTask : org/gradle/api/DefaultTask {
+	public field apiBuildDir Ljava/io/File;
+	public fun <init> (Lorg/gradle/api/model/ObjectFactory;)V
+	public final fun getApiBuildDir ()Ljava/io/File;
+	public final fun getDummyOutputFile ()Ljava/io/File;
+	public final fun getNonExistingProjectApiDir ()Ljava/lang/String;
+	public final fun getProjectApiDir ()Ljava/io/File;
+	public final fun setApiBuildDir (Ljava/io/File;)V
+	public final fun setNonExistingProjectApiDir (Ljava/lang/String;)V
+	public final fun setProjectApiDir (Ljava/io/File;)V
+}
+
+public final class kotlinx/validation/api/ClassBinarySignature {
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Lkotlinx/validation/api/AccessFlags;ZZLjava/util/List;)Lkotlinx/validation/api/ClassBinarySignature;
+	public static synthetic fun copy$default (Lkotlinx/validation/api/ClassBinarySignature;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Lkotlinx/validation/api/AccessFlags;ZZLjava/util/List;ILjava/lang/Object;)Lkotlinx/validation/api/ClassBinarySignature;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class kotlinx/validation/api/KotlinSignaturesLoadingKt {
+	public static final fun dump (Ljava/util/List;)Ljava/io/PrintStream;
+	public static final fun dump (Ljava/util/List;Ljava/lang/Appendable;)Ljava/lang/Appendable;
+	public static final fun filterOutAnnotated (Ljava/util/List;Ljava/util/Set;)Ljava/util/List;
+	public static final fun filterOutNonPublic (Ljava/util/List;Ljava/util/Collection;Ljava/util/Collection;)Ljava/util/List;
+	public static synthetic fun filterOutNonPublic$default (Ljava/util/List;Ljava/util/Collection;Ljava/util/Collection;ILjava/lang/Object;)Ljava/util/List;
+	public static final fun loadApiFromJvmClasses (Ljava/util/jar/JarFile;Lkotlin/jvm/functions/Function1;)Ljava/util/List;
+	public static final fun loadApiFromJvmClasses (Lkotlin/sequences/Sequence;Lkotlin/jvm/functions/Function1;)Ljava/util/List;
+	public static synthetic fun loadApiFromJvmClasses$default (Ljava/util/jar/JarFile;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Ljava/util/List;
+	public static synthetic fun loadApiFromJvmClasses$default (Lkotlin/sequences/Sequence;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Ljava/util/List;
+	public static final fun retainExplicitlyIncludedIfDeclared (Ljava/util/List;Ljava/util/Collection;Ljava/util/Collection;Ljava/util/Collection;)Ljava/util/List;
+	public static synthetic fun retainExplicitlyIncludedIfDeclared$default (Ljava/util/List;Ljava/util/Collection;Ljava/util/Collection;Ljava/util/Collection;ILjava/lang/Object;)Ljava/util/List;
+}
+
