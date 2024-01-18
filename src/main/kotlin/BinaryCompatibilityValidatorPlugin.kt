@@ -136,7 +136,7 @@ private class TargetConfig constructor(
     project: Project,
     extension: ApiValidationExtension,
     val targetName: String? = null,
-    private val dirConfig: Provider<DirConfig>? = null,
+    dirConfig: Provider<DirConfig>? = null,
 ) {
     private val apiDirProvider = project.provider {
         val dir = extension.apiDumpDirectory
@@ -144,26 +144,27 @@ private class TargetConfig constructor(
         val root = project.layout.projectDirectory.asFile.toPath().toAbsolutePath().normalize()
         val resolvedDir = root.resolve(dir).normalize()
         if (!resolvedDir.startsWith(root)) {
-            throw IllegalArgumentException("apiDumpDirectory (\"$dir\") should be inside the project directory, " +
-                    "but it resolves to a path outside the project root.\n" +
-                    "Project's root path: $root\nResolved apiDumpDirectory: $resolvedDir")
+            throw IllegalArgumentException(
+                "apiDumpDirectory (\"$dir\") should be inside the project directory, " +
+                        "but it resolves to a path outside the project root.\n" +
+                        "Project's root path: $root\nResolved apiDumpDirectory: $resolvedDir"
+            )
         }
 
         dir
     }
 
+    val apiDir = dirConfig?.map { dirConfig ->
+        when (dirConfig) {
+            DirConfig.COMMON -> apiDirProvider.get()
+            else -> "${apiDirProvider.get()}/$targetName"
+        }
+    } ?: apiDirProvider
+
     fun apiTaskName(suffix: String) = when (targetName) {
         null, "" -> "api$suffix"
-        else     -> "${targetName}Api$suffix"
+        else -> "${targetName}Api$suffix"
     }
-
-    val apiDir
-        get() = dirConfig?.map { dirConfig ->
-            when (dirConfig) {
-                DirConfig.COMMON -> apiDirProvider.get()
-                else -> "${apiDirProvider.get()}/$targetName"
-            }
-        } ?: apiDirProvider
 }
 
 private enum class DirConfig {
@@ -172,6 +173,7 @@ private enum class DirConfig {
      * Used in single target projects
      */
     COMMON,
+
     /**
      * Target-based directory, used in multitarget setups.
      * E.g. for the project with targets jvm and android,
