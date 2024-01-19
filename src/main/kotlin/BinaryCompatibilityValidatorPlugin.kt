@@ -291,7 +291,8 @@ private fun Project.configureCheckTasks(
         isEnabled = apiCheckEnabled(projectName, extension) && apiBuild.map { it.enabled }.getOrElse(true)
         group = "verification"
         description = "Checks signatures of public API against the golden value in API folder for $projectName"
-        compareApiDumps(apiReferenceDir = apiCheckDir.get(), apiBuildDir = apiBuildDir.get())
+        projectApiFile = apiCheckDir.get().resolve(jvmDumpFileName)
+        generatedApiFile = apiBuildDir.get().resolve(jvmDumpFileName)
         dependsOn(apiBuild)
     }
 
@@ -369,7 +370,8 @@ private class KlibValidationPipelineBuilder(
         group = "verification"
         description = "Checks signatures of public klib ABI against the golden value in ABI folder for " +
                 project.name
-        compareApiDumps(apiReferenceDir = klibApiDir.get(), apiBuildDir = klibMergeDir)
+        projectApiFile = klibApiDir.get().resolve(klibDumpFileName)
+        generatedApiFile = klibMergeDir.resolve(klibDumpFileName)
     }
 
     private fun Project.dumpKlibsTask(
