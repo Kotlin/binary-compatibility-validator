@@ -89,7 +89,7 @@ abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask() {
         // find a set of supported targets that are closer to unsupported target in the hierarchy
         val matchingTargets = findMatchingTargets()
         val target2outFile = supportedTargets.keysToMap {
-            File(outputApiDir).resolve(it).resolve(dumpFileName)
+            File(outputApiDir).parentFile.resolve(it).resolve(dumpFileName)
         }
 
         // given a set of similar targets, combine their ABI files into a single merged dump and consider it
@@ -104,16 +104,23 @@ abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask() {
         // specific to the unsupported target
         val image = KlibAbiDumpMerger()
         if (inputImageFile.exists()) {
-            image.loadMergedDump(inputImageFile)
-            image.retainSpecific(Target(unsupportedTarget))
+            if (inputImageFile.length() > 0L) {
+                image.loadMergedDump(inputImageFile)
+                image.retainSpecific(Target(unsupportedTarget))
+                // merge common ABI with target-specific ABI
+                commonDump.mergeTargetSpecific(image)
+            } else {
+                logger.warn(
+                    "Project's ABI file exists, but empty: $inputImageFile. " +
+                            "The file will be ignored during ABI dump inference for the unsupported target " +
+                            unsupportedTarget
+                )
+            }
         }
-
-        // merge common ABI with target-specific ABI
-        commonDump.mergeTargetSpecific(image)
         commonDump.overrideTargets(setOf(Target(unsupportedTarget)))
 
-       outputFile.bufferedWriter().use {
-            commonDump.dump(it)
+        outputFile.bufferedWriter().use {
+            commonDump.dump(it, false)
         }
 
         logger.warn(
@@ -135,7 +142,8 @@ abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask() {
                 return targets
             }
             currentGroup = targetsHierarchy[currentGroup] ?: throw IllegalStateException(
-                "Can't find any targets similar to $unsupportedTarget to generate a dump for it."
+                "The target $unsupportedTarget is not supported by the host compiler " +
+                        "and there are no targets similar to linuxArm64 to infer a dump from it."
             )
             groupMembers = collectGroupMembers(currentGroup)
         }

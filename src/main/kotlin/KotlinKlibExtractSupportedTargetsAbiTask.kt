@@ -29,6 +29,9 @@ abstract class KotlinKlibExtractSupportedTargetsAbiTask : DefaultTask() {
 
     @TaskAction
     fun generate() {
+        if (inputAbiFile.length() == 0L) {
+            error("Project ABI file $inputAbiFile is empty.")
+        }
         val dump = KlibAbiDumpMerger().apply { loadMergedDump(inputAbiFile) }
         val enabledTargets = targets.get()
         val targetsToRemove = dump.targets.filter { it.name !in enabledTargets }

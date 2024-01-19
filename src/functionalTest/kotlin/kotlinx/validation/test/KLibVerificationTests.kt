@@ -99,7 +99,9 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
                 resolve("examples/classes/BuildConfig.kt")
             }
 
-            abiFile(projectName = "testproject") {}
+            abiFile(projectName = "testproject") {
+                resolve("examples/classes/Empty.klib.dump")
+            }
 
             runner {
                 arguments.add(":apiCheck")
@@ -402,49 +404,6 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
     }
 
     @Test
-    fun `apiDump should fail if a target is not supported`() {
-        val runner = test {
-            settingsGradleKts {
-                resolve("examples/gradle/settings/settings-name-testproject.gradle.kts")
-            }
-            buildGradleKts {
-                resolve("examples/gradle/base/withNativePlugin.gradle.kts")
-            }
-            kotlin("TopLevelDeclarations.kt", "commonMain") {
-                resolve("examples/classes/TopLevelDeclarations.kt")
-            }
-            runner {
-                arguments.add("-P$BANNED_TARGETS_PROPERTY_NAME=linuxArm64")
-                arguments.add(":apiDump")
-            }
-        }
-
-        runner.buildAndFail()
-    }
-
-    @Test
-    fun `apiDump should not fail if a target is not supported and ignore flag is set`() {
-        val runner = test {
-            settingsGradleKts {
-                resolve("examples/gradle/settings/settings-name-testproject.gradle.kts")
-            }
-            buildGradleKts {
-                resolve("examples/gradle/base/withNativePlugin.gradle.kts")
-                resolve("examples/gradle/configuration/unsupported/ignore.gradle.kts")
-            }
-            kotlin("TopLevelDeclarations.kt", "commonMain") {
-                resolve("examples/classes/TopLevelDeclarations.kt")
-            }
-            runner {
-                arguments.add("-P$BANNED_TARGETS_PROPERTY_NAME=linuxArm64")
-                arguments.add(":apiDump")
-            }
-        }
-
-        checkKlibDump(runner.build(), "examples/classes/TopLevelDeclarations.klib.unsup.dump")
-    }
-
-    @Test
     fun `apiCheck should fail if a target is not supported`() {
         val runner = test {
             settingsGradleKts {
@@ -468,14 +427,13 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
     }
 
     @Test
-    fun `apiCheck should ignore unsupported target when the ignore flag is set`() {
+    fun `apiCheck should ignore unsupported targets by default`() {
         val runner = test {
             settingsGradleKts {
                 resolve("examples/gradle/settings/settings-name-testproject.gradle.kts")
             }
             buildGradleKts {
                 resolve("examples/gradle/base/withNativePlugin.gradle.kts")
-                resolve("examples/gradle/configuration/unsupported/ignore.gradle.kts")
             }
             kotlin("TopLevelDeclarations.kt", "commonMain") {
                 resolve("examples/classes/TopLevelDeclarations.kt")
@@ -496,122 +454,41 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
     }
 
     @Test
-    fun `klibDumpAll should replace dump for unsupported target with dump for similar target`() {
+    fun `apiCheck should fail for unsupported targets with strict mode turned on`() {
         val runner = test {
             settingsGradleKts {
                 resolve("examples/gradle/settings/settings-name-testproject.gradle.kts")
             }
             buildGradleKts {
                 resolve("examples/gradle/base/withNativePlugin.gradle.kts")
-                resolve("examples/gradle/configuration/unsupported/ignore.gradle.kts")
-            }
-            kotlin("TopLevelDeclarations.kt", "commonMain") {
-                resolve("examples/classes/TopLevelDeclarations.kt")
-            }
-            runner {
-                arguments.add("-P$BANNED_TARGETS_PROPERTY_NAME=linuxArm64")
-                arguments.add(":klibApiDumpAll")
-            }
-        }
-
-        checkKlibDump(runner.build(), "examples/classes/TopLevelDeclarations.klib.dump",
-            dumpTask = ":klibApiDumpAll")
-    }
-
-    @Test
-    fun `klibCheckAll should pass if there is a target with similar sourceSet`() {
-        val runner = test {
-            settingsGradleKts {
-                resolve("examples/gradle/settings/settings-name-testproject.gradle.kts")
-            }
-            buildGradleKts {
-                resolve("examples/gradle/base/withNativePlugin.gradle.kts")
-                resolve("examples/gradle/configuration/unsupported/ignore.gradle.kts")
+                resolve("examples/gradle/configuration/unsupported/enforce.gradle.kts")
             }
             kotlin("TopLevelDeclarations.kt", "commonMain") {
                 resolve("examples/classes/TopLevelDeclarations.kt")
             }
             abiFile(projectName = "testproject") {
+                // note that the regular dump is used, where linuxArm64 is presented
                 resolve("examples/classes/TopLevelDeclarations.klib.dump")
             }
             runner {
                 arguments.add("-P$BANNED_TARGETS_PROPERTY_NAME=linuxArm64")
-                arguments.add(":klibApiCheckAll")
-            }
-        }
-
-        runner.build().apply {
-            assertTaskSuccess(":klibApiCheckAll")
-        }
-    }
-
-    @Test
-    fun `klibDumpAll should fail if no targets share exact sourceSets with the disabled target`() {
-        val runner = test {
-            settingsGradleKts {
-                resolve("examples/gradle/settings/settings-name-testproject.gradle.kts")
-            }
-            buildGradleKts {
-                resolve("examples/gradle/base/withNativePlugin.gradle.kts")
-                resolve("examples/gradle/configuration/unsupported/ignore.gradle.kts")
-            }
-            kotlin("TopLevelDeclarations.kt", "commonMain") {
-                resolve("examples/classes/TopLevelDeclarations.kt")
-            }
-            kotlin("AnotherBuildConfigLinuxArm64.kt", "linuxArm64Main") {
-                resolve("examples/classes/AnotherBuildConfigLinuxArm64.kt")
-            }
-            runner {
-                arguments.add("-P$BANNED_TARGETS_PROPERTY_NAME=linuxArm64")
-                arguments.add(":klibApiDumpAll")
+                arguments.add(":apiCheck")
             }
         }
 
         runner.buildAndFail().apply {
-            assertTaskFailure(":linuxArm64ApiFakeAbiDump")
+            assertTaskFailure(":klibApiPrepareAbiForValidation")
         }
     }
 
     @Test
-    fun `klibCheckAll should fail if no targets share exact sourceSets with the disabled target`() {
+    fun `klibDump should infer a dump for unsupported target from similar enough target`() {
         val runner = test {
             settingsGradleKts {
                 resolve("examples/gradle/settings/settings-name-testproject.gradle.kts")
             }
             buildGradleKts {
                 resolve("examples/gradle/base/withNativePlugin.gradle.kts")
-                resolve("examples/gradle/configuration/unsupported/ignore.gradle.kts")
-            }
-            kotlin("TopLevelDeclarations.kt", "commonMain") {
-                resolve("examples/classes/TopLevelDeclarations.kt")
-            }
-            kotlin("AnotherBuildConfigLinuxArm64.kt", "linuxArm64Main") {
-                resolve("examples/classes/AnotherBuildConfigLinuxArm64.kt")
-            }
-            abiFile("testproject") {
-            }
-            runner {
-                arguments.add("-P$BANNED_TARGETS_PROPERTY_NAME=linuxArm64")
-                arguments.add(":klibApiCheckAll")
-            }
-        }
-
-        runner.buildAndFail().apply {
-            assertTaskFailure(":linuxArm64ApiFakeAbiDump")
-        }
-    }
-
-
-    @Test
-    fun `klibDumpAll should with similar enough target when allowed`() {
-        val runner = test {
-            settingsGradleKts {
-                resolve("examples/gradle/settings/settings-name-testproject.gradle.kts")
-            }
-            buildGradleKts {
-                resolve("examples/gradle/base/withNativePlugin.gradle.kts")
-                resolve("examples/gradle/configuration/unsupported/ignore.gradle.kts")
-                resolve("examples/gradle/configuration/unsupported/inexact.gradle.kts")
             }
             kotlin("TopLevelDeclarations.kt", "commonMain") {
                 resolve("examples/classes/TopLevelDeclarations.kt")
@@ -621,55 +498,22 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
             }
             runner {
                 arguments.add("-P$BANNED_TARGETS_PROPERTY_NAME=linuxArm64")
-                arguments.add(":klibApiDumpAll")
+                arguments.add(":klibApiDump")
             }
         }
 
         checkKlibDump(runner.build(), "examples/classes/TopLevelDeclarations.klib.dump",
-            dumpTask = ":klibApiDumpAll")
+            dumpTask = ":klibApiDump")
     }
 
     @Test
-    fun `klibCheckAll should with similar enough target when allowed`() {
-        val runner = test {
-            settingsGradleKts {
-                resolve("examples/gradle/settings/settings-name-testproject.gradle.kts")
-            }
-            buildGradleKts {
-                resolve("examples/gradle/base/withNativePlugin.gradle.kts")
-                resolve("examples/gradle/configuration/unsupported/ignore.gradle.kts")
-                resolve("examples/gradle/configuration/unsupported/inexact.gradle.kts")
-            }
-            kotlin("TopLevelDeclarations.kt", "commonMain") {
-                resolve("examples/classes/TopLevelDeclarations.kt")
-            }
-            kotlin("AnotherBuildConfigLinuxArm64.kt", "linuxArm64Main") {
-                resolve("examples/classes/AnotherBuildConfigLinuxArm64.kt")
-            }
-            abiFile("testproject") {
-                resolve("examples/classes/TopLevelDeclarations.klib.dump")
-            }
-            runner {
-                arguments.add("-P$BANNED_TARGETS_PROPERTY_NAME=linuxArm64")
-                arguments.add(":klibApiCheckAll")
-            }
-        }
-
-        runner.build().apply {
-            assertTaskSuccess(":klibApiCheckAll")
-        }
-    }
-
-    @Test
-    fun `klibDumpAll should fail when the only target in the project is disabled`() {
+    fun `klibDump should fail when the only target in the project is disabled`() {
         val runner = test {
             settingsGradleKts {
                 resolve("examples/gradle/settings/settings-name-testproject.gradle.kts")
             }
             buildGradleKts {
                 resolve("examples/gradle/base/withNativePluginAndSingleTarget.gradle.kts")
-                resolve("examples/gradle/configuration/unsupported/ignore.gradle.kts")
-                resolve("examples/gradle/configuration/unsupported/inexact.gradle.kts")
             }
             kotlin("TopLevelDeclarations.kt", "commonMain") {
                 resolve("examples/classes/TopLevelDeclarations.kt")
@@ -679,45 +523,24 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
             }
             runner {
                 arguments.add("-P$BANNED_TARGETS_PROPERTY_NAME=linuxArm64")
-                arguments.add(":klibApiDumpAll")
+                arguments.add(":klibApiDump")
             }
         }
 
         runner.buildAndFail().apply {
             assertTaskFailure(":linuxArm64ApiFakeAbiDump")
-            assertTrue(output.contains("The target linuxArm64 is not supported by the host compiler " +
-                    "and there are no other enabled targets to steal a dump form."))
+            Assertions.assertThat(output).contains("The target linuxArm64 is not supported by the host compiler " +
+                    "and there are no targets similar to linuxArm64 to infer a dump from it.")
         }
     }
 
     @Test
-    fun `klibDumpAll should fail when the only klib-target in the project is disabled`() {
-        val runner = test {
-            settingsGradleKts {
-                resolve("examples/gradle/settings/settings-name-testproject.gradle.kts")
-            }
-            buildGradleKts {
-                resolve("examples/gradle/base/withNativePluginAndSingleTarget.gradle.kts")
-                resolve("examples/gradle/configuration/unsupported/ignore.gradle.kts")
-                resolve("examples/gradle/configuration/unsupported/inexact.gradle.kts")
-                resolve("examples/gradle/base/enableJvmInWithNativePlugin.gradle.kts")
-            }
-            kotlin("TopLevelDeclarations.kt", "commonMain") {
-                resolve("examples/classes/TopLevelDeclarations.kt")
-            }
-            kotlin("AnotherBuildConfigLinuxArm64.kt", "linuxArm64Main") {
-                resolve("examples/classes/AnotherBuildConfigLinuxArm64.kt")
-            }
-            runner {
-                arguments.add("-P$BANNED_TARGETS_PROPERTY_NAME=linuxArm64")
-                arguments.add(":klibApiDumpAll")
-            }
-        }
+    fun `klibDump if all klib-targets are unavailable`() {
+        TODO()
+    }
 
-        runner.buildAndFail().apply {
-            assertTaskFailure(":linuxArm64ApiFakeAbiDump")
-            assertTrue(output.contains("The target linuxArm64 is not supported by the host compiler " +
-                    "and there are no other enabled targets to steal a dump form."))
-        }
+    @Test
+    fun `klibCheck if all klib-targets are unavailable`() {
+        TODO()
     }
 }

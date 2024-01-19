@@ -4,5 +4,5 @@
  */
 
 configure<kotlinx.validation.ApiValidationExtension> {
-    klib.ignoreUnsupportedTargets = true
+    klib.strictValidation = true
 }

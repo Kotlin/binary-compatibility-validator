@@ -205,15 +205,17 @@ internal class KlibAbiDumpMerger {
         }
     }
 
-    fun dump(appendable: Appendable) {
-        val targetsStr = targetsMut.sortedBy { it.name }
-            .joinToString(TARGETS_DELIMITER, TARGETS_LIST_PREFIX, TARGETS_LIST_SUFFIX) { it.name }
-        appendable.append(targetsStr).append('\n')
+    fun dump(appendable: Appendable, includeTargets: Boolean = true) {
+        if (includeTargets) {
+            val targetsStr = targetsMut.sortedBy { it.name }
+                .joinToString(TARGETS_DELIMITER, TARGETS_LIST_PREFIX, TARGETS_LIST_SUFFIX) { it.name }
+            appendable.append(targetsStr).append('\n')
+        }
         headerContent.forEach {
             appendable.append(it).append('\n')
         }
         topLevelDeclaration.children.sortedWith(DeclarationsComparator).forEach {
-            it.dump(appendable, targetsMut)
+            it.dump(appendable, targetsMut, includeTargets)
         }
     }
 
@@ -277,8 +279,8 @@ private class DeclarationContainer(val text: String, val parent: DeclarationCont
         return child
     }
 
-    fun dump(appendable: Appendable, allTargets: Set<Target>) {
-        if (targets != allTargets) {
+    fun dump(appendable: Appendable, allTargets: Set<Target>, includeTargets: Boolean = true) {
+        if (targets != allTargets && includeTargets) {
             val targetsStr = targets.sortedBy { it.name }
                 .joinToString(TARGETS_DELIMITER, TARGETS_LIST_PREFIX, TARGETS_LIST_SUFFIX) { it.name }
             // Use the same indentation for target list as for the declaration itself

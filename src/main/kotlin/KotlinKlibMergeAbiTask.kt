@@ -36,6 +36,7 @@ abstract class KotlinKlibMergeAbiTask : DefaultTask() {
         val builder = KlibAbiDumpMerger()
         targets.forEach { targetName ->
             val target = Target(targetName)
+            println("Adding ${targetToFile[targetName]!!.resolve(dumpFileName)}")
             builder.addIndividualDump(target, targetToFile[targetName]!!.resolve(dumpFileName))
         }
         mergedFile.bufferedWriter().use { builder.dump(it) }

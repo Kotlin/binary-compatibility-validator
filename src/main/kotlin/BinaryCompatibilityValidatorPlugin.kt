@@ -341,6 +341,7 @@ private class KlibValidationPipelineBuilder(
         }!!
         val klibMergeDir = project.buildDir.resolve(klibDumpConfig.apiDir.get())
         val klibMergeAllDir = project.buildDir.resolve(klibDumpAllConfig.apiDir.get())
+        // TODO
         val klibExtractedFileDir = klibMergeAllDir.resolve("extracted")
 
         val klibMerge = project.mergeKlibsUmbrellaTask(klibDumpConfig, klibMergeDir)
@@ -563,7 +564,7 @@ private class KlibValidationPipelineBuilder(
             this.supportedTargets = supportedTargets
             inputImageFile = klibApiDir.get().resolve(klibDumpFileName)
             outputApiDir = apiBuildDir.toString()
-            outputFile = apiBuildDir.resolve(targetConfig.targetName)
+            outputFile = apiBuildDir.resolve(klibDumpFileName)
             unsupportedTarget = targetConfig.targetName
             dumpFileName = klibDumpFileName
             dependsOn(project.tasks.withType(KotlinKlibAbiBuildTask::class.java))
