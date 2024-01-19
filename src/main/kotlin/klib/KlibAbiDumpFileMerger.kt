@@ -65,9 +65,11 @@ private fun parseBcvTargetsLine(line: String): Set<Target> {
 }
 
 internal class KlibAbiDumpMerger {
-    private val targets: MutableSet<Target> = mutableSetOf()
+    private val targetsMut: MutableSet<Target> = mutableSetOf()
     private val headerContent: MutableList<String> = mutableListOf()
     private val topLevelDeclaration: DeclarationContainer = DeclarationContainer("")
+
+    public val targets: Set<Target> = targetsMut
 
     public fun loadMergedDump(file: File) {
         require(file.exists()) { "File does not exist: $file" }
@@ -85,7 +87,7 @@ internal class KlibAbiDumpMerger {
 
     private fun mergeFile(targets: Set<Target>, lines: LinesProvider) {
         val isMergedFile = targets.isEmpty()
-        if (isMergedFile) check(this.targets.isEmpty()) { "Merged dump could only be loaded once." }
+        if (isMergedFile) check(this.targetsMut.isEmpty()) { "Merged dump could only be loaded once." }
 
         val bcvTargets = if (isMergedFile) {
             lines.parseTargets()
@@ -93,12 +95,12 @@ internal class KlibAbiDumpMerger {
             targets
         }
         val header = lines.parseFileHeader()
-        if (isMergedFile || this.targets.isEmpty()) {
+        if (isMergedFile || this.targetsMut.isEmpty()) {
             headerContent.addAll(header)
         } else if (headerContent != header) {
             throw IllegalStateException("File header doesn't match the header of other files")
         }
-        this.targets.addAll(bcvTargets)
+        this.targetsMut.addAll(bcvTargets)
         topLevelDeclaration.targets.addAll(bcvTargets)
 
         // All declarations belonging to the same scope has equal indentation.
@@ -204,51 +206,58 @@ internal class KlibAbiDumpMerger {
     }
 
     fun dump(appendable: Appendable) {
-        val targetsStr = targets.sortedBy { it.name }
+        val targetsStr = targetsMut.sortedBy { it.name }
             .joinToString(TARGETS_DELIMITER, TARGETS_LIST_PREFIX, TARGETS_LIST_SUFFIX) { it.name }
         appendable.append(targetsStr).append('\n')
         headerContent.forEach {
             appendable.append(it).append('\n')
         }
         topLevelDeclaration.children.sortedWith(DeclarationsComparator).forEach {
-            it.dump(appendable, targets)
+            it.dump(appendable, targetsMut)
         }
     }
 
     fun remove(target: Target) {
-        if (!targets.contains(target)) {
+        if (!targetsMut.contains(target)) {
             return
         }
 
-        targets.remove(target)
+        targetsMut.remove(target)
         topLevelDeclaration.remove(target)
     }
 
     fun retainSpecific(target: Target) {
-        if (!targets.contains(target)) {
-            targets.clear()
+        if (!targetsMut.contains(target)) {
+            targetsMut.clear()
             topLevelDeclaration.children.clear()
             topLevelDeclaration.targets.clear()
             return
         }
 
-        topLevelDeclaration.retainSpecific(target, targets)
-        targets.retainAll(setOf(target))
+        topLevelDeclaration.retainSpecific(target, targetsMut)
+        targetsMut.retainAll(setOf(target))
     }
 
     fun retainCommon() {
-        topLevelDeclaration.retainCommon(targets)
+        topLevelDeclaration.retainCommon(targetsMut)
         if (topLevelDeclaration.children.isEmpty()) {
-            targets.clear()
+            targetsMut.clear()
         }
     }
 
     fun mergeTargetSpecific(other: KlibAbiDumpMerger) {
-        require(other.targets.size == 1)
-        require(other.targets.first() !in targets)
+        require(other.targetsMut.size == 1)
+        require(other.targetsMut.first() !in targetsMut)
 
-        targets.addAll(other.targets)
+        targetsMut.addAll(other.targetsMut)
         topLevelDeclaration.mergeTargetSpecific(other.topLevelDeclaration)
+    }
+
+    fun overrideTargets(targets: Set<Target>) {
+        targetsMut.clear()
+        targetsMut.addAll(targets)
+
+        topLevelDeclaration.overrideTargets(targets)
     }
 }
 
@@ -354,6 +363,13 @@ private class DeclarationContainer(val text: String, val parent: DeclarationCont
     private fun addTargetRecursively(first: Target) {
         targets.add(first)
         children.forEach { it.addTargetRecursively(first) }
+    }
+
+    fun overrideTargets(targets: Set<Target>) {
+        this.targets.clear()
+        this.targets.addAll(targets)
+
+        children.forEach { it.overrideTargets(targets) }
     }
 }
 
