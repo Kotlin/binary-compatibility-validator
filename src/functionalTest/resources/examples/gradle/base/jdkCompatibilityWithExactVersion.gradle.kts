@@ -15,9 +15,7 @@ repositories {
 }
 
 val target = project.properties["jdkVersion"]!!.toString()
-
 val toolchainVersion = target.split('.').last().toInt()
-val targetVersionString = "JVM_" + target.replace('.', '_')
 
 kotlin {
     jvmToolchain(toolchainVersion)
@@ -25,6 +23,6 @@ kotlin {
 
 tasks.compileKotlin {
     compilerOptions {
-        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.valueOf(targetVersionString))
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.fromTarget(target))
     }
 }

@@ -21,7 +21,6 @@ val useMax = (project.properties["useMaxVersion"]?.toString() ?: "false").toBool
 val target = (if (useMax) maxTarget else minTarget).toString()
 
 val toolchainVersion = target.split('.').last().toInt()
-val targetVersionString = "JVM_" + target.replace('.', '_')
 
 kotlin {
     jvmToolchain(toolchainVersion)
@@ -29,6 +28,6 @@ kotlin {
 
 tasks.compileKotlin {
     compilerOptions {
-        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.valueOf(targetVersionString))
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.fromTarget(target))
     }
 }

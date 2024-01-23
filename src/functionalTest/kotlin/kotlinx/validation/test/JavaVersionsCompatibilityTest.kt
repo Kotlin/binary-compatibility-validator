@@ -13,7 +13,7 @@ import org.junit.Test
 
 class JavaVersionsCompatibilityTest : BaseKotlinGradleTest() {
     private fun checkCompatibility(useMaxVersion: Boolean) {
-        val runner = test(gradleVersion = "8.5") {
+        val runner = test(gradleVersion = "8.5", injectPluginClasspath = false) {
             buildGradleKts {
                 resolve("/examples/gradle/base/jdkCompatibility.gradle.kts")
             }
@@ -39,7 +39,7 @@ class JavaVersionsCompatibilityTest : BaseKotlinGradleTest() {
     }
 
     private fun checkCompatibility(jdkVersion: String) {
-        val runner = test(gradleVersion = "8.5") {
+        val runner = test(gradleVersion = "8.5", injectPluginClasspath = false) {
             buildGradleKts {
                 resolve("/examples/gradle/base/jdkCompatibilityWithExactVersion.gradle.kts")
             }
