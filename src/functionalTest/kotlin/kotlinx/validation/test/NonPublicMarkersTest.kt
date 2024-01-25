@@ -42,20 +42,20 @@ class NonPublicMarkersTest : BaseKotlinGradleTest() {
     fun testFiltrationByPackageLevelAnnotations() {
         val runner = test {
             buildGradleKts {
-                resolve("examples/gradle/base/withPlugin.gradle.kts")
-                resolve("examples/gradle/configuration/nonPublicMarkers/packages.gradle.kts")
+                resolve("/examples/gradle/base/withPlugin.gradle.kts")
+                resolve("/examples/gradle/configuration/nonPublicMarkers/packages.gradle.kts")
             }
             java("annotated/PackageAnnotation.java") {
-                resolve("examples/classes/PackageAnnotation.java")
+                resolve("/examples/classes/PackageAnnotation.java")
             }
             java("annotated/package-info.java") {
-                resolve("examples/classes/package-info.java")
+                resolve("/examples/classes/package-info.java")
             }
             kotlin("ClassFromAnnotatedPackage.kt") {
-                resolve("examples/classes/ClassFromAnnotatedPackage.kt")
+                resolve("/examples/classes/ClassFromAnnotatedPackage.kt")
             }
             kotlin("AnotherBuildConfig.kt") {
-                resolve("examples/classes/AnotherBuildConfig.kt")
+                resolve("/examples/classes/AnotherBuildConfig.kt")
             }
             runner {
                 arguments.add(":apiDump")
@@ -67,7 +67,7 @@ class NonPublicMarkersTest : BaseKotlinGradleTest() {
 
             assertTrue(rootProjectApiDump.exists(), "api dump file should exist")
 
-            val expected = readFileList("examples/classes/AnotherBuildConfig.dump")
+            val expected = readFileList("/examples/classes/AnotherBuildConfig.dump")
             Assertions.assertThat(rootProjectApiDump.readText()).isEqualToIgnoringNewLines(expected)
         }
     }
