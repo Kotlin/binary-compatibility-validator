@@ -1,0 +1,4 @@
+public final class cases/packageAnnotations/b/b/ShouldRemainPublic {
+	public fun <init> ()V
+}
+

@@ -219,6 +219,19 @@ private fun List<ClassBinarySignature>.filterOutNotAnnotated(
 }
 
 @ExternalApi
+public fun List<ClassBinarySignature>.extractAnnotatedPackages(targetAnnotations: Set<String>): List<String> {
+    if (targetAnnotations.isEmpty()) return emptyList()
+
+    return filter {
+        it.name.endsWith("/package-info")
+    }.filter {
+        it.annotations.all { ann -> targetAnnotations.any { ann.refersToName(it) } }
+    }.map {
+        it.name.substring(0, it.name.length - "/package-info".length)
+    }
+}
+
+@ExternalApi
 public fun List<ClassBinarySignature>.filterOutNonPublic(
     nonPublicPackages: Collection<String> = emptyList(),
     nonPublicClasses: Collection<String> = emptyList()
