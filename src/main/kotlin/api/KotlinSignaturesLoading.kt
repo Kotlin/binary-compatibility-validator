@@ -225,9 +225,12 @@ public fun List<ClassBinarySignature>.extractAnnotatedPackages(targetAnnotations
     return filter {
         it.name.endsWith("/package-info")
     }.filter {
-        it.annotations.all { ann -> targetAnnotations.any { ann.refersToName(it) } }
+        it.annotations.any {
+            ann -> targetAnnotations.any { ann.refersToName(it) }
+        }
     }.map {
-        it.name.substring(0, it.name.length - "/package-info".length)
+        val res = it.name.substring(0, it.name.length - "/package-info".length)
+        res
     }
 }
 
