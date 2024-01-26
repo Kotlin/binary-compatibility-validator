@@ -2,3 +2,7 @@ public final class cases/packageAnnotations/b/b/ShouldRemainPublic {
 	public fun <init> ()V
 }
 
+public final class cases/packageAnnotations/b/c/ShouldNotBeRemoved {
+	public fun <init> ()V
+}
+
