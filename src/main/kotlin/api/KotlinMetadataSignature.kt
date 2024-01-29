@@ -12,38 +12,40 @@ import org.objectweb.asm.tree.*
 
 @ExternalApi // Only name is part of the API, nothing else is used by stdlib
 public data class ClassBinarySignature internal constructor(
-    internal val name: String,
+    public val name: String,
     internal val superName: String,
     internal val outerName: String?,
     internal val supertypes: List<String>,
-    internal val memberSignatures: List<MemberBinarySignature>,
+    public val memberSignatures: List<MemberBinarySignature>,
     internal val access: AccessFlags,
     internal val isEffectivelyPublic: Boolean,
     internal val isNotUsedWhenEmpty: Boolean,
     internal val annotations: List<AnnotationNode>
 ) {
-    internal val signature: String
+    public val signature: String
         get() = "${access.getModifierString()} class $name" + if (supertypes.isEmpty()) "" else " : ${supertypes.joinToString()}"
 
 }
 
-internal interface MemberBinarySignature {
-    val jvmMember: JvmMemberSignature
-    val name: String get() = jvmMember.name
-    val desc: String get() = jvmMember.desc
-    val access: AccessFlags
-    val isPublishedApi: Boolean
-    val annotations: List<AnnotationNode>
+public interface MemberBinarySignature {
+    public val jvmMember: JvmMemberSignature
+    public val name: String get() = jvmMember.name
+    public val desc: String get() = jvmMember.desc
+    public val access: AccessFlags
+    public val annotations: List<AnnotationNode>
+    public val signature: String
+}
 
-    fun isEffectivelyPublic(classAccess: AccessFlags, classVisibility: ClassVisibility?) =
+internal abstract class BaseMemberBinarySignature : MemberBinarySignature {
+    abstract val isPublishedApi: Boolean
+
+    internal open fun isEffectivelyPublic(classAccess: AccessFlags, classVisibility: ClassVisibility?) =
         access.isPublic && !(access.isProtected && classAccess.isFinal)
                 && (findMemberVisibility(classVisibility)?.isPublic(isPublishedApi) ?: true)
 
-    fun findMemberVisibility(classVisibility: ClassVisibility?): MemberVisibility? {
+    internal open fun findMemberVisibility(classVisibility: ClassVisibility?): MemberVisibility? {
         return classVisibility?.findMember(jvmMember)
     }
-
-    val signature: String
 }
 
 internal data class MethodBinarySignature(
@@ -52,7 +54,7 @@ internal data class MethodBinarySignature(
     override val access: AccessFlags,
     override val annotations: List<AnnotationNode>,
     private val alternateDefaultSignature: JvmMethodSignature?
-) : MemberBinarySignature {
+) : BaseMemberBinarySignature() {
     override val signature: String
         get() = "${access.getModifierString()} fun $name $desc"
 
@@ -85,11 +87,13 @@ internal fun MethodNode.alternateDefaultSignature(className: String): JvmMethodS
         access and Opcodes.ACC_SYNTHETIC == 0 -> null
         name == "<init>" && "ILkotlin/jvm/internal/DefaultConstructorMarker;" in desc ->
             JvmMethodSignature(name, desc.replace("ILkotlin/jvm/internal/DefaultConstructorMarker;", ""))
+
         name.endsWith("\$default") && "ILjava/lang/Object;)" in desc ->
             JvmMethodSignature(
                 name.removeSuffix("\$default"),
                 desc.replace("ILjava/lang/Object;)", ")").replace("(L$className;", "(")
             )
+
         else -> null
     }
 }
@@ -119,7 +123,7 @@ internal data class FieldBinarySignature(
     override val isPublishedApi: Boolean,
     override val access: AccessFlags,
     override val annotations: List<AnnotationNode>
-) : MemberBinarySignature {
+) : BaseMemberBinarySignature() {
     override val signature: String
         get() = "${access.getModifierString()} field $name $desc"
 
@@ -138,6 +142,7 @@ internal fun FieldNode.toFieldBinarySignature(extraAnnotations: List<AnnotationN
         allAnnotations
     )
 }
+
 private val MemberBinarySignature.kind: Int
     get() = when (this) {
         is FieldBinarySignature -> 1
@@ -145,26 +150,35 @@ private val MemberBinarySignature.kind: Int
         else -> error("Unsupported $this")
     }
 
-internal val MEMBER_SORT_ORDER = compareBy<MemberBinarySignature>(
-    { it.kind },
-    { it.name },
-    { it.desc }
-)
+public val MEMBER_SORT_ORDER: Comparator<MemberBinarySignature> =
+    compareBy(
+        { it.kind },
+        { it.name },
+        { it.desc }
+    )
 
-internal data class AccessFlags(val access: Int) {
-    val isPublic: Boolean get() = isPublic(access)
-    val isProtected: Boolean get() = isProtected(access)
-    val isStatic: Boolean get() = isStatic(access)
-    val isFinal: Boolean get() = isFinal(access)
-    val isSynthetic: Boolean get() = isSynthetic(access)
-    val isAbstract: Boolean get() = isAbstract(access)
-    val isInterface: Boolean get() = isInterface(access)
-
-    private fun getModifiers(): List<String> =
-        ACCESS_NAMES.entries.mapNotNull { if (access and it.key != 0) it.value else null }
-
-    fun getModifierString(): String = getModifiers().joinToString(" ")
+public interface AccessFlags {
+    public val access: Int
 }
+
+
+internal val AccessFlags.isPublic: Boolean get() = isPublic(access)
+internal val AccessFlags.isProtected: Boolean get() = isProtected(access)
+internal val AccessFlags.isStatic: Boolean get() = isStatic(access)
+internal val AccessFlags.isFinal: Boolean get() = isFinal(access)
+internal val AccessFlags.isSynthetic: Boolean get() = isSynthetic(access)
+internal val AccessFlags.isAbstract: Boolean get() = isAbstract(access)
+internal val AccessFlags.isInterface: Boolean get() = isInterface(access)
+
+private fun AccessFlags.getModifiers(): List<String> =
+    ACCESS_NAMES.entries.mapNotNull { if (access and it.key != 0) it.value else null }
+
+internal fun AccessFlags.getModifierString(): String = getModifiers().joinToString(" ")
+
+private data class AccessFlagsImpl(override val access: Int) : AccessFlags
+
+internal fun AccessFlags(access: Int): AccessFlags = AccessFlagsImpl(access)
+
 
 internal fun FieldNode.isCompanionField(outerClassMetadata: KotlinClassMetadata?): Boolean {
     val access = AccessFlags(access)

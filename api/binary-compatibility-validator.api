@@ -56,12 +56,25 @@ public class kotlinx/validation/KotlinApiCompareTask : org/gradle/api/DefaultTas
 	public final fun setProjectApiDir (Ljava/io/File;)V
 }
 
+public abstract interface class kotlinx/validation/api/AccessFlags {
+	public abstract fun getAccess ()I
+}
+
 public final class kotlinx/validation/api/ClassBinarySignature {
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/util/List;
 	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Lkotlinx/validation/api/AccessFlags;ZZLjava/util/List;)Lkotlinx/validation/api/ClassBinarySignature;
 	public static synthetic fun copy$default (Lkotlinx/validation/api/ClassBinarySignature;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Lkotlinx/validation/api/AccessFlags;ZZLjava/util/List;ILjava/lang/Object;)Lkotlinx/validation/api/ClassBinarySignature;
 	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMemberSignatures ()Ljava/util/List;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getSignature ()Ljava/lang/String;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
+}
+
+public final class kotlinx/validation/api/KotlinMetadataSignatureKt {
+	public static final fun getMEMBER_SORT_ORDER ()Ljava/util/Comparator;
 }
 
 public final class kotlinx/validation/api/KotlinSignaturesLoadingKt {
@@ -77,5 +90,19 @@ public final class kotlinx/validation/api/KotlinSignaturesLoadingKt {
 	public static synthetic fun loadApiFromJvmClasses$default (Lkotlin/sequences/Sequence;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Ljava/util/List;
 	public static final fun retainExplicitlyIncludedIfDeclared (Ljava/util/List;Ljava/util/Collection;Ljava/util/Collection;Ljava/util/Collection;)Ljava/util/List;
 	public static synthetic fun retainExplicitlyIncludedIfDeclared$default (Ljava/util/List;Ljava/util/Collection;Ljava/util/Collection;Ljava/util/Collection;ILjava/lang/Object;)Ljava/util/List;
+}
+
+public abstract interface class kotlinx/validation/api/MemberBinarySignature {
+	public abstract fun getAccess ()Lkotlinx/validation/api/AccessFlags;
+	public abstract fun getAnnotations ()Ljava/util/List;
+	public abstract fun getDesc ()Ljava/lang/String;
+	public abstract fun getJvmMember ()Lkotlinx/metadata/jvm/JvmMemberSignature;
+	public abstract fun getName ()Ljava/lang/String;
+	public abstract fun getSignature ()Ljava/lang/String;
+}
+
+public final class kotlinx/validation/api/MemberBinarySignature$DefaultImpls {
+	public static fun getDesc (Lkotlinx/validation/api/MemberBinarySignature;)Ljava/lang/String;
+	public static fun getName (Lkotlinx/validation/api/MemberBinarySignature;)Ljava/lang/String;
 }
 
