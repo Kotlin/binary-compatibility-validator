@@ -124,6 +124,9 @@ publishing {
         signPublicationIfKeyPresent(this)
     }
 
+    tasks.withType<PublishToMavenRepository>().configureEach {
+        dependsOn(tasks.withType<Sign>())
+    }
     // a publication will be created automatically by com.gradle.plugin-publish
 }
 
