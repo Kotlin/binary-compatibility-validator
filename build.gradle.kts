@@ -17,7 +17,7 @@ plugins {
 }
 
 group = "org.jetbrains.kotlinx"
-providers.gradleProperty("DeployVersion").orNull?.let {
+project.findProperty("DeployVersion")?.let {
     version = it
 }
 
