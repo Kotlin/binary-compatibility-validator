@@ -71,4 +71,49 @@ public open class ApiValidationExtension {
      * By default, it's `api`.
      */
     public var apiDumpDirectory: String = "api"
+
+    /**
+     * KLib ABI validation settings.
+     *
+     * @see KlibValidationSettings
+     */
+    public val klib: KlibValidationSettings = KlibValidationSettings()
+
+    /**
+     * Configure KLib AVI validation settings.
+     */
+    public inline fun klib(block: KlibValidationSettings.() -> Unit) {
+        block(this.klib)
+    }
+}
+
+/**
+ * Settings affecting KLib ABI validation.
+ */
+open class KlibValidationSettings {
+    /**
+     * Enables KLib ABI validation checks.
+     */
+    public var enabled: Boolean = false
+    /**
+     * Specify which version of signature KLib ABI dump should contain.
+     */
+    public var signatureVersion: Int = 2
+    /**
+     * Fail validation if some build targets are not supported by the host compiler.
+     * By default, ABI dumped only for supported files will be validated. This option makes validation behavior
+     * more strict and treat having unsupported targets as an error.
+     */
+    public var strictValidation: Boolean = false
+    /**
+     * For declarations available only on some targets, replace a comment listing all targets
+     * with a short alias.
+     *
+     * Group aliases are based on [the default hierarchy template](https://kotlinlang.org/docs/multiplatform-hierarchy.html#see-the-full-hierarchy-template)
+     * and enabled by default.
+     *
+     * Grouping will not be applied if a project has a target with a custom name that clashes
+     * with one of the group names.
+     */
+    public var useTargetGroupAliases: Boolean = true
 }
