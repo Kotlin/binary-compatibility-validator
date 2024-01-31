@@ -8,9 +8,37 @@ package kotlinx.validation.api
 import kotlinx.validation.ApiValidationExtension
 import java.io.*
 import org.gradle.testkit.runner.GradleRunner
+import org.gradle.testkit.runner.internal.DefaultGradleRunner
 import org.intellij.lang.annotations.Language
+import java.lang.management.ManagementFactory
 
 public val API_DIR: String = ApiValidationExtension().apiDumpDirectory
+
+private object KoverInterceptor {
+    val jvmArgs: List<String> by lazy {
+        val rtBean = ManagementFactory.getRuntimeMXBean()
+        val jvmArgs = rtBean.inputArguments
+
+        val agent = jvmArgs.find { it.startsWith("-javaagent") && it.endsWith("kover-agent.args") }
+        if (agent == null) {
+            return@lazy emptyList()
+        }
+
+        val coverageArgs = mutableListOf<String>()
+        coverageArgs.add(agent)
+
+        jvmArgs.forEach {
+            when {
+                it.contains("idea.new.tracing.coverage") -> coverageArgs.add(it)
+                it.contains("idea.coverage") -> coverageArgs.add(it)
+            }
+        }
+        coverageArgs
+    }
+
+    val coverageEnabled: Boolean
+        get() = jvmArgs.isNotEmpty()
+}
 
 internal fun BaseKotlinGradleTest.test(
     gradleVersion: String = "8.5",
@@ -38,6 +66,9 @@ internal fun BaseKotlinGradleTest.test(
         .withPluginClasspath()
         .withArguments(baseKotlinScope.runner.arguments)
         .withGradleVersion(gradleVersion)
+
+    setupCoverage(runner)
+
     if (injectPluginClasspath) {
         // The hack dating back to https://docs.gradle.org/6.0/userguide/test_kit.html#sub:test-kit-classpath-injection
         // Currently, some tests won't work without it because some classes are missing on the classpath.
@@ -46,6 +77,12 @@ internal fun BaseKotlinGradleTest.test(
     return runner
     // disabled because of: https://github.com/gradle/gradle/issues/6862
     // .withDebug(baseKotlinScope.runner.debug)
+}
+
+private fun setupCoverage(runner: GradleRunner) {
+    if (!KoverInterceptor.coverageEnabled) return
+    if (runner !is DefaultGradleRunner) throw IllegalStateException("Can't setup coverage params")
+    runner.withJvmArguments(KoverInterceptor.jvmArgs)
 }
 
 /**
@@ -165,7 +202,12 @@ internal class AppendableScope(val filePath: String) {
 }
 
 internal class Runner {
-    val arguments: MutableList<String> = mutableListOf("--configuration-cache")
+    val arguments: MutableList<String> = mutableListOf<String>().apply {
+        if (!KoverInterceptor.coverageEnabled) {
+            // Configuration cache is incompatible with javaagents being enabled for Gradle
+            add("--configuration-cache")
+        }
+    }
 }
 
 internal fun readFileList(@Language("file-reference") fileName: String): String {

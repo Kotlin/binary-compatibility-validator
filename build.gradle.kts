@@ -14,6 +14,7 @@ plugins {
     `maven-publish`
     `jvm-test-suite`
     id("org.jetbrains.kotlinx.binary-compatibility-validator")
+    alias(libs.plugins.kover)
 }
 
 group = "org.jetbrains.kotlinx"
@@ -194,4 +195,14 @@ testing {
 
 tasks.withType<Sign>().configureEach {
     onlyIf("only sign if signatory is present") { signatory?.keyId != null }
+}
+
+kover {
+    koverReport {
+        filters {
+            excludes {
+                packages("kotlinx.validation.test")
+            }
+        }
+    }
 }
