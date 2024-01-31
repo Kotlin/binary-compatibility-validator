@@ -7,7 +7,6 @@ package kotlinx.validation
 
 import com.github.difflib.DiffUtils
 import com.github.difflib.UnifiedDiffUtils
-import difflib.DiffUtils
 import java.io.*
 import java.util.TreeMap
 import javax.inject.Inject

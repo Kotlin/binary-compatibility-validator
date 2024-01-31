@@ -62,7 +62,7 @@ val createClasspathManifest = tasks.register("createClasspathManifest") {
 dependencies {
     implementation(gradleApi())
     implementation(libs.kotlinx.metadata)
-    compileOnly("org.jetbrains.kotlin:kotlin-compiler-embeddable")
+    compileOnly(libs.kotlin.compiler.embeddable)
     implementation(libs.ow2.asm)
     implementation(libs.ow2.asmTree)
     implementation(libs.javaDiffUtils)
@@ -163,6 +163,7 @@ testing {
                 implementation(project())
                 implementation(libs.assertJ.core)
                 implementation(libs.kotlin.test)
+                implementation(libs.kotlin.compiler.embeddable)
             }
         }
 

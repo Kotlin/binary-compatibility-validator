@@ -16,27 +16,27 @@ import java.io.File
 /**
  * Extracts dump for targets supported by the host compiler from a merged API dump stored in a project.
  */
-abstract class KotlinKlibExtractSupportedTargetsAbiTask : DefaultTask() {
+public abstract class KotlinKlibExtractSupportedTargetsAbiTask : DefaultTask() {
     @get:Internal
     internal val projectName = project.name
 
     @InputFiles
-    lateinit var inputAbiFile: File
+    public lateinit var inputAbiFile: File
 
     @OutputFile
-    lateinit var outputAbiFile: File
+    public lateinit var outputAbiFile: File
 
     @get:Input
-    lateinit var targets: Provider<Set<String>>
+    public lateinit var targets: Provider<Set<String>>
 
     @Input
-    var strictValidation: Boolean = false
+    public var strictValidation: Boolean = false
 
     @Input
-    var groupTargetNames: Boolean = true
+    public var groupTargetNames: Boolean = true
 
     @TaskAction
-    fun generate() {
+    internal fun generate() {
         if (inputAbiFile.length() == 0L) {
             error("Project ABI file $inputAbiFile is empty.")
         }

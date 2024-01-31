@@ -15,25 +15,25 @@ import org.jetbrains.kotlin.library.abi.*
 /**
  * Generates a text file with a ABI dump for a single klib.
  */
-abstract class KotlinKlibAbiBuildTask : BuildTaskBase() {
+public abstract class KotlinKlibAbiBuildTask : BuildTaskBase() {
 
     @InputFiles
-    lateinit var klibFile: FileCollection
+    public lateinit var klibFile: FileCollection
 
     @InputFiles
-    lateinit var compilationDependencies: FileCollection
+    public lateinit var compilationDependencies: FileCollection
 
     @Optional
     @get:Input
-    var signatureVersion: Int? = null
+    public var signatureVersion: Int? = null
 
     @Input
-    lateinit var target: String
+    public lateinit var target: String
 
     @ExperimentalStdlibApi
     @ExperimentalLibraryAbiReader
     @TaskAction
-    fun generate() {
+    internal fun generate() {
         outputApiFile.delete()
         outputApiFile.parentFile.mkdirs()
 

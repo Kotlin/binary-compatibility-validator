@@ -5,11 +5,13 @@ public class kotlinx/validation/ApiValidationExtension {
 	public final fun getIgnoredClasses ()Ljava/util/Set;
 	public final fun getIgnoredPackages ()Ljava/util/Set;
 	public final fun getIgnoredProjects ()Ljava/util/Set;
+	public final fun getKlib ()Lkotlinx/validation/KlibValidationSettings;
 	public final fun getNonPublicMarkers ()Ljava/util/Set;
 	public final fun getPublicClasses ()Ljava/util/Set;
 	public final fun getPublicMarkers ()Ljava/util/Set;
 	public final fun getPublicPackages ()Ljava/util/Set;
 	public final fun getValidationDisabled ()Z
+	public final fun klib (Lkotlin/jvm/functions/Function1;)V
 	public final fun setAdditionalSourceSets (Ljava/util/Set;)V
 	public final fun setApiDumpDirectory (Ljava/lang/String;)V
 	public final fun setIgnoredClasses (Ljava/util/Set;)V
@@ -28,32 +30,125 @@ public final class kotlinx/validation/BinaryCompatibilityValidatorPlugin : org/g
 	public fun apply (Lorg/gradle/api/Project;)V
 }
 
+public abstract class kotlinx/validation/BuildTaskBase : org/gradle/api/DefaultTask {
+	public field outputApiFile Ljava/io/File;
+	public fun <init> ()V
+	public final fun getIgnoredClasses ()Ljava/util/Set;
+	public final fun getIgnoredPackages ()Ljava/util/Set;
+	public final fun getNonPublicMarkers ()Ljava/util/Set;
+	public final fun getOutputApiFile ()Ljava/io/File;
+	public final fun getPublicClasses ()Ljava/util/Set;
+	public final fun getPublicMarkers ()Ljava/util/Set;
+	public final fun getPublicPackages ()Ljava/util/Set;
+	public final fun setIgnoredClasses (Ljava/util/Set;)V
+	public final fun setIgnoredPackages (Ljava/util/Set;)V
+	public final fun setNonPublicMarkers (Ljava/util/Set;)V
+	public final fun setOutputApiFile (Ljava/io/File;)V
+	public final fun setPublicClasses (Ljava/util/Set;)V
+	public final fun setPublicMarkers (Ljava/util/Set;)V
+	public final fun setPublicPackages (Ljava/util/Set;)V
+}
+
 public abstract interface annotation class kotlinx/validation/ExternalApi : java/lang/annotation/Annotation {
 }
 
-public class kotlinx/validation/KotlinApiBuildTask : org/gradle/api/DefaultTask {
+public class kotlinx/validation/KlibValidationSettings {
+	public fun <init> ()V
+	public final fun getEnabled ()Z
+	public final fun getSignatureVersion ()I
+	public final fun getStrictValidation ()Z
+	public final fun getUseTargetGroupAliases ()Z
+	public final fun setEnabled (Z)V
+	public final fun setSignatureVersion (I)V
+	public final fun setStrictValidation (Z)V
+	public final fun setUseTargetGroupAliases (Z)V
+}
+
+public class kotlinx/validation/KotlinApiBuildTask : kotlinx/validation/BuildTaskBase {
 	public field inputDependencies Lorg/gradle/api/file/FileCollection;
-	public field outputApiDir Ljava/io/File;
 	public fun <init> ()V
 	public final fun getInputClassesDirs ()Lorg/gradle/api/file/FileCollection;
 	public final fun getInputDependencies ()Lorg/gradle/api/file/FileCollection;
 	public final fun getInputJar ()Lorg/gradle/api/file/RegularFileProperty;
-	public final fun getOutputApiDir ()Ljava/io/File;
 	public final fun setInputClassesDirs (Lorg/gradle/api/file/FileCollection;)V
 	public final fun setInputDependencies (Lorg/gradle/api/file/FileCollection;)V
-	public final fun setOutputApiDir (Ljava/io/File;)V
 }
 
 public class kotlinx/validation/KotlinApiCompareTask : org/gradle/api/DefaultTask {
-	public field apiBuildDir Ljava/io/File;
+	public field generatedApiFile Ljava/io/File;
+	public field projectApiFile Ljava/io/File;
 	public fun <init> (Lorg/gradle/api/model/ObjectFactory;)V
-	public final fun getApiBuildDir ()Ljava/io/File;
-	public final fun getDummyOutputFile ()Ljava/io/File;
-	public final fun getNonExistingProjectApiDir ()Ljava/lang/String;
-	public final fun getProjectApiDir ()Ljava/io/File;
-	public final fun setApiBuildDir (Ljava/io/File;)V
-	public final fun setNonExistingProjectApiDir (Ljava/lang/String;)V
-	public final fun setProjectApiDir (Ljava/io/File;)V
+	public final fun getGeneratedApiFile ()Ljava/io/File;
+	public final fun getProjectApiFile ()Ljava/io/File;
+	public final fun setGeneratedApiFile (Ljava/io/File;)V
+	public final fun setProjectApiFile (Ljava/io/File;)V
+}
+
+public abstract class kotlinx/validation/KotlinKlibAbiBuildTask : kotlinx/validation/BuildTaskBase {
+	public field compilationDependencies Lorg/gradle/api/file/FileCollection;
+	public field klibFile Lorg/gradle/api/file/FileCollection;
+	public field target Ljava/lang/String;
+	public fun <init> ()V
+	public final fun getCompilationDependencies ()Lorg/gradle/api/file/FileCollection;
+	public final fun getKlibFile ()Lorg/gradle/api/file/FileCollection;
+	public final fun getSignatureVersion ()Ljava/lang/Integer;
+	public final fun getTarget ()Ljava/lang/String;
+	public final fun setCompilationDependencies (Lorg/gradle/api/file/FileCollection;)V
+	public final fun setKlibFile (Lorg/gradle/api/file/FileCollection;)V
+	public final fun setSignatureVersion (Ljava/lang/Integer;)V
+	public final fun setTarget (Ljava/lang/String;)V
+}
+
+public abstract class kotlinx/validation/KotlinKlibExtractSupportedTargetsAbiTask : org/gradle/api/DefaultTask {
+	public field inputAbiFile Ljava/io/File;
+	public field outputAbiFile Ljava/io/File;
+	public field targets Lorg/gradle/api/provider/Provider;
+	public fun <init> ()V
+	public final fun getGroupTargetNames ()Z
+	public final fun getInputAbiFile ()Ljava/io/File;
+	public final fun getOutputAbiFile ()Ljava/io/File;
+	public final fun getStrictValidation ()Z
+	public final fun getTargets ()Lorg/gradle/api/provider/Provider;
+	public final fun setGroupTargetNames (Z)V
+	public final fun setInputAbiFile (Ljava/io/File;)V
+	public final fun setOutputAbiFile (Ljava/io/File;)V
+	public final fun setStrictValidation (Z)V
+	public final fun setTargets (Lorg/gradle/api/provider/Provider;)V
+}
+
+public abstract class kotlinx/validation/KotlinKlibInferAbiForUnsupportedTargetTask : org/gradle/api/DefaultTask {
+	public field dumpFileName Ljava/lang/String;
+	public field inputImageFile Ljava/io/File;
+	public field outputApiDir Ljava/lang/String;
+	public field outputFile Ljava/io/File;
+	public field supportedTargets Ljava/util/Set;
+	public field unsupportedTarget Ljava/lang/String;
+	public fun <init> ()V
+	public final fun getDumpFileName ()Ljava/lang/String;
+	public final fun getInputImageFile ()Ljava/io/File;
+	public final fun getOutputApiDir ()Ljava/lang/String;
+	public final fun getOutputFile ()Ljava/io/File;
+	public final fun getSupportedTargets ()Ljava/util/Set;
+	public final fun getUnsupportedTarget ()Ljava/lang/String;
+	public final fun setDumpFileName (Ljava/lang/String;)V
+	public final fun setInputImageFile (Ljava/io/File;)V
+	public final fun setOutputApiDir (Ljava/lang/String;)V
+	public final fun setOutputFile (Ljava/io/File;)V
+	public final fun setSupportedTargets (Ljava/util/Set;)V
+	public final fun setUnsupportedTarget (Ljava/lang/String;)V
+}
+
+public abstract class kotlinx/validation/KotlinKlibMergeAbiTask : org/gradle/api/DefaultTask {
+	public field dumpFileName Ljava/lang/String;
+	public field mergedFile Ljava/io/File;
+	public fun <init> ()V
+	public final fun getDumpFileName ()Ljava/lang/String;
+	public final fun getGroupTargetNames ()Z
+	public final fun getMergedFile ()Ljava/io/File;
+	public final fun getTargets ()Ljava/util/Set;
+	public final fun setDumpFileName (Ljava/lang/String;)V
+	public final fun setGroupTargetNames (Z)V
+	public final fun setMergedFile (Ljava/io/File;)V
 }
 
 public final class kotlinx/validation/api/ClassBinarySignature {

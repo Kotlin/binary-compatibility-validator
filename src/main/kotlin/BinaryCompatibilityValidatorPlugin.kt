@@ -18,9 +18,8 @@ import org.jetbrains.kotlin.library.abi.LibraryAbiReader
 import java.io.*
 import kotlin.text.split
 
-const val API_DIR = "api"
-const val KLIB_PHONY_TARGET_NAME = "klib"
-const val KLIB_ALL_PHONY_TARGET_NAME = "klib-all"
+internal const val KLIB_PHONY_TARGET_NAME = "klib"
+internal const val KLIB_ALL_PHONY_TARGET_NAME = "klib-all"
 
 public class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
 
@@ -256,7 +255,7 @@ internal val Project.apiValidationExtensionOrNull: ApiValidationExtension?
 private fun apiCheckEnabled(projectName: String, extension: ApiValidationExtension): Boolean =
     projectName !in extension.ignoredProjects && !extension.validationDisabled
 
-fun klibAbiCheckEnabled(projectName: String, extension: ApiValidationExtension): Boolean =
+private fun klibAbiCheckEnabled(projectName: String, extension: ApiValidationExtension): Boolean =
     projectName !in extension.ignoredProjects && !extension.validationDisabled && extension.klib.enabled
 
 private fun Project.configureApiTasks(
@@ -332,7 +331,7 @@ private inline fun <reified T : Task> Project.task(
     noinline configuration: T.() -> Unit,
 ): TaskProvider<T> = tasks.register(name, T::class.java, Action(configuration))
 
-const val BANNED_TARGETS_PROPERTY_NAME = "binary.compatibility.validator.klib.targets.blacklist.for.testing"
+internal const val BANNED_TARGETS_PROPERTY_NAME = "binary.compatibility.validator.klib.targets.blacklist.for.testing"
 
 private class KlibValidationPipelineBuilder(
     val dirConfig: Provider<DirConfig>?,
@@ -344,16 +343,17 @@ private class KlibValidationPipelineBuilder(
         // In the intermediate phase of Klib dump generation there are always multiple targets, thus we need
         // target-based directory tree.
         intermediateFilesConfig = project.provider { DirConfig.TARGET_DIR }
-        val klibApiDirConfig = dirConfig?.map { TargetConfig(project, KLIB_PHONY_TARGET_NAME, dirConfig) }
-        val klibDumpConfig = TargetConfig(project, KLIB_PHONY_TARGET_NAME, intermediateFilesConfig)
-        val klibDumpAllConfig = TargetConfig(project, KLIB_ALL_PHONY_TARGET_NAME, intermediateFilesConfig)
+        val klibApiDirConfig = dirConfig?.map { TargetConfig(project, extension, KLIB_PHONY_TARGET_NAME, dirConfig) }
+        val klibDumpConfig = TargetConfig(project, extension, KLIB_PHONY_TARGET_NAME, intermediateFilesConfig)
+        val klibDumpAllConfig = TargetConfig(project, extension, KLIB_ALL_PHONY_TARGET_NAME, intermediateFilesConfig)
 
         val projectDir = project.projectDir
         val klibApiDir = klibApiDirConfig?.map {
             projectDir.resolve(it.apiDir.get())
         }!!
-        val klibMergeDir = project.buildDir.resolve(klibDumpConfig.apiDir.get())
-        val klibMergeAllDir = project.buildDir.resolve(klibDumpAllConfig.apiDir.get())
+        val projectBuildDir = project.layout.buildDirectory.asFile.get()
+        val klibMergeDir = projectBuildDir.resolve(klibDumpConfig.apiDir.get())
+        val klibMergeAllDir = projectBuildDir.resolve(klibDumpAllConfig.apiDir.get())
         val klibExtractedFileDir = klibMergeAllDir.resolve("extracted")
 
         val klibMerge = project.mergeKlibsUmbrellaTask(klibDumpConfig, klibMergeDir)
@@ -470,8 +470,8 @@ private class KlibValidationPipelineBuilder(
             }
 
             val targetName = currentTarget.targetName
-            val targetConfig = TargetConfig(project, targetName, intermediateFilesConfig)
-            val apiBuildDir = targetConfig.apiDir.map { project.buildDir.resolve(it) }.get()
+            val targetConfig = TargetConfig(project, extension, targetName, intermediateFilesConfig)
+            val apiBuildDir = targetConfig.apiDir.map { project.layout.buildDirectory.asFile.get().resolve(it) }.get()
 
             val targetSupported = targetName in supportedTargets.get()
             if (targetSupported) {

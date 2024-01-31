@@ -82,7 +82,7 @@ public open class ApiValidationExtension {
     /**
      * Configure KLib AVI validation settings.
      */
-    public inline fun klib(block: KlibValidationSettings.() -> Unit) {
+    public fun klib(block: KlibValidationSettings.() -> Unit) {
         block(this.klib)
     }
 }
@@ -90,7 +90,7 @@ public open class ApiValidationExtension {
 /**
  * Settings affecting KLib ABI validation.
  */
-open class KlibValidationSettings {
+public open class KlibValidationSettings {
     /**
      * Enables KLib ABI validation checks.
      */

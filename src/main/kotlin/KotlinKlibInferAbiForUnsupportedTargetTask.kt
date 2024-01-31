@@ -24,30 +24,30 @@ import java.io.File
  * from it and merged into the common ABI extracted previously.
  * The resulting dump is then used as an inferred dump for the unsupported target.
  */
-abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask() {
+public abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask() {
     @get:Internal
     internal val projectName = project.name
 
     @Input
-    lateinit var unsupportedTarget: String
+    public lateinit var unsupportedTarget: String
 
     @InputFiles
-    lateinit var outputApiDir: String
+    public lateinit var outputApiDir: String
 
     @Input
-    lateinit var supportedTargets: Set<String>
+    public lateinit var supportedTargets: Set<String>
 
     @InputFiles
-    lateinit var inputImageFile: File
+    public lateinit var inputImageFile: File
 
     @Input
-    lateinit var dumpFileName: String
+    public lateinit var dumpFileName: String
 
     @OutputFile
-    lateinit var outputFile: File
+    public lateinit var outputFile: File
 
     @TaskAction
-    fun generate() {
+    internal fun generate() {
         // find a set of supported targets that are closer to unsupported target in the hierarchy
         val matchingTargets = findMatchingTargets()
         val target2outFile = supportedTargets.keysToMap {

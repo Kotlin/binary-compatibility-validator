@@ -5,11 +5,12 @@
 
 package kotlinx.validation.api
 
-import kotlinx.validation.API_DIR
-import kotlinx.validation.KLIB_PHONY_TARGET_NAME
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
 import java.io.File
+
+internal const val KLIB_PHONY_TARGET_NAME = "klib"
+internal const val KLIB_ALL_PHONY_TARGET_NAME = "klib-all"
 
 public open class BaseKotlinGradleTest {
     @Rule

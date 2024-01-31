@@ -16,31 +16,31 @@ import java.io.File
 /**
  * Merges multiple individual KLib ABI dumps into a single merged dump.
  */
-abstract class KotlinKlibMergeAbiTask : DefaultTask() {
+public abstract class KotlinKlibMergeAbiTask : DefaultTask() {
     private val targetToFile = mutableMapOf<String, File>()
 
     @get:Internal
     internal val projectName = project.name
 
     @get:Input
-    val targets: Set<String>
+    public val targets: Set<String>
         get() = targetToFile.keys
 
     @OutputFile
-    lateinit var mergedFile: File
+    public lateinit var mergedFile: File
 
     @Input
-    lateinit var dumpFileName: String
+    public lateinit var dumpFileName: String
 
     @Input
-    var groupTargetNames: Boolean = true
+    public var groupTargetNames: Boolean = true
 
-    fun addInput(target: String, file: File) {
+    internal fun addInput(target: String, file: File) {
         targetToFile[target] = file
     }
 
     @TaskAction
-    fun merge() {
+    internal fun merge() {
         val builder = KlibAbiDumpMerger()
         targets.forEach { targetName ->
             val target = Target(targetName)
