@@ -6,6 +6,8 @@ One can contribute to the project by reporting issues or submitting changes via 
 
 Please use [GitHub issues](https://github.com/Kotlin/binary-compatibility-validator/issues) for filing feature requests and bug reports.
 
+Questions about usage and general inquiries are better suited for StackOverflow or the [#library-development](https://kotlinlang.slack.com/archives/C8C4JTXR7) channel in KotlinLang Slack.
+
 ## Submitting changes
 
 Submit pull requests [here](https://github.com/Kotlin/binary-compatibility-validator/pulls).
