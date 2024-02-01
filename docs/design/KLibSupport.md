@@ -1,4 +1,4 @@
-The document described assumptions that led to the current KLib ABI validation implementation.
+The document describes assumptions that led to the current KLib ABI validation implementation.
 
 ### Motivation and assumptions
 

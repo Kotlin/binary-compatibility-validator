@@ -43,21 +43,21 @@ class NonPublicMarkersTest : BaseKotlinGradleTest() {
     fun testIgnoredMarkersOnPropertiesForNativeTargets() {
         val runner = test {
             settingsGradleKts {
-                resolve("examples/gradle/settings/settings-name-testproject.gradle.kts")
+                resolve("/examples/gradle/settings/settings-name-testproject.gradle.kts")
             }
 
             buildGradleKts {
-                resolve("examples/gradle/base/withNativePlugin.gradle.kts")
-                resolve("examples/gradle/configuration/nonPublicMarkers/markers.gradle.kts")
+                resolve("/examples/gradle/base/withNativePlugin.gradle.kts")
+                resolve("/examples/gradle/configuration/nonPublicMarkers/markers.gradle.kts")
             }
 
             kotlin("Properties.kt", sourceSet = "commonMain") {
-                resolve("examples/classes/Properties.kt")
+                resolve("/examples/classes/Properties.kt")
             }
 
             commonNativeTargets.forEach {
                 abiFile(projectName = "testproject", target = it) {
-                    resolve("examples/classes/Properties.klib.dump")
+                    resolve("/examples/classes/Properties.klib.dump")
                 }
             }
 

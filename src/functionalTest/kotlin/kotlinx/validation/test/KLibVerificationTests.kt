@@ -19,17 +19,15 @@ import kotlin.test.assertTrue
 
 internal const val BANNED_TARGETS_PROPERTY_NAME = "binary.compatibility.validator.klib.targets.blacklist.for.testing"
 
-private fun KLibVerificationTests.checkKlibDump(buildResult: BuildResult, expectedDumpFileName: String,
-                                                projectName: String = "testproject",
-                                                dumpTask: String = ":apiDump",
-                                                projectWithMultipleDumps: Boolean = false) {
+private fun KLibVerificationTests.checkKlibDump(
+    buildResult: BuildResult,
+    expectedDumpFileName: String,
+    projectName: String = "testproject",
+    dumpTask: String = ":apiDump"
+) {
     buildResult.assertTaskSuccess(dumpTask)
 
-    val generatedDump = if (projectWithMultipleDumps) {
-        rootProjectAbiDump(target = KLIB_PHONY_TARGET_NAME, project = projectName)
-    } else {
-        rootProjectAbiDump(projectName)
-    }
+    val generatedDump = rootProjectAbiDump(projectName)
     assertTrue(generatedDump.exists(), "There are no dumps generated for KLibs")
 
     val expected = readFileList(expectedDumpFileName)
@@ -140,14 +138,10 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
         }
 
         runner.build().apply {
-            assertTaskSuccess(":apiDump")
-
-            // not common, but built from the common source set
-            val dump = rootProjectAbiDump("testproject")
-            assertTrue(dump.exists(), "Dump does not exist")
-
-            val expectedDump = readFileList("/examples/classes/AnotherBuildConfigLinuxArm64Extra.klib.dump")
-            Assertions.assertThat(dump.readText()).isEqualToIgnoringNewLines(expectedDump)
+            checkKlibDump(
+                this,
+                "/examples/classes/AnotherBuildConfigLinuxArm64Extra.klib.dump"
+            )
         }
     }
 
@@ -170,8 +164,7 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
         }
 
         runner.build().apply {
-            checkKlibDump(this, "/examples/classes/AnotherBuildConfig.klib.dump",
-                projectWithMultipleDumps = false)
+            checkKlibDump(this, "/examples/classes/AnotherBuildConfig.klib.dump")
 
             val jvmApiDump = rootProjectDir.resolve("$API_DIR/testproject.api")
             assertTrue(jvmApiDump.exists(), "No API dump for JVM")
@@ -403,7 +396,7 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
     }
 
     @Test
-    fun `apiCheck should fail if a target is not supported`() {
+    fun `apiCheck should not fail if a target is not supported`() {
         val runner = test {
             settingsGradleKts {
                 resolve("/examples/gradle/settings/settings-name-testproject.gradle.kts")
@@ -414,7 +407,8 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
             kotlin("TopLevelDeclarations.kt", "commonMain") {
                 resolve("/examples/classes/TopLevelDeclarations.kt")
             }
-            abiFile(projectName = "testproject", target = KLIB_PHONY_TARGET_NAME) {
+            abiFile(projectName = "testproject") {
+                resolve("/examples/classes/TopLevelDeclarations.klib.dump")
             }
             runner {
                 arguments.add("-P$BANNED_TARGETS_PROPERTY_NAME=linuxArm64")
@@ -422,7 +416,9 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
             }
         }
 
-        runner.buildAndFail()
+        runner.build().apply {
+            assertTaskSuccess(":apiCheck")
+        }
     }
 
     @Test
@@ -501,8 +497,10 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
             }
         }
 
-        checkKlibDump(runner.build(), "/examples/classes/TopLevelDeclarations.klib.with.linux.dump",
-            dumpTask = ":klibApiDump")
+        checkKlibDump(
+            runner.build(), "/examples/classes/TopLevelDeclarations.klib.with.linux.dump",
+            dumpTask = ":klibApiDump"
+        )
     }
 
     @Test
@@ -528,8 +526,10 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
 
         runner.buildAndFail().apply {
             assertTaskFailure(":linuxArm64ApiInferAbiDump")
-            Assertions.assertThat(output).contains("The target linuxArm64 is not supported by the host compiler " +
-                    "and there are no targets similar to linuxArm64 to infer a dump from it.")
+            Assertions.assertThat(output).contains(
+                "The target linuxArm64 is not supported by the host compiler " +
+                        "and there are no targets similar to linuxArm64 to infer a dump from it."
+            )
         }
     }
 
@@ -546,16 +546,18 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
                 resolve("/examples/classes/TopLevelDeclarations.kt")
             }
             runner {
-                arguments.add("-P$BANNED_TARGETS_PROPERTY_NAME=linuxArm64,linuxX64,mingwX64," +
-                        "androidNativeArm32,androidNativeArm64,androidNativeX64,androidNativeX86")
+                arguments.add(
+                    "-P$BANNED_TARGETS_PROPERTY_NAME=linuxArm64,linuxX64,mingwX64," +
+                            "androidNativeArm32,androidNativeArm64,androidNativeX64,androidNativeX86"
+                )
                 arguments.add(":klibApiDump")
             }
         }
 
         runner.buildAndFail().apply {
-           Assertions.assertThat(output).contains(
-               "is not supported by the host compiler and there are no targets similar to"
-           )
+            Assertions.assertThat(output).contains(
+                "is not supported by the host compiler and there are no targets similar to"
+            )
         }
     }
 
@@ -576,8 +578,10 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
                 resolve("/examples/classes/TopLevelDeclarations.klib.dump")
             }
             runner {
-                arguments.add("-P$BANNED_TARGETS_PROPERTY_NAME=linuxArm64,linuxX64,mingwX64," +
-                        "androidNativeArm32,androidNativeArm64,androidNativeX64,androidNativeX86")
+                arguments.add(
+                    "-P$BANNED_TARGETS_PROPERTY_NAME=linuxArm64,linuxX64,mingwX64," +
+                            "androidNativeArm32,androidNativeArm64,androidNativeX64,androidNativeX86"
+                )
                 arguments.add(":klibApiCheck")
             }
         }
@@ -607,8 +611,10 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
             }
         }
 
-        checkKlibDump(runner.build(), "/examples/classes/AnotherBuildConfig.klib.clash.dump",
-            dumpTask = ":klibApiDump")
+        checkKlibDump(
+            runner.build(), "/examples/classes/AnotherBuildConfig.klib.clash.dump",
+            dumpTask = ":klibApiDump"
+        )
     }
 
     @Test
@@ -629,8 +635,10 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
             }
         }
 
-        checkKlibDump(runner.build(), "/examples/classes/AnotherBuildConfig.klib.custom.dump",
-            dumpTask = ":klibApiDump")
+        checkKlibDump(
+            runner.build(), "/examples/classes/AnotherBuildConfig.klib.custom.dump",
+            dumpTask = ":klibApiDump"
+        )
     }
 
     @Test
@@ -656,7 +664,9 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
             }
         }
 
-        checkKlibDump(runner.build(), "/examples/classes/AnotherBuildConfigLinux.klib.grouping.dump",
-            dumpTask = ":klibApiDump")
+        checkKlibDump(
+            runner.build(), "/examples/classes/AnotherBuildConfigLinux.klib.grouping.dump",
+            dumpTask = ":klibApiDump"
+        )
     }
 }

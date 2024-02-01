@@ -18,9 +18,6 @@ import org.jetbrains.kotlin.library.abi.LibraryAbiReader
 import java.io.*
 import kotlin.text.split
 
-internal const val KLIB_PHONY_TARGET_NAME = "klib"
-internal const val KLIB_ALL_PHONY_TARGET_NAME = "klib-all"
-
 public class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
 
     @ExperimentalLibraryAbiReader
@@ -336,7 +333,9 @@ private inline fun <reified T : Task> Project.task(
     noinline configuration: T.() -> Unit,
 ): TaskProvider<T> = tasks.register(name, T::class.java, Action(configuration))
 
-internal const val BANNED_TARGETS_PROPERTY_NAME = "binary.compatibility.validator.klib.targets.blacklist.for.testing"
+private const val BANNED_TARGETS_PROPERTY_NAME = "binary.compatibility.validator.klib.targets.blacklist.for.testing"
+private const val KLIB_DUMPS_DIRECTORY = "klib"
+private const val KLIB_INFERRED_DUMPS_DIRECTORY = "klib-all"
 
 @ExperimentalBCVApi
 private class KlibValidationPipelineBuilder(
@@ -349,9 +348,9 @@ private class KlibValidationPipelineBuilder(
         // In the intermediate phase of Klib dump generation there are always multiple targets, thus we need
         // target-based directory tree.
         intermediateFilesConfig = project.provider { DirConfig.TARGET_DIR }
-        val klibApiDirConfig = dirConfig?.map { TargetConfig(project, extension, KLIB_PHONY_TARGET_NAME, dirConfig) }
-        val klibDumpConfig = TargetConfig(project, extension, KLIB_PHONY_TARGET_NAME, intermediateFilesConfig)
-        val klibDumpAllConfig = TargetConfig(project, extension, KLIB_ALL_PHONY_TARGET_NAME, intermediateFilesConfig)
+        val klibApiDirConfig = dirConfig?.map { TargetConfig(project, extension, KLIB_DUMPS_DIRECTORY, dirConfig) }
+        val klibDumpConfig = TargetConfig(project, extension, KLIB_DUMPS_DIRECTORY, intermediateFilesConfig)
+        val klibDumpAllConfig = TargetConfig(project, extension, KLIB_INFERRED_DUMPS_DIRECTORY, intermediateFilesConfig)
 
         val projectDir = project.projectDir
         val klibApiDir = klibApiDirConfig?.map {
