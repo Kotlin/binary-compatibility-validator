@@ -80,7 +80,7 @@ public open class ApiValidationExtension {
     public val klib: KlibValidationSettings = KlibValidationSettings()
 
     /**
-     * Configure KLib AVI validation settings.
+     * Configure KLib ABI validation settings.
      */
     public fun klib(block: KlibValidationSettings.() -> Unit) {
         block(this.klib)
@@ -102,7 +102,7 @@ public open class KlibValidationSettings {
     /**
      * Fail validation if some build targets are not supported by the host compiler.
      * By default, ABI dumped only for supported files will be validated. This option makes validation behavior
-     * more strict and treat having unsupported targets as an error.
+     * stricter and treats having unsupported targets as an error.
      */
     public var strictValidation: Boolean = false
     /**

@@ -7,7 +7,6 @@ package kotlinx.validation.klib
 
 import java.io.File
 import java.nio.file.Files
-import javax.sound.sampled.Line
 
 internal data class Target(val name: String)
 
@@ -122,11 +121,11 @@ internal class KlibAbiDumpMerger {
         this.targetsMut.addAll(bcvTargets)
         topLevelDeclaration.targets.addAll(bcvTargets)
 
-        // All declarations belonging to the same scope has equal indentation.
+        // All declarations belonging to the same scope have equal indentation.
         // Nested declarations have higher indentation.
-        // By tracking the indentation we can decide if the line should be added into the current container,
-        // to its parent container (i.e. the line represents sibling declaration) or the current declaration ended,
-        // and we must pop one or several declaration out of the parsing stack.
+        // By tracking the indentation, we can decide if the line should be added into the current container,
+        // to its parent container (i.e., the line represents sibling declaration) or the current declaration ended,
+        // and we must pop one or several declarations out of the parsing stack.
         var currentContainer = topLevelDeclaration
         var depth = -1
 
@@ -135,12 +134,12 @@ internal class KlibAbiDumpMerger {
             // TODO: wrap the line and cache the depth inside that wrapper?
             val lineDepth = line.depth()
             when {
-                // The depth is the same as before, we encountered a sibling
+                // The depth is the same as before; we encountered a sibling
                 depth == lineDepth -> {
                     currentContainer =
                         lines.parseDeclaration(lineDepth, currentContainer.parent!!, bcvTargets, isMergedFile, aliases)
                 }
-                // The depth is increasing, that means we encountered child declaration
+                // The depth is increasing; that means we encountered child declaration
                 depth < lineDepth -> {
                     check(lineDepth - depth == 1) {
                         "The line has too big indentation relative to a previous line\nline: $line\n" +
@@ -158,7 +157,7 @@ internal class KlibAbiDumpMerger {
                     while (currentContainer.text.depth() > lineDepth) {
                         currentContainer = currentContainer.parent!!
                     }
-                    // If the line is '}' - add it as a terminator to corresponding declaration, it'll simplify
+                    // If the line is '}' - add it as a terminator to the corresponding declaration, it'll simplify
                     // dumping the merged file back to text format.
                     if (line.trim() == CLASS_DECLARATION_TERMINATOR) {
                         currentContainer.delimiter = line
@@ -256,7 +255,7 @@ internal class KlibAbiDumpMerger {
                         "and the current file claimed to be a regular dump file:\n$line"
             }
             next() // skip prefix
-            // Target list means that the declaration following it has narrower set of targets then its parent,
+            // Target list means that the declaration following it has a narrower set of targets then its parent,
             // so we must use it.
             val targets = parseBcvTargetsLine(line)
             val expandedTargets = targets.flatMap {
@@ -266,9 +265,9 @@ internal class KlibAbiDumpMerger {
         } else {
             // That's an ugly part:
             // - for a merged file (isMergedFile==true) we need to use parent declaration targets: if we're in this
-            //   branch, no explicit targets were specified and new declaration targets should be the same as targets
-            //   of its parent. We can't use allTargets here, as parent may have more specific set of targets.
-            // - for a single klib dump file we need to specify exact target associated with this file and allTargets
+            //   branch, no explicit targets were specified, and new declaration targets should be the same as targets
+            //   of its parent. We can't use allTargets here, as parent may have a more specific set of targets.
+            // - for a single klib dump file, we need to specify the exact target associated with this file and allTargets
             //   must contain exactly one value here.
             parent.createOrUpdateChildren(next(), if (isMergedFile) parent.targets else allTargets)
         }
@@ -506,7 +505,7 @@ private object DeclarationsComparator : Comparator<DeclarationContainer> {
                 }
                 result
             } else {
-                // longer the target list, earlier the declaration would appear
+                // the longer the target list, the earlier the declaration would appear
                 c1.targets.size.compareTo(c0.targets.size)
             }
         }
