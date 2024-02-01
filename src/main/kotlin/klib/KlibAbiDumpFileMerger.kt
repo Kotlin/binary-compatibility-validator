@@ -71,6 +71,9 @@ internal data class KlibAbiDumpFormat(
     val useGroupAliases: Boolean = false
 )
 
+/**
+ * A class representing a textual KLib ABI dump, either a regular one, or a merged.
+ */
 internal class KlibAbiDumpMerger {
     private val targetsMut: MutableSet<Target> = mutableSetOf()
     private val headerContent: MutableList<String> = mutableListOf()
@@ -377,6 +380,10 @@ internal class KlibAbiDumpMerger {
     }
 }
 
+/**
+ * A class representing a single declaration from a KLib API dump along with all its children
+ * declarations.
+ */
 private class DeclarationContainer(val text: String, val parent: DeclarationContainer? = null) {
     val targets: MutableSet<Target> = mutableSetOf()
     val children: MutableList<DeclarationContainer> = mutableListOf()

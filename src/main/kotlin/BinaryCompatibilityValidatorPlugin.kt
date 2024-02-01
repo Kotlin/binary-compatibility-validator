@@ -24,6 +24,7 @@ internal const val KLIB_ALL_PHONY_TARGET_NAME = "klib-all"
 public class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
 
     @ExperimentalLibraryAbiReader
+    @ExperimentalBCVApi
     override fun apply(target: Project): Unit = with(target) {
         val extension = extensions.create("apiValidation", ApiValidationExtension::class.java)
         validateExtension(extension)
@@ -33,6 +34,7 @@ public class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
     }
 
     @ExperimentalLibraryAbiReader
+    @ExperimentalBCVApi
     private fun Project.validateExtension(extension: ApiValidationExtension) {
         afterEvaluate {
             val ignored = extension.ignoredProjects
@@ -53,6 +55,7 @@ public class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
         }
     }
 
+    @ExperimentalBCVApi
     private fun configureProject(project: Project, extension: ApiValidationExtension) {
         configureKotlinPlugin(project, extension)
         configureAndroidPlugin(project, extension)
@@ -69,6 +72,7 @@ public class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
         action.execute(it)
     }
 
+    @ExperimentalBCVApi
     private fun configureMultiplatformPlugin(
         project: Project,
         extension: ApiValidationExtension
@@ -255,6 +259,7 @@ internal val Project.apiValidationExtensionOrNull: ApiValidationExtension?
 private fun apiCheckEnabled(projectName: String, extension: ApiValidationExtension): Boolean =
     projectName !in extension.ignoredProjects && !extension.validationDisabled
 
+@ExperimentalBCVApi
 private fun klibAbiCheckEnabled(projectName: String, extension: ApiValidationExtension): Boolean =
     projectName !in extension.ignoredProjects && !extension.validationDisabled && extension.klib.enabled
 
@@ -333,6 +338,7 @@ private inline fun <reified T : Task> Project.task(
 
 internal const val BANNED_TARGETS_PROPERTY_NAME = "binary.compatibility.validator.klib.targets.blacklist.for.testing"
 
+@ExperimentalBCVApi
 private class KlibValidationPipelineBuilder(
     val dirConfig: Provider<DirConfig>?,
     val extension: ApiValidationExtension

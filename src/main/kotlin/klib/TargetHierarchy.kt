@@ -5,6 +5,9 @@
 
 package kotlinx.validation.klib
 
+/**
+ * A hierarchy of KMP targets that should resemble the default hierarchy template.
+ */
 internal object TargetHierarchy {
     class Node(val name: String, vararg childrenNodes: Node) {
         var parent: Node? = null

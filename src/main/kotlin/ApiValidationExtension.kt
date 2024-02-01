@@ -77,11 +77,13 @@ public open class ApiValidationExtension {
      *
      * @see KlibValidationSettings
      */
+    @ExperimentalBCVApi
     public val klib: KlibValidationSettings = KlibValidationSettings()
 
     /**
      * Configure KLib ABI validation settings.
      */
+    @ExperimentalBCVApi
     public fun klib(block: KlibValidationSettings.() -> Unit) {
         block(this.klib)
     }
@@ -90,6 +92,7 @@ public open class ApiValidationExtension {
 /**
  * Settings affecting KLib ABI validation.
  */
+@ExperimentalBCVApi
 public open class KlibValidationSettings {
     /**
      * Enables KLib ABI validation checks.
