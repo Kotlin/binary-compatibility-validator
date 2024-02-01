@@ -13,20 +13,32 @@ import org.gradle.api.tasks.TaskAction
 import org.jetbrains.kotlin.library.abi.*
 
 /**
- * Generates a text file with a ABI dump for a single klib.
+ * Generates a text file with a KLib ABI dump for a single klib.
  */
 public abstract class KotlinKlibAbiBuildTask : BuildTaskBase() {
 
+    /**
+     * Path to a klib to dump.
+     */
     @InputFiles
     public lateinit var klibFile: FileCollection
 
+    /**
+     * Bind this task with a klib compilation.
+     */
     @InputFiles
     public lateinit var compilationDependencies: FileCollection
 
+    /**
+     * Refer to [KlibValidationSettings.signatureVersion] for details.
+     */
     @Optional
     @get:Input
     public var signatureVersion: Int? = null
 
+    /**
+     * Name of a target [klibFile] was compiled for.
+     */
     @Input
     public lateinit var target: String
 

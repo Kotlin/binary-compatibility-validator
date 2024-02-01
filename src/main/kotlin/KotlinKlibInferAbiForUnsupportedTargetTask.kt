@@ -16,7 +16,7 @@ import java.io.File
 
 /**
  * Task infers a possible KLib ABI dump for an unsupported target.
- * To infer a dump, tasks walks up the default targets hierarchy tree starting from the unsupported
+ * To infer a dump, tasks walk up the default targets hierarchy tree starting from the unsupported
  * target until it finds a node corresponding to a group of targets having at least one supported target.
  * After that, dumps generated for such supported targets are merged and declarations that are common to all
  * of them are considered as a common ABI that most likely will be shared by the unsupported target.
@@ -28,21 +28,40 @@ public abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask()
     @get:Internal
     internal val projectName = project.name
 
+    /**
+     * The name of a target to infer a dump for.
+     */
     @Input
     public lateinit var unsupportedTarget: String
 
+    /**
+     * A root directory containing dumps successfully generated for each supported target.
+     * It is assumed that this directory contains subdirectories named after targets.
+     */
     @InputFiles
     public lateinit var outputApiDir: String
 
+    /**
+     * Set of all supported targets.
+     */
     @Input
     public lateinit var supportedTargets: Set<String>
 
+    /**
+     * Previously generated merged ABI dump file, the golden image every dump should be verified against.
+     */
     @InputFiles
     public lateinit var inputImageFile: File
 
+    /**
+     * The name of a dump file.
+     */
     @Input
     public lateinit var dumpFileName: String
 
+    /**
+     * A path to an inferred dump file.
+     */
     @OutputFile
     public lateinit var outputFile: File
 

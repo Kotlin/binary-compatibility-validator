@@ -22,16 +22,28 @@ public abstract class KotlinKlibMergeAbiTask : DefaultTask() {
     @get:Internal
     internal val projectName = project.name
 
+    /**
+     * Set of targets whose dumps should be merged.
+     */
     @get:Input
     public val targets: Set<String>
         get() = targetToFile.keys
 
+    /**
+     * A path to a resulting merged dump.
+     */
     @OutputFile
     public lateinit var mergedFile: File
 
+    /**
+     * The name of a dump file.
+     */
     @Input
     public lateinit var dumpFileName: String
 
+    /**
+     * Refer to [KlibValidationSettings.useTargetGroupAliases] for details.
+     */
     @Input
     public var groupTargetNames: Boolean = true
 
