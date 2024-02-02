@@ -175,7 +175,7 @@ internal class Runner {
     val arguments: MutableList<String> = mutableListOf<String>().apply {
         if (!koverEnabled) {
             // Configuration cache is incompatible with javaagents being enabled for Gradle
-            // See https://github.com/gradle/gradle/issues/6862
+            // See https://github.com/gradle/gradle/issues/25979
             add("--configuration-cache")
         }
     }
