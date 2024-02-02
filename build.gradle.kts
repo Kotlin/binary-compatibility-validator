@@ -1,3 +1,4 @@
+import kotlinx.kover.gradle.plugin.dsl.MetricType
 import kotlinx.validation.build.mavenCentralMetadata
 import kotlinx.validation.build.mavenRepositoryPublishing
 import kotlinx.validation.build.signPublicationIfKeyPresent
@@ -108,6 +109,7 @@ tasks.compileTestKotlin {
 tasks.withType<Test>().configureEach {
     systemProperty("overwrite.output", System.getProperty("overwrite.output", "false"))
     systemProperty("testCasesClassesDirs", sourceSets.test.get().output.classesDirs.asPath)
+    systemProperty("kover.enabled", project.findProperty("kover.enabled")?.toString().toBoolean())
     jvmArgs("-ea")
 }
 
@@ -204,5 +206,17 @@ kover {
                 packages("kotlinx.validation.test")
             }
         }
+        verify {
+            rule {
+                minBound(80, MetricType.BRANCH)
+                minBound(90, MetricType.LINE)
+            }
+        }
+    }
+    // Unfortunately, we can't test both configuration cache use and the test coverage
+    // simultaneously, so the coverage collection should be enabled explicitly (and that
+    // will disable configuration cache).
+    if (!project.findProperty("kover.enabled")?.toString().toBoolean()) {
+        disable()
     }
 }
