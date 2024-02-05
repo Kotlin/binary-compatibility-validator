@@ -61,7 +61,7 @@ public abstract class KotlinKlibExtractSupportedTargetsAbiTask : DefaultTask() {
         if (targetsToRemove.isNotEmpty() && strictValidation) {
             throw IllegalStateException(
                 "Validation could not be performed as some targets are not available " +
-                        "and the strictValidation mode was enabled"
+                        "and the strictValidation mode was enabled."
             )
         }
         for (target in targetsToRemove) {

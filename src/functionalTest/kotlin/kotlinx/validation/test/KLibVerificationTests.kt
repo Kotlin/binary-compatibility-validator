@@ -474,7 +474,7 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
         }
 
         runner.buildAndFail().apply {
-            assertTaskFailure(":klibApiPrepareAbiForValidation")
+            assertTaskFailure(":klibApiExtractForValidation")
         }
     }
 
@@ -527,7 +527,7 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
         }
 
         runner.buildAndFail().apply {
-            assertTaskFailure(":linuxArm64ApiInferAbiDump")
+            assertTaskFailure(":linuxArm64ApiInfer")
             Assertions.assertThat(output).contains(
                 "The target linuxArm64 is not supported by the host compiler " +
                         "and there are no targets similar to linuxArm64 to infer a dump from it."
@@ -590,7 +590,7 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
 
         runner.buildAndFail().apply {
             Assertions.assertThat(output).contains(
-                "KLib ABI dump/validation requires at least enabled klib target, but none were found."
+                "KLib ABI dump/validation requires at least one enabled klib target, but none were found."
             )
         }
     }

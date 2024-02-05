@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2023 JetBrains s.r.o.
+ * Copyright 2016-2024 JetBrains s.r.o.
  * Use of this source code is governed by the Apache 2.0 License that can be found in the LICENSE.txt file.
  */
 
@@ -105,10 +105,10 @@ public abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask()
         }
 
         logger.warn(
-            "An ABI dump for target $unsupportedTarget was inferred from the ABI generated for target " +
-                    "[${matchingTargets.joinToString(",")}] " +
-                    "as the former target is not supported by the host compiler. " +
-                    "Inferred dump may not reflect actual ABI for the target $unsupportedTarget. " +
+            "An ABI dump for target $unsupportedTarget was inferred from the ABI generated for the following targets " +
+                    "as the former target is not supported by the host compiler: " +
+                    "[${matchingTargets.joinToString(",")}]. " +
+                    "Inferred dump may not reflect an actual ABI for the target $unsupportedTarget. " +
                     "It is recommended to regenerate the dump on the host supporting all required compilation target."
         )
     }

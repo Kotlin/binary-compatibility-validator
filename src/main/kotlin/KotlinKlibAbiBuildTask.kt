@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2023 JetBrains s.r.o.
+ * Copyright 2016-2024 JetBrains s.r.o.
  * Use of this source code is governed by the Apache 2.0 License that can be found in the LICENSE.txt file.
  */
 
@@ -68,7 +68,7 @@ public abstract class KotlinKlibAbiBuildTask : BuildTaskBase() {
         val parsedAbi = try {
             LibraryAbiReader.readAbiInfo(klibFile.singleFile, filters)
         } catch (e: Exception) {
-            throw IllegalStateException("Can't read a KLib: ${klibFile.singleFile}", e)
+            throw IllegalStateException("Can't read a klib: ${klibFile.singleFile}", e)
         }
 
         val supportedVersions = parsedAbi.signatureVersions.asSequence()
@@ -83,7 +83,7 @@ public abstract class KotlinKlibAbiBuildTask : BuildTaskBase() {
             AbiSignatureVersion.resolveByVersionNumber(signatureVersion!!)
         } else {
             supportedVersions.maxByOrNull(AbiSignatureVersion::versionNumber)
-                ?: throw IllegalStateException("Can't choose abiSignatureVersion")
+                ?: throw IllegalStateException("Can't choose signatureVersion")
         }
 
         outputApiFile.bufferedWriter().use {
