@@ -4,5 +4,7 @@
  */
 
 configure<kotlinx.validation.ApiValidationExtension> {
-    klibSignatureVersion = 100500
+    klib {
+        signatureVersion = 100500
+    }
 }

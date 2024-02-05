@@ -343,7 +343,9 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
             }
         }
 
-        runner.buildAndFail()
+        runner.buildAndFail().apply {
+            Assertions.assertThat(output).contains("Unsupported KLib signature version '100500'")
+        }
     }
 
     @Test
@@ -668,5 +670,52 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
             runner.build(), "/examples/classes/AnotherBuildConfigLinux.klib.grouping.dump",
             dumpTask = ":klibApiDump"
         )
+    }
+
+    @Test
+    fun `apiDump should work with web targets`() {
+        val runner = test {
+            settingsGradleKts {
+                resolve("/examples/gradle/settings/settings-name-testproject.gradle.kts")
+            }
+            buildGradleKts {
+                resolve("/examples/gradle/base/withNativePlugin.gradle.kts")
+                resolve("/examples/gradle/configuration/nonNativeKlibTargets/targets.gradle.kts")
+            }
+            kotlin("AnotherBuildConfig.kt", "commonMain") {
+                resolve("/examples/classes/AnotherBuildConfig.kt")
+            }
+            runner {
+                arguments.add(":apiDump")
+            }
+        }
+
+        checkKlibDump(runner.build(), "/examples/classes/AnotherBuildConfig.klib.web.dump")
+    }
+
+    @Test
+    fun `apiCheck should work with web targets`() {
+        val runner = test {
+            settingsGradleKts {
+                resolve("/examples/gradle/settings/settings-name-testproject.gradle.kts")
+            }
+            buildGradleKts {
+                resolve("/examples/gradle/base/withNativePlugin.gradle.kts")
+                resolve("/examples/gradle/configuration/nonNativeKlibTargets/targets.gradle.kts")
+            }
+            kotlin("AnotherBuildConfig.kt", "commonMain") {
+                resolve("/examples/classes/AnotherBuildConfig.kt")
+            }
+            abiFile(projectName = "testproject") {
+                resolve("/examples/classes/AnotherBuildConfig.klib.web.dump")
+            }
+            runner {
+                arguments.add(":apiCheck")
+            }
+        }
+
+        runner.build().apply {
+            assertTaskSuccess(":apiCheck")
+        }
     }
 }
