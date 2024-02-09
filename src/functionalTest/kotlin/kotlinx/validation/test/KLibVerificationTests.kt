@@ -15,6 +15,8 @@ import org.jetbrains.kotlin.konan.target.HostManager
 import org.jetbrains.kotlin.konan.target.KonanTarget
 import org.junit.Assume
 import org.junit.Test
+import java.io.File
+import java.nio.file.Files
 import kotlin.test.assertTrue
 
 internal const val BANNED_TARGETS_PROPERTY_NAME = "binary.compatibility.validator.klib.targets.blacklist.for.testing"
@@ -716,6 +718,104 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
 
         runner.build().apply {
             assertTaskSuccess(":apiCheck")
+        }
+    }
+
+    @Test
+    fun `check dump is updated on added declaration`() {
+        val runner = test {
+            settingsGradleKts {
+                resolve("/examples/gradle/settings/settings-name-testproject.gradle.kts")
+            }
+            buildGradleKts {
+                resolve("/examples/gradle/base/withNativePlugin.gradle.kts")
+            }
+            kotlin("AnotherBuildConfig.kt", "commonMain") {
+                resolve("/examples/classes/AnotherBuildConfig.kt")
+            }
+            runner {
+                arguments.add(":apiDump")
+            }
+        }
+        checkKlibDump(runner.build(), "/examples/classes/AnotherBuildConfig.klib.dump")
+
+        // Update the source file by adding a declaration
+        val updatedSourceFile = File(this::class.java.getResource(
+            "/examples/classes/AnotherBuildConfigModified.kt")!!.toURI()
+        )
+        val existingSource = runner.projectDir.resolve(
+            "src/commonMain/kotlin/AnotherBuildConfig.kt"
+        )
+        Files.write(existingSource.toPath(), updatedSourceFile.readBytes())
+
+        checkKlibDump(runner.build(), "/examples/classes/AnotherBuildConfigModified.klib.dump")
+    }
+
+    @Test
+    fun `check dump is updated on a declaration added to some source sets`() {
+        val runner = test {
+            settingsGradleKts {
+                resolve("/examples/gradle/settings/settings-name-testproject.gradle.kts")
+            }
+            buildGradleKts {
+                resolve("/examples/gradle/base/withNativePlugin.gradle.kts")
+            }
+            kotlin("AnotherBuildConfig.kt", "commonMain") {
+                resolve("/examples/classes/AnotherBuildConfig.kt")
+            }
+            runner {
+                arguments.add(":apiDump")
+            }
+        }
+        checkKlibDump(runner.build(), "/examples/classes/AnotherBuildConfig.klib.dump")
+
+        // Update the source file by adding a declaration
+        val updatedSourceFile = File(this::class.java.getResource(
+            "/examples/classes/AnotherBuildConfigLinuxArm64.kt")!!.toURI()
+        )
+        val existingSource = runner.projectDir.resolve(
+            "src/linuxArm64Main/kotlin/AnotherBuildConfigLinuxArm64.kt"
+        )
+        existingSource.parentFile.mkdirs()
+        Files.write(existingSource.toPath(), updatedSourceFile.readBytes())
+
+        checkKlibDump(runner.build(), "/examples/classes/AnotherBuildConfigLinuxArm64Extra.klib.dump")
+    }
+
+    @Test
+    fun `re-validate dump after sources updated`() {
+        val runner = test {
+            settingsGradleKts {
+                resolve("/examples/gradle/settings/settings-name-testproject.gradle.kts")
+            }
+            buildGradleKts {
+                resolve("/examples/gradle/base/withNativePlugin.gradle.kts")
+            }
+            kotlin("AnotherBuildConfig.kt", "commonMain") {
+                resolve("/examples/classes/AnotherBuildConfig.kt")
+            }
+            abiFile(projectName = "testproject") {
+                resolve("/examples/classes/AnotherBuildConfig.klib.dump")
+            }
+            runner {
+                arguments.add(":apiCheck")
+            }
+        }
+        runner.build().apply {
+            assertTaskSuccess(":apiCheck")
+        }
+
+        // Update the source file by adding a declaration
+        val updatedSourceFile = File(this::class.java.getResource(
+            "/examples/classes/AnotherBuildConfigModified.kt")!!.toURI()
+        )
+        val existingSource = runner.projectDir.resolve(
+            "src/commonMain/kotlin/AnotherBuildConfig.kt"
+        )
+        Files.write(existingSource.toPath(), updatedSourceFile.readBytes())
+
+        runner.buildAndFail().apply {
+            assertTaskFailure(":klibApiCheck")
         }
     }
 }

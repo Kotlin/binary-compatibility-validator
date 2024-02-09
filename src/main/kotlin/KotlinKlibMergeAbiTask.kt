@@ -29,6 +29,12 @@ public abstract class KotlinKlibMergeAbiTask : DefaultTask() {
     public val targets: Set<String>
         get() = targetToFile.keys
 
+    // Required to enforce task rerun on klibs update
+    @Suppress("UNUSED")
+    @get:InputFiles
+    internal val inputDumps: Collection<File>
+        get() = targetToFile.values
+
     /**
      * A path to a resulting merged dump.
      */
