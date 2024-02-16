@@ -249,7 +249,7 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
         }
 
         runner.buildAndFail().apply {
-            Assertions.assertThat(output).contains("Unsupported KLib signature version '100500'")
+            Assertions.assertThat(output).contains("Selected KLib ABI signature version '100500' is unsupported")
         }
     }
 

@@ -177,3 +177,43 @@ public final class kotlinx/validation/api/KotlinSignaturesLoadingKt {
 	public static synthetic fun retainExplicitlyIncludedIfDeclared$default (Ljava/util/List;Ljava/util/Collection;Ljava/util/Collection;Ljava/util/Collection;ILjava/lang/Object;)Ljava/util/List;
 }
 
+public final class kotlinx/validation/api/klib/KLibDumpFilters {
+	public static final field Companion Lkotlinx/validation/api/klib/KLibDumpFilters$Companion;
+	public final fun getIgnoredClasses ()Ljava/util/Set;
+	public final fun getIgnoredPackages ()Ljava/util/Set;
+	public final fun getNonPublicMarkers ()Ljava/util/Set;
+	public final fun getSignatureVersion ()Lkotlinx/validation/api/klib/SignatureVersion;
+}
+
+public final class kotlinx/validation/api/klib/KLibDumpFilters$Builder {
+	public fun <init> ()V
+	public final fun build ()Lkotlinx/validation/api/klib/KLibDumpFilters;
+	public final fun getIgnoredClasses ()Ljava/util/Set;
+	public final fun getIgnoredPackages ()Ljava/util/Set;
+	public final fun getNonPublicMarkers ()Ljava/util/Set;
+	public final fun getSignatureVersion ()Lkotlinx/validation/api/klib/SignatureVersion;
+	public final fun setSignatureVersion (Lkotlinx/validation/api/klib/SignatureVersion;)V
+}
+
+public final class kotlinx/validation/api/klib/KLibDumpFilters$Companion {
+	public final fun getDEFAULT ()Lkotlinx/validation/api/klib/KLibDumpFilters;
+}
+
+public final class kotlinx/validation/api/klib/KLibDumpKt {
+	public static final fun KLibDumpFilters (Lkotlin/jvm/functions/Function1;)Lkotlinx/validation/api/klib/KLibDumpFilters;
+	public static final fun dumpKlib (Ljava/io/File;Ljava/io/File;Lkotlinx/validation/api/klib/KLibDumpFilters;)V
+	public static final fun dumpKlib (Ljava/io/File;Ljava/lang/Appendable;Lkotlinx/validation/api/klib/KLibDumpFilters;)V
+	public static synthetic fun dumpKlib$default (Ljava/io/File;Ljava/io/File;Lkotlinx/validation/api/klib/KLibDumpFilters;ILjava/lang/Object;)V
+	public static synthetic fun dumpKlib$default (Ljava/io/File;Ljava/lang/Appendable;Lkotlinx/validation/api/klib/KLibDumpFilters;ILjava/lang/Object;)V
+}
+
+public final class kotlinx/validation/api/klib/SignatureVersion {
+	public static final field Companion Lkotlinx/validation/api/klib/SignatureVersion$Companion;
+	public fun <init> (I)V
+	public final fun getVersion ()I
+}
+
+public final class kotlinx/validation/api/klib/SignatureVersion$Companion {
+	public final fun getLATEST ()Lkotlinx/validation/api/klib/SignatureVersion;
+}
+

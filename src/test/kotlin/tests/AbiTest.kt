@@ -5,7 +5,7 @@
 
 package kotlinx.validation.api.tests
 
-import kotlinx.validation.generateQualifiedNames
+import kotlinx.validation.api.klib.generateQualifiedNames
 import org.jetbrains.kotlin.library.abi.*
 import org.junit.Test
 import kotlin.test.assertEquals

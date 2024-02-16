@@ -5,6 +5,9 @@
 
 package kotlinx.validation
 
+import kotlinx.validation.api.klib.KLibDumpFilters
+import kotlinx.validation.api.klib.SignatureVersion
+import kotlinx.validation.api.klib.dumpKlib
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -49,61 +52,15 @@ public abstract class KotlinKlibAbiBuildTask : BuildTaskBase() {
         outputApiFile.delete()
         outputApiFile.parentFile.mkdirs()
 
-        val filters = buildList {
-            if (ignoredPackages.isNotEmpty()) {
-                add(AbiReadingFilter.ExcludedPackages(ignoredPackages.map { AbiCompoundName(it) }))
-            }
-            if (ignoredClasses.isNotEmpty()) {
-                add(AbiReadingFilter.ExcludedClasses(ignoredClasses.flatMap {
-                    generateQualifiedNames(it)
-                }))
-            }
-            if (nonPublicMarkers.isNotEmpty()) {
-                add(AbiReadingFilter.NonPublicMarkerAnnotations(nonPublicMarkers.flatMap {
-                    generateQualifiedNames(it)
-                }))
-            }
-        }
+        klibFile.singleFile.dumpKlib(outputApiFile, KLibDumpFilters {
+            ignoredClasses.addAll(this@KotlinKlibAbiBuildTask.ignoredClasses)
+            ignoredPackages.addAll(this@KotlinKlibAbiBuildTask.ignoredPackages)
+            nonPublicMarkers.addAll(this@KotlinKlibAbiBuildTask.nonPublicMarkers)
 
-        val parsedAbi = try {
-            LibraryAbiReader.readAbiInfo(klibFile.singleFile, filters)
-        } catch (e: Exception) {
-            throw IllegalStateException("Can't read a klib: ${klibFile.singleFile}", e)
-        }
-
-        val supportedVersions = parsedAbi.signatureVersions.asSequence()
-        val sigVersion = if (signatureVersion != null) {
-            val versionNumbers = supportedVersions.map { it.versionNumber }.toSortedSet()
-            if (signatureVersion !in versionNumbers) {
-                throw IllegalArgumentException(
-                    "Unsupported KLib signature version '$signatureVersion'. " +
-                            "Supported versions are: $versionNumbers"
-                )
+            signatureVersion = when (val ver = this@KotlinKlibAbiBuildTask.signatureVersion) {
+                null -> SignatureVersion.LATEST
+                else -> SignatureVersion(ver)
             }
-            AbiSignatureVersion.resolveByVersionNumber(signatureVersion!!)
-        } else {
-            supportedVersions.maxByOrNull(AbiSignatureVersion::versionNumber)
-                ?: throw IllegalStateException("Can't choose signatureVersion")
-        }
-
-        outputApiFile.bufferedWriter().use {
-            LibraryAbiRenderer.render(parsedAbi, it, AbiRenderingSettings(sigVersion))
-        }
-    }
-}
-
-@ExperimentalStdlibApi
-@ExperimentalLibraryAbiReader
-internal fun generateQualifiedNames(name: String): List<AbiQualifiedName> {
-    if (!name.contains('.')) {
-        return listOf(AbiQualifiedName(AbiCompoundName(""), AbiCompoundName(name)))
-    }
-    val parts = name.split('.')
-    return buildList {
-        for (packageLength in parts.indices) {
-            val packageName = AbiCompoundName(parts.subList(0, packageLength).joinToString("."))
-            val className = AbiCompoundName(parts.subList(packageLength, parts.size).joinToString("."))
-            add(AbiQualifiedName(packageName, className))
-        }
+        })
     }
 }
