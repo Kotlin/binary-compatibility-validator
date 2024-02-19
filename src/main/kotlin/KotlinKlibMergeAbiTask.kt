@@ -5,9 +5,10 @@
 
 package kotlinx.validation
 
-import kotlinx.validation.klib.KlibAbiDumpFormat
-import kotlinx.validation.klib.KlibAbiDumpMerger
-import kotlinx.validation.klib.Target
+import kotlinx.validation.api.klib.KLibTarget
+import kotlinx.validation.api.klib.MergedKLibDumpFormat
+import kotlinx.validation.api.klib.MergedKlibDump
+import kotlinx.validation.api.klib.dumpTo
 import kotlinx.validation.klib.TargetHierarchy
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.*
@@ -59,12 +60,13 @@ public abstract class KotlinKlibMergeAbiTask : DefaultTask() {
 
     @TaskAction
     internal fun merge() {
-        val builder = KlibAbiDumpMerger()
-        targets.forEach { targetName ->
-            val target = Target(targetName)
-            builder.addIndividualDump(target, targetToFile[targetName]!!.resolve(dumpFileName))
-        }
-        mergedFile.bufferedWriter().use { builder.dump(it, KlibAbiDumpFormat(useGroupAliases = canUseGroupAliases())) }
+        MergedKlibDump().also {
+            targets.forEach { targetName ->
+                it.load(KLibTarget(targetName), targetToFile[targetName]!!.resolve(dumpFileName))
+            }
+        }.dumpTo(mergedFile, MergedKLibDumpFormat {
+            groupTargetNames = canUseGroupAliases()
+        })
     }
 
     private fun canUseGroupAliases(): Boolean {

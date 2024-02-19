@@ -5,8 +5,10 @@
 
 package kotlinx.validation
 
-import kotlinx.validation.klib.KlibAbiDumpFormat
-import kotlinx.validation.klib.KlibAbiDumpMerger
+import kotlinx.validation.api.klib.KLibTarget
+import kotlinx.validation.api.klib.MergedKLibDumpFormat
+import kotlinx.validation.api.klib.MergedKlibDump
+import kotlinx.validation.api.klib.dumpTo
 import kotlinx.validation.klib.TargetHierarchy
 import org.gradle.api.DefaultTask
 import org.gradle.api.provider.Provider
@@ -55,19 +57,20 @@ public abstract class KotlinKlibExtractSupportedTargetsAbiTask : DefaultTask() {
         if (inputAbiFile.length() == 0L) {
             error("Project ABI file $inputAbiFile is empty.")
         }
-        val dump = KlibAbiDumpMerger().apply { loadMergedDump(inputAbiFile) }
-        val enabledTargets = targets.get()
-        val targetsToRemove = dump.targets.filter { it.name !in enabledTargets }
-        if (targetsToRemove.isNotEmpty() && strictValidation) {
+        val dump = MergedKlibDump().apply {
+            loadMerged(inputAbiFile)
+        }
+        val enabledTargets = targets.get().map { KLibTarget(it) }
+        if (dump.targets.subtract(enabledTargets).isNotEmpty() && strictValidation) {
             throw IllegalStateException(
                 "Validation could not be performed as some targets are not available " +
                         "and the strictValidation mode was enabled."
             )
         }
-        for (target in targetsToRemove) {
-            dump.remove(target)
-        }
-        outputAbiFile.bufferedWriter().use { dump.dump(it, KlibAbiDumpFormat(useGroupAliases = canUseGroupAliases())) }
+        dump.retain(*enabledTargets.toTypedArray())
+        dump.dumpTo(outputAbiFile, MergedKLibDumpFormat {
+            saveAsMerged = canUseGroupAliases()
+        })
     }
 
     private fun canUseGroupAliases(): Boolean {

@@ -5,9 +5,7 @@
 
 package kotlinx.validation
 
-import kotlinx.validation.klib.KlibAbiDumpFormat
-import kotlinx.validation.klib.KlibAbiDumpMerger
-import kotlinx.validation.klib.Target
+import kotlinx.validation.api.klib.*
 import kotlinx.validation.klib.TargetHierarchy
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.*
@@ -71,26 +69,10 @@ public abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask()
         val matchingTargets = findMatchingTargets()
         val target2outFile = supportedTargets.keysToMap {
             File(outputApiDir).parentFile.resolve(it).resolve(dumpFileName)
-        }
+        }.mapKeys { KLibTarget(it.key) }
 
-        // given a set of similar targets, combine their ABI files into a single merged dump and consider it
-        // a common ABI that should be shared by the unsupported target as well
-        val commonDump = KlibAbiDumpMerger()
-        for (target in matchingTargets) {
-            commonDump.addIndividualDump(Target(target), target2outFile[target]!!)
-        }
-        commonDump.retainCommonAbi()
-
-        // load and old dump (that may contain the dump for the unsupported target) and remove all but the declarations
-        // specific to the unsupported target
-        val image = KlibAbiDumpMerger()
         if (inputImageFile.exists()) {
-            if (inputImageFile.length() > 0L) {
-                image.loadMergedDump(inputImageFile)
-                image.retainTargetSpecificAbi(Target(unsupportedTarget))
-                // merge common ABI with target-specific ABI
-                commonDump.mergeTargetSpecific(image)
-            } else {
+            if (inputImageFile.length() == 0L) {
                 logger.warn(
                     "Project's ABI file exists, but empty: $inputImageFile. " +
                             "The file will be ignored during ABI dump inference for the unsupported target " +
@@ -98,11 +80,10 @@ public abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask()
                 )
             }
         }
-        commonDump.overrideTargets(setOf(Target(unsupportedTarget)))
-
-        outputFile.bufferedWriter().use {
-            commonDump.dump(it, KlibAbiDumpFormat(includeTargets = false))
-        }
+        guessAbi(KLibTarget(unsupportedTarget), inputImageFile, target2outFile)
+            .dumpTo(outputFile, MergedKLibDumpFormat {
+                saveAsMerged = false
+            })
 
         logger.warn(
             "An ABI dump for target $unsupportedTarget was inferred from the ABI generated for the following targets " +

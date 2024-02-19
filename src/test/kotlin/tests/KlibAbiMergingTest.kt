@@ -5,9 +5,9 @@
 
 package tests
 
-import kotlinx.validation.klib.KlibAbiDumpFormat
+import kotlinx.validation.api.klib.KLibTarget
+import kotlinx.validation.api.klib.MergedKLibDumpFormat
 import kotlinx.validation.klib.KlibAbiDumpMerger
-import kotlinx.validation.klib.Target
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -44,10 +44,10 @@ class KlibAbiMergingTest {
                            useAliases: Boolean = false): File {
         val file = tempDir.newFile()
         FileWriter(file).use {
-            klib.dump(it, KlibAbiDumpFormat(
-                includeTargets = !singleTargetDump,
-                useGroupAliases = useAliases
-            ))
+            klib.dump(it, MergedKLibDumpFormat {
+                saveAsMerged = !singleTargetDump
+                groupTargetNames = useAliases
+            })
         }
         return file
     }
@@ -55,7 +55,7 @@ class KlibAbiMergingTest {
     @Test
     fun identicalDumpFiles() {
         val klib = KlibAbiDumpMerger()
-        listOf(Target("macosArm64"), Target("linuxX64")).forEach {
+        listOf(KLibTarget("macosArm64"), KLibTarget("linuxX64")).forEach {
             klib.addIndividualDump(it, file("/merge/identical/dump.abi"))
         }
         val merged = dumpToFile(klib)
@@ -69,7 +69,7 @@ class KlibAbiMergingTest {
     @Test
     fun identicalDumpFilesWithAliases() {
         val klib = KlibAbiDumpMerger()
-        listOf(Target("macosArm64"), Target("linuxX64")).forEach {
+        listOf(KLibTarget("macosArm64"), KLibTarget("linuxX64")).forEach {
             klib.addIndividualDump(it, file("/merge/identical/dump.abi"))
         }
         val merged = dumpToFile(klib, useAliases = true)
@@ -89,7 +89,7 @@ class KlibAbiMergingTest {
             val targets = mutableListOf("androidNativeArm64", "linuxArm64", "linuxX64", "tvOsX64")
             targets.shuffle(random)
             targets.forEach {
-                klib.addIndividualDump(Target(it), file("/merge/diverging/$it.api"))
+                klib.addIndividualDump(KLibTarget(it), file("/merge/diverging/$it.api"))
             }
             val merged = dumpToFile(klib)
             assertContentEquals(
@@ -108,7 +108,7 @@ class KlibAbiMergingTest {
             val targets = mutableListOf("androidNativeArm64", "linuxArm64", "linuxX64", "tvOsX64")
             targets.shuffle(random)
             targets.forEach {
-                klib.addIndividualDump(Target(it), file("/merge/diverging/$it.api"))
+                klib.addIndividualDump(KLibTarget(it), file("/merge/diverging/$it.api"))
             }
             val merged = dumpToFile(klib, useAliases = true)
             assertContentEquals(
@@ -134,13 +134,13 @@ class KlibAbiMergingTest {
     fun mergeDumpsWithDivergedHeaders() {
         val klib = KlibAbiDumpMerger()
         klib.addIndividualDump(
-            Target("linuxArm64"),
+            KLibTarget("linuxArm64"),
             file("/merge/header-mismatch/v1.abi")
         )
 
         assertFailsWith<IllegalStateException> {
             klib.addIndividualDump(
-                Target("linuxX64"),
+                KLibTarget("linuxX64"),
                 file("/merge/header-mismatch/v2.abi")
             )
         }
@@ -153,8 +153,8 @@ class KlibAbiMergingTest {
 
         val targets = listOf("androidNativeArm64", "linuxArm64", "linuxX64", "tvOsX64")
         targets.forEach { target ->
-            klib.remove(Target(target))
-            klib.addIndividualDump(Target(target), file("/merge/diverging/$target.api"))
+            klib.remove(KLibTarget(target))
+            klib.addIndividualDump(KLibTarget(target), file("/merge/diverging/$target.api"))
         }
 
         val merged = dumpToFile(klib)
@@ -182,14 +182,14 @@ class KlibAbiMergingTest {
         val klib = KlibAbiDumpMerger()
         klib.loadMergedDump(file("/merge/parseNarrowChildrenDecls/merged.abi"))
 
-        klib.remove(Target("linuxArm64"))
+        klib.remove(KLibTarget("linuxArm64"))
         val written1 = dumpToFile(klib)
         assertContentEquals(
             lines("/merge/parseNarrowChildrenDecls/withoutLinuxArm64.abi"),
             Files.readAllLines(written1.toPath()).asSequence()
         )
 
-        klib.remove(Target("linuxX64"))
+        klib.remove(KLibTarget("linuxX64"))
         val written2 = dumpToFile(klib)
         assertContentEquals(
             lines("/merge/parseNarrowChildrenDecls/withoutLinuxAll.abi"),
@@ -198,10 +198,31 @@ class KlibAbiMergingTest {
     }
 
     @Test
+    fun merge() {
+        val random = Random(42)
+        for (i in 0 until 10) {
+            val klib = KlibAbiDumpMerger()
+            val targets = mutableListOf("androidNativeArm64", "linuxArm64", "linuxX64", "tvOsX64")
+            targets.shuffle(random)
+            targets.forEach {
+                klib.merge(KlibAbiDumpMerger().apply {
+                    addIndividualDump(KLibTarget(it), file("/merge/diverging/$it.api"))
+                })
+            }
+            val merged = dumpToFile(klib)
+            assertContentEquals(
+                lines("/merge/diverging/merged.abi"),
+                Files.readAllLines(merged.toPath()).asSequence(),
+                merged.readText()
+            )
+        }
+    }
+
+    @Test
     fun guessAbi() {
         val klib = KlibAbiDumpMerger()
         klib.loadMergedDump(file("/merge/guess/merged.api"))
-        klib.retainTargetSpecificAbi(Target("linuxArm64"))
+        klib.retainTargetSpecificAbi(KLibTarget("linuxArm64"))
 
         val retainedLinuxAbiDump = dumpToFile(klib)
         assertContentEquals(
@@ -211,7 +232,7 @@ class KlibAbiMergingTest {
 
         val commonAbi = KlibAbiDumpMerger()
         commonAbi.loadMergedDump(file("/merge/guess/merged.api"))
-        commonAbi.remove(Target("linuxArm64"))
+        commonAbi.remove(KLibTarget("linuxArm64"))
         commonAbi.retainCommonAbi()
 
         val commonAbiDump = dumpToFile(commonAbi)
@@ -221,7 +242,7 @@ class KlibAbiMergingTest {
         )
 
         commonAbi.mergeTargetSpecific(klib)
-        commonAbi.overrideTargets(setOf(Target("linuxArm64")))
+        commonAbi.overrideTargets(setOf(KLibTarget("linuxArm64")))
 
         val guessedAbiDump = dumpToFile(commonAbi, true)
         assertContentEquals(
@@ -247,20 +268,20 @@ class KlibAbiMergingTest {
 
         assertFails {
             KlibAbiDumpMerger().addIndividualDump(
-                Target("linuxX64"), file("/merge/illegalFiles/emptyFile.txt")
+                KLibTarget("linuxX64"), file("/merge/illegalFiles/emptyFile.txt")
             )
         }
 
         assertFails {
             KlibAbiDumpMerger().addIndividualDump(
-                Target("linuxX64"), file("/merge/illegalFiles/nonDumpFile.txt")
+                KLibTarget("linuxX64"), file("/merge/illegalFiles/nonDumpFile.txt")
             )
         }
 
         assertFails {
             // Not a single-target dump
             KlibAbiDumpMerger().addIndividualDump(
-                Target("linuxX64"), file("/merge/diverging/merged.api")
+                KLibTarget("linuxX64"), file("/merge/diverging/merged.api")
             )
         }
     }
