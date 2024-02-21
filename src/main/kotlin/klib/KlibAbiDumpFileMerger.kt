@@ -289,7 +289,7 @@ internal class KlibAbiDumpMerger {
         headerContent.forEach {
             appendable.append(it).append('\n')
         }
-        topLevelDeclaration.children.sortedWith(DeclarationsComparator).forEach {
+        topLevelDeclaration.children.values.sortedWith(DeclarationsComparator).forEach {
             it.dump(appendable, targetsMut, dumpFormat, formatter)
         }
     }
@@ -386,14 +386,12 @@ internal class KlibAbiDumpMerger {
  */
 private class DeclarationContainer(val text: String, val parent: DeclarationContainer? = null) {
     val targets: MutableSet<Target> = mutableSetOf()
-    val children: MutableList<DeclarationContainer> = mutableListOf()
+    val children: MutableMap<String, DeclarationContainer> = mutableMapOf()
     var delimiter: String? = null
-    private val childrenCache: MutableMap<String, DeclarationContainer> = mutableMapOf()
 
     fun createOrUpdateChildren(text: String, targets: Set<Target>): DeclarationContainer {
-        val child = childrenCache.computeIfAbsent(text) {
+        val child = children.computeIfAbsent(text) {
             val newChild = DeclarationContainer(it, this)
-            children.add(newChild)
             newChild
         }
         child.targets.addAll(targets)
@@ -411,7 +409,7 @@ private class DeclarationContainer(val text: String, val parent: DeclarationCont
                 .append('\n')
         }
         appendable.append(text).append('\n')
-        children.sortedWith(DeclarationsComparator).forEach {
+        children.values.sortedWith(DeclarationsComparator).forEach {
             it.dump(appendable, this.targets, dumpFormat, formatter)
         }
         if (delimiter != null) {
@@ -423,16 +421,8 @@ private class DeclarationContainer(val text: String, val parent: DeclarationCont
         if (parent != null && !targets.contains(target)) {
             return
         }
-
         targets.remove(target)
-        children.removeIf {
-            val shouldRemove = it.targets.contains(target) && it.targets.size == 1
-            if (shouldRemove) {
-                childrenCache.remove(it.text)
-            }
-            shouldRemove
-        }
-        children.forEach { it.remove(target) }
+        mutateChildrenAndRemoveTargetless { it.remove(target) }
     }
 
     fun retainSpecific(target: Target, allTargets: Set<Target>) {
@@ -442,8 +432,8 @@ private class DeclarationContainer(val text: String, val parent: DeclarationCont
             return
         }
 
-        children.forEach { it.retainSpecific(target, allTargets) }
-        children.removeIf { it.targets.isEmpty() }
+        mutateChildrenAndRemoveTargetless { it.retainSpecific(target, allTargets) }
+
         if (targets == allTargets) {
             if (children.isEmpty()) {
                 targets.clear()
@@ -461,39 +451,44 @@ private class DeclarationContainer(val text: String, val parent: DeclarationCont
             targets.clear()
             return
         }
-        children.forEach { it.retainCommon(commonTargets) }
-        children.removeIf { it.targets.isEmpty() }
+        mutateChildrenAndRemoveTargetless { it.retainCommon(commonTargets) }
     }
 
     fun mergeTargetSpecific(other: DeclarationContainer) {
         targets.addAll(other.targets)
-        val newChildren = mutableListOf<DeclarationContainer>()
         other.children.forEach { otherChild ->
-            val child = children.find { it.text == otherChild.text }
-            if (child != null) {
-                child.mergeTargetSpecific(otherChild)
-            } else {
-                newChildren.add(otherChild)
+            when (val child = children[otherChild.key]) {
+                null -> children[otherChild.key] = otherChild.value
+                else -> child.mergeTargetSpecific(otherChild.value)
             }
         }
         children.forEach {
-            if (other.targets.first() !in it.targets) {
-                it.addTargetRecursively(other.targets.first())
+            if (other.targets.first() !in it.value.targets) {
+                it.value.addTargetRecursively(other.targets.first())
             }
         }
-        children.addAll(newChildren)
     }
 
     private fun addTargetRecursively(first: Target) {
         targets.add(first)
-        children.forEach { it.addTargetRecursively(first) }
+        children.forEach { it.value.addTargetRecursively(first) }
     }
 
     fun overrideTargets(targets: Set<Target>) {
         this.targets.clear()
         this.targets.addAll(targets)
+        children.forEach { it.value.overrideTargets(targets) }
+    }
 
-        children.forEach { it.overrideTargets(targets) }
+    private inline fun mutateChildrenAndRemoveTargetless(blockAction: (DeclarationContainer) -> Unit) {
+        val iterator = children.iterator()
+        while (iterator.hasNext()) {
+            val (_, child) = iterator.next()
+            blockAction(child)
+            if (child.targets.isEmpty()) {
+                iterator.remove()
+            }
+        }
     }
 }
 
