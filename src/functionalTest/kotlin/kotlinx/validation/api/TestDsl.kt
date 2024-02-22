@@ -124,7 +124,7 @@ internal fun FileContainer.apiFile(projectName: String, fn: AppendableScope.() -
 }
 
 /**
- * Shortcut for creating a `api/<target>/<project>.api` descriptor using [file][FileContainer.file]
+ * Shortcut for creating a `api/<target>/<project>.klib.api` descriptor using [file][FileContainer.file]
  */
 internal fun FileContainer.abiFile(projectName: String, target: String, fn: AppendableScope.() -> Unit) {
     dir(API_DIR) {

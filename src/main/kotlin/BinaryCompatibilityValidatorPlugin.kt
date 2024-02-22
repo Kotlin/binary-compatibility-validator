@@ -45,7 +45,7 @@ public class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
                 } catch (e: NoClassDefFoundError) {
                     throw IllegalStateException(
                         "KLib validation is not available. " +
-                                "Make sure the project use at least Kotlin 1.9.20 or disable KLib validation " +
+                                "Make sure the project uses at least Kotlin 1.9.20 or disable KLib validation " +
                                 "by setting apiValidation.klib.enabled to false", e
                     )
                 }
