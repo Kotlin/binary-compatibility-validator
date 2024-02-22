@@ -18,10 +18,9 @@ import org.jetbrains.kotlin.library.abi.LibraryAbiReader
 import java.io.*
 import kotlin.text.split
 
+@OptIn(ExperimentalBCVApi::class, ExperimentalLibraryAbiReader::class)
 public class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
 
-    @ExperimentalLibraryAbiReader
-    @ExperimentalBCVApi
     override fun apply(target: Project): Unit = with(target) {
         val extension = extensions.create("apiValidation", ApiValidationExtension::class.java)
         validateExtension(extension)
@@ -30,8 +29,6 @@ public class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
         }
     }
 
-    @ExperimentalLibraryAbiReader
-    @ExperimentalBCVApi
     private fun Project.validateExtension(extension: ApiValidationExtension) {
         afterEvaluate {
             val ignored = extension.ignoredProjects
@@ -53,7 +50,7 @@ public class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
         }
     }
 
-    @ExperimentalBCVApi
+    @OptIn(ExperimentalBCVApi::class)
     private fun configureProject(project: Project, extension: ApiValidationExtension) {
         configureKotlinPlugin(project, extension)
         configureAndroidPlugin(project, extension)
@@ -70,7 +67,6 @@ public class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
         action.execute(it)
     }
 
-    @ExperimentalBCVApi
     private fun configureMultiplatformPlugin(
         project: Project,
         extension: ApiValidationExtension
@@ -257,7 +253,7 @@ internal val Project.apiValidationExtensionOrNull: ApiValidationExtension?
 private fun apiCheckEnabled(projectName: String, extension: ApiValidationExtension): Boolean =
     projectName !in extension.ignoredProjects && !extension.validationDisabled
 
-@ExperimentalBCVApi
+@OptIn(ExperimentalBCVApi::class)
 private fun klibAbiCheckEnabled(projectName: String, extension: ApiValidationExtension): Boolean =
     projectName !in extension.ignoredProjects && !extension.validationDisabled && extension.klib.enabled
 
