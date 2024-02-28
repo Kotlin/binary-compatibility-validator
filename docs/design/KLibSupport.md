@@ -55,7 +55,6 @@ Here's a brief example of such a merged dump file:
 ```
 // Merged KLib ABI Dump
 // Targets: [androidNativeArm32, androidNativeArm64, androidNativeX64, androidNativeX86, linuxArm64, linuxX64, mingwX64]
-// Alias: androidNative => [androidNativeArm32, androidNativeArm64, androidNativeX64, androidNativeX86]
 // Alias: linux => [linuxArm64, linuxX64]
 // Rendering settings:
 // - Signature version: 2
@@ -84,15 +83,12 @@ declarations, until it is mentioned explicitly, the list of targets is the same 
 So, the class `BuildConfig` have the same targets as the whole file, but `linuxSpecific`-function
 is presented only on `linux`-targets (`// Targets: [linux]`).
 
-The next two lines declare target aliases (`// Alias: <name> => [<targets>]`). There are only two
-aliases (`linux` and `androidNative`), because it seems excessive to declare aliases for groups
-consisting of only a single target (like `mingw`) as well as declaring aliases for targets
-than will never be explicitly presented in a file (like an alias for all the targets, or all native targets). 
-We also can't add aliases for targets that does not exist, so there are no aliases like `macos` or `apple` 
-(in this example).
-However, all other aliases are generated even if it is not explicitly mentioned (like `androidNative`) to
-minimize dump's header changes in the future, when such groups could emerge.
-
+The next line declares a target alias (`// Alias: <name> => [<targets>]`). There are only one alias (`linux`).
+Aliases are generated for target groups corresponding to groups from a default hierarchy, that could appear in a file
+and consist of more than a single target.
+For instance, there's no `andoidNative` group alias as there are no declarations having only 
+corresponding android-native targets and there is no group for `mingwX64` 
+as there would no other targets in such a group.
 After that, a regular KLib ABI dump header continues, with an exception to some declarations being 
 annotated with `// Targets`.
 

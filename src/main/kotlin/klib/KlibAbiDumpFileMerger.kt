@@ -305,7 +305,7 @@ internal class KlibAbiDumpMerger {
                     )
                 }
             }
-            return GroupingFormatter(targets)
+            return GroupingFormatter(this)
         } else {
             DefaultFormatter
         }
@@ -378,13 +378,19 @@ internal class KlibAbiDumpMerger {
 
         topLevelDeclaration.overrideTargets(targets)
     }
+
+    internal fun visit(action: (DeclarationContainer) -> Unit) {
+        topLevelDeclaration.children.forEach {
+            action(it.value)
+        }
+    }
 }
 
 /**
  * A class representing a single declaration from a KLib API dump along with all its children
  * declarations.
  */
-private class DeclarationContainer(val text: String, val parent: DeclarationContainer? = null) {
+internal class DeclarationContainer(val text: String, val parent: DeclarationContainer? = null) {
     val targets: MutableSet<Target> = mutableSetOf()
     val children: MutableMap<String, DeclarationContainer> = mutableMapOf()
     var delimiter: String? = null
@@ -490,6 +496,12 @@ private class DeclarationContainer(val text: String, val parent: DeclarationCont
             }
         }
     }
+
+    internal fun visit(action: (DeclarationContainer) -> Unit) {
+        children.forEach {
+            action(it.value)
+        }
+    }
 }
 
 // TODO: optimize
@@ -514,7 +526,7 @@ private object DeclarationsComparator : Comparator<DeclarationContainer> {
     }
 }
 
-private interface KLibsTargetsFormatter {
+internal interface KLibsTargetsFormatter {
     fun formatHeader(targets: Set<Target>): String
 
     fun formatDeclarationTargets(targets: Set<Target>): String
@@ -531,15 +543,16 @@ private object DefaultFormatter : KLibsTargetsFormatter {
     }
 }
 
-private class GroupingFormatter(allTargets: Set<Target>) : KLibsTargetsFormatter {
+private class GroupingFormatter(klibDump: KlibAbiDumpMerger) : KLibsTargetsFormatter {
     private data class Alias(val name: String, val targets: Set<Target>)
 
     private val aliases: List<Alias>
 
     init {
+        val allTargets = klibDump.targets
         val aliasesBuilder = mutableListOf<Alias>()
         TargetHierarchy.hierarchyIndex.asSequence()
-            // place smaller groups (more specific groups) closer to beginning of the list
+            // place smaller groups (more specific groups) closer to the beginning of the list
             .sortedWith(compareBy({ it.value.allLeafs.size }, { it.key }))
             .forEach {
                 // intersect with all targets to use only enabled targets in aliases
@@ -554,6 +567,14 @@ private class GroupingFormatter(allTargets: Set<Target>) : KLibsTargetsFormatter
         // filter out all groups consisting of less than one member
         aliasesBuilder.removeIf { it.targets.size < 2 }
         aliasesBuilder.removeIf { it.targets == allTargets }
+        // collect all actually used target groups and remove all unused aliases
+        val usedAliases = mutableSetOf<Set<Target>>()
+        fun visitor(decl: DeclarationContainer) {
+            usedAliases.add(decl.targets)
+            decl.visit(::visitor)
+        }
+        klibDump.visit(::visitor)
+        aliasesBuilder.removeIf { !usedAliases.contains(it.targets) }
         // Remove all duplicating groups. At this point, aliases are sorted so
         // that more specific groups are before more common groups, so we'll remove
         // more common groups here.
@@ -569,7 +590,7 @@ private class GroupingFormatter(allTargets: Set<Target>) : KLibsTargetsFormatter
         toRemove.forEach {
             aliasesBuilder.removeAt(it)
         }
-        // reverse the order to place common group first
+        // reverse the order to place a common group first
         aliases = aliasesBuilder.reversed()
     }
 

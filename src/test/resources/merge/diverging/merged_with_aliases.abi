@@ -1,6 +1,5 @@
 // Merged KLib ABI Dump
 // Targets: [androidNativeArm64, linuxArm64, linuxX64, tvOsX64]
-// Alias: native => [androidNativeArm64, linuxArm64, linuxX64]
 // Alias: linux => [linuxArm64, linuxX64]
 // Rendering settings:
 // - Signature version: 2
