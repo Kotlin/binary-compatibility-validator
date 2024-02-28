@@ -20,7 +20,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import kotlin.test.assertTrue
 
-internal const val BANNED_TARGETS_PROPERTY_NAME = "binary.compatibility.validator.klib.targets.blacklist.for.testing"
+internal const val BANNED_TARGETS_PROPERTY_NAME = "binary.compatibility.validator.klib.targets.disabled.for.testing"
 
 private fun KLibVerificationTests.checkKlibDump(
     buildResult: BuildResult,

@@ -16,7 +16,6 @@ import org.jetbrains.kotlin.konan.target.HostManager
 import org.jetbrains.kotlin.library.abi.ExperimentalLibraryAbiReader
 import org.jetbrains.kotlin.library.abi.LibraryAbiReader
 import java.io.*
-import kotlin.text.split
 
 @OptIn(ExperimentalBCVApi::class, ExperimentalLibraryAbiReader::class)
 public class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
@@ -330,7 +329,7 @@ private inline fun <reified T : Task> Project.task(
     noinline configuration: T.() -> Unit,
 ): TaskProvider<T> = tasks.register(name, T::class.java, Action(configuration))
 
-private const val BANNED_TARGETS_PROPERTY_NAME = "binary.compatibility.validator.klib.targets.blacklist.for.testing"
+private const val BANNED_TARGETS_PROPERTY_NAME = "binary.compatibility.validator.klib.targets.disabled.for.testing"
 private const val KLIB_DUMPS_DIRECTORY = "klib"
 private const val KLIB_INFERRED_DUMPS_DIRECTORY = "klib-all"
 

@@ -99,9 +99,20 @@ public open class KlibValidationSettings {
      */
     public var enabled: Boolean = false
     /**
-     * Specify which version of signature KLib ABI dump should contain.
+     * Specifies which version of signature KLib ABI dump should contain.
+     * By default, or when explicitly set to null, the latest supported version will be used.
+     *
+     * This option covers some advanced scenarios and does not require any configuration by default.
+     *
+     * A linker uses signatures to look up symbols, thus signature changes brake binary compatibility and
+     * should be tracked. Signature format itself is not stabilized yet and may change in the future. In that case,
+     * a new version of a signature will be introduced. Change of a signature version will be reflected in a dump
+     * causing a validation failure even if declarations itself remained unchanged.
+     * However, if a klib supports multiple signature versions simultaneously, one my explicitly specify the version
+     * that will be dumped to prevent changes in a dump file.
      */
-    public var signatureVersion: Int = 2
+    public var signatureVersion: Int? = null
+
     /**
      * Fail validation if some build targets are not supported by the host compiler.
      * By default, ABI dumped only for supported files will be validated. This option makes validation behavior
@@ -109,7 +120,7 @@ public open class KlibValidationSettings {
      */
     public var strictValidation: Boolean = false
     /**
-     * For declarations available only on some targets, replace a comment listing all targets
+     * For declarations available only on some targets, replace a comment listing these targets
      * with a short alias.
      *
      * Group aliases are based on [the default hierarchy template](https://kotlinlang.org/docs/multiplatform-hierarchy.html#see-the-full-hierarchy-template)

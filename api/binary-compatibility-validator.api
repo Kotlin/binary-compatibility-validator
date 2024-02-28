@@ -58,11 +58,11 @@ public abstract interface annotation class kotlinx/validation/ExternalApi : java
 public class kotlinx/validation/KlibValidationSettings {
 	public fun <init> ()V
 	public final fun getEnabled ()Z
-	public final fun getSignatureVersion ()I
+	public final fun getSignatureVersion ()Ljava/lang/Integer;
 	public final fun getStrictValidation ()Z
 	public final fun getUseTargetGroupAliases ()Z
 	public final fun setEnabled (Z)V
-	public final fun setSignatureVersion (I)V
+	public final fun setSignatureVersion (Ljava/lang/Integer;)V
 	public final fun setStrictValidation (Z)V
 	public final fun setUseTargetGroupAliases (Z)V
 }

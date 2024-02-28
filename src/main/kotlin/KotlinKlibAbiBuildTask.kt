@@ -71,7 +71,7 @@ public abstract class KotlinKlibAbiBuildTask : BuildTaskBase() {
             throw IllegalStateException("Can't read a klib: ${klibFile.singleFile}", e)
         }
 
-        val supportedVersions = parsedAbi.signatureVersions.asSequence()
+        val supportedVersions = parsedAbi.signatureVersions.asSequence().filter { it.isSupportedByAbiReader }
         val sigVersion = if (signatureVersion != null) {
             val versionNumbers = supportedVersions.map { it.versionNumber }.toSortedSet()
             if (signatureVersion !in versionNumbers) {
