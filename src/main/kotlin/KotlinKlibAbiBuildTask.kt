@@ -87,7 +87,7 @@ public abstract class KotlinKlibAbiBuildTask : BuildTaskBase() {
         }
 
         outputApiFile.bufferedWriter().use {
-            LibraryAbiRenderer.render(parsedAbi, it, AbiRenderingSettings(sigVersion))
+            LibraryAbiRenderer.render(parsedAbi, it, AbiRenderingSettings(sigVersion, renderManifest = true))
         }
     }
 }

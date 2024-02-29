@@ -71,8 +71,6 @@ public abstract class KotlinKlibExtractSupportedTargetsAbiTask : DefaultTask() {
     }
 
     private fun canUseGroupAliases(): Boolean {
-        if (!groupTargetNames) return false
-        val clashingTargets = targets.get().intersect(TargetHierarchy.nonLeafTargets())
-        return clashingTargets.isEmpty()
+        return groupTargetNames
     }
 }

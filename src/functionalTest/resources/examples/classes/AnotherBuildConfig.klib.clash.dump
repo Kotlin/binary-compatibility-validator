@@ -1,8 +1,9 @@
 // Merged KLib ABI Dump
-// Targets: [linux, linuxArm64]
+// Targets: [androidNativeArm32, androidNativeArm64, androidNativeX64, androidNativeX86, linux.linuxX64, linuxArm64, mingwX64]
+// Alias: linux => [linux.linuxX64, linuxArm64]
 // Rendering settings:
 // - Signature version: 2
-// - Show manifest properties: false
+// - Show manifest properties: true
 // - Show declarations: true
 
 // Library unique name: <testproject>
@@ -12,3 +13,5 @@ final class org.different.pack/BuildConfig { // org.different.pack/BuildConfig|n
     final val p1 // org.different.pack/BuildConfig.p1|{}p1[0]
         final fun <get-p1>(): kotlin/Int // org.different.pack/BuildConfig.p1.<get-p1>|<get-p1>(){}[0]
 }
+// Targets: [linux]
+final fun (org.different.pack/BuildConfig).org.different.pack/linuxArm64Specific(): kotlin/Int // org.different.pack/linuxArm64Specific|linuxArm64Specific@org.different.pack.BuildConfig(){}[0]

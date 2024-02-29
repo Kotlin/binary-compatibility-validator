@@ -5,9 +5,12 @@
 
 package kotlinx.validation.klib
 
+import org.jetbrains.kotlin.konan.target.KonanTarget
 import org.junit.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class TargetHierarchyTest {
     @Test
@@ -32,6 +35,20 @@ class TargetHierarchyTest {
         assertEquals(setOf("linuxX64"), TargetHierarchy.targets("linuxX64"))
         assertEquals(setOf("macosX64", "macosArm64"), TargetHierarchy.targets("macos"))
         assertEquals(emptySet(), TargetHierarchy.targets("unknown"))
+    }
+
+    @Test
+    fun testEveryMappedTargetIsWithinTheHierarchy() {
+        konanTargetNameMapping.forEach { (underlyingTarget, name) ->
+            assertNotNull(TargetHierarchy.parent(name),
+                "Target $name.$underlyingTarget is missing from the hierarchy.")
+        }
+    }
+
+    @Test
+    fun testAllTargetsAreMapped() {
+        val notMappedTargets = KonanTarget.predefinedTargets.keys.subtract(konanTargetNameMapping.keys)
+        assertTrue(notMappedTargets.isEmpty(), "Following targets are not mapped: $notMappedTargets")
     }
 
     @OptIn(ExperimentalStdlibApi::class)

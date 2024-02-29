@@ -61,15 +61,12 @@ public abstract class KotlinKlibMergeAbiTask : DefaultTask() {
     internal fun merge() {
         val builder = KlibAbiDumpMerger()
         targets.forEach { targetName ->
-            val target = Target(targetName)
-            builder.addIndividualDump(target, targetToFile[targetName]!!.resolve(dumpFileName))
+            builder.addIndividualDump(targetName, targetToFile[targetName]!!.resolve(dumpFileName))
         }
         mergedFile.bufferedWriter().use { builder.dump(it, KlibAbiDumpFormat(useGroupAliases = canUseGroupAliases())) }
     }
 
     private fun canUseGroupAliases(): Boolean {
-        if (!groupTargetNames) return false
-        val clashingTargets = targets.intersect(TargetHierarchy.nonLeafTargets())
-        return clashingTargets.isEmpty()
+        return groupTargetNames
     }
 }

@@ -3,7 +3,7 @@
 // Alias: androidNative => [androidNativeArm32, androidNativeArm64, androidNativeX64, androidNativeX86]
 // Rendering settings:
 // - Signature version: 2
-// - Show manifest properties: false
+// - Show manifest properties: true
 // - Show declarations: true
 
 // Library unique name: <testproject>

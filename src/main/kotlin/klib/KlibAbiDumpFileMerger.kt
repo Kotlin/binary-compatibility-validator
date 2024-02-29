@@ -8,7 +8,35 @@ package kotlinx.validation.klib
 import java.io.File
 import java.nio.file.Files
 
-internal data class Target(val name: String)
+/**
+ * Target name consisting of two parts: a [name] that could be configured by a user, and an [underlyingTarget]
+ * that names a target platform and could not be configured by a user.
+ *
+ * When serialized, the target represented as a tuple `<name>.<underlyingTarget>`, like `ios.iosArm64`.
+ * If both names are the same (they are by default, unless a user decides to use a custom name), the serialized
+ * from is shortened to a single term. For example, `macosArm64.macosArm64` and `macosArm64` are a long and a short
+ * serialized forms of the same target.
+ */
+internal data class Target(val name: String, val underlyingTarget: String) {
+    companion object {
+        fun parse(line: String): Target {
+            if (!line.contains('.')) {
+                return Target(line)
+            }
+            val parts = line.split('.')
+            if (parts.size != 2 || parts.any { it.isBlank() }) {
+                throw IllegalStateException(
+                    "Target has illegal name format: \"$line\", expected: <target name>.<underlying target name>"
+                )
+            }
+            return Target(parts[0], parts[1])
+        }
+    }
+
+    override fun toString(): String = if (name == underlyingTarget) name else "$name.$underlyingTarget"
+}
+
+internal fun Target(name: String) = Target(name, name)
 
 internal class LinesProvider(private val lines: Iterator<String>) : Iterator<String> {
     private var nextLine: String? = null
@@ -46,6 +74,10 @@ private const val TARGETS_LIST_SUFFIX = "]"
 private const val TARGETS_DELIMITER = ", "
 private const val CLASS_DECLARATION_TERMINATOR = "}"
 private const val INDENT_WIDTH = 4
+private const val ALIAS_PREFIX = "// Alias: "
+private const val PLATFORM_PREFIX = "// Platform: "
+private const val NATIVE_TARGETS_PREFIX = "// Native targets: "
+private const val LIBRARY_NAME_PREFIX = "// Library unique name:"
 
 private fun String.depth(): Int {
     val indentation = this.takeWhile { it == ' ' }.count()
@@ -62,7 +94,7 @@ private fun parseBcvTargetsLine(line: String): Set<Target> {
     }
     return trimmedLine.substring(TARGETS_LIST_PREFIX.length, trimmedLine.length - 1)
         .split(TARGETS_DELIMITER)
-        .map { Target(it) }
+        .map { Target.parse(it) }
         .toSet()
 }
 
@@ -70,6 +102,18 @@ internal data class KlibAbiDumpFormat(
     val includeTargets: Boolean = true,
     val useGroupAliases: Boolean = false
 )
+
+private class KlibAbiDumpHeader(
+    val content: List<String>,
+    val underlyingTarget: String?
+) {
+    fun extractTarget(targetName: String): Target {
+        if (underlyingTarget == "wasm") {
+            return Target(targetName)
+        }
+        return Target(targetName, underlyingTarget ?: targetName)
+    }
+}
 
 /**
  * A class representing a textual KLib ABI dump, either a regular one, or a merged.
@@ -87,38 +131,48 @@ internal class KlibAbiDumpMerger {
     public fun loadMergedDump(file: File) {
         require(file.exists()) { "File does not exist: $file" }
         Files.lines(file.toPath()).use {
-            mergeFile(emptySet(), LinesProvider(it.iterator()))
+            mergeFile(true, null, LinesProvider(it.iterator()))
         }
     }
 
-    public fun addIndividualDump(target: Target, file: File) {
+    public fun addIndividualDump(customTargetName: String, file: File) {
         require(file.exists()) { "File does not exist: $file" }
         Files.lines(file.toPath()).use {
-            mergeFile(setOf(target), LinesProvider(it.iterator()))
+            mergeFile(false, customTargetName, LinesProvider(it.iterator()))
         }
     }
 
-    private fun mergeFile(targets: Set<Target>, lines: LinesProvider) {
-        val isMergedFile = targets.isEmpty()
-        if (isMergedFile) check(this.targetsMut.isEmpty()) { "Merged dump could only be loaded once." }
+    public fun addIndividualDump(file: File) {
+        require(file.exists()) { "File does not exist: $file" }
+        Files.lines(file.toPath()).use {
+            mergeFile(false, null, LinesProvider(it.iterator()))
+        }
+    }
 
+    private fun mergeFile(isMergedFile: Boolean, targetName: String?, lines: LinesProvider) {
+        if (isMergedFile) check(this.targetsMut.isEmpty()) { "Merged dump could only be loaded once." }
         lines.checkFileFormat(isMergedFile)
 
-        val bcvTargets = if (isMergedFile) {
-            lines.parseTargets()
-        } else {
-            targets
+        val aliases = mutableMapOf<String, Set<Target>>()
+        val bcvTargets = mutableSetOf<Target>()
+        if (isMergedFile) {
+            bcvTargets.addAll(lines.parseTargets())
+            aliases.putAll(lines.parseAliases())
         }
-        val aliases = if (isMergedFile) {
-            lines.parseAliases()
-        } else {
-            emptyMap()
-        }
-
         val header = lines.parseFileHeader()
+        if (!isMergedFile) {
+            if (targetName == null && header.underlyingTarget == "wasm") {
+                throw IllegalStateException(
+                    "Currently, there is no way to distinguish dumps generated for " +
+                            "different Wasm targets (wasmJs and wasmWasi), " +
+                            "please specify the actual target name explicitly"
+                )
+            }
+            bcvTargets.add(header.extractTarget(targetName ?: header.underlyingTarget!!))
+        }
         if (isMergedFile || this.targetsMut.isEmpty()) {
-            headerContent.addAll(header)
-        } else if (headerContent != header) {
+            headerContent.addAll(header.content)
+        } else if (headerContent != header.content) {
             throw IllegalStateException("File header doesn't match the header of other files")
         }
         this.targetsMut.addAll(bcvTargets)
@@ -188,9 +242,9 @@ internal class KlibAbiDumpMerger {
 
     private fun LinesProvider.parseAliases(): Map<String, Set<Target>> {
         val aliases = mutableMapOf<String, Set<Target>>()
-        while (peek()?.startsWith("// Alias: ") == true) {
+        while (peek()?.startsWith(ALIAS_PREFIX) == true) {
             val line = next()
-            val trimmedLine = line.substring("// Alias: ".length)
+            val trimmedLine = line.substring(ALIAS_PREFIX.length)
             val separatorIdx = trimmedLine.indexOf(" => [")
             if (separatorIdx == -1 || !trimmedLine.endsWith(']')) {
                 throw IllegalStateException("Invalid alias line: $line")
@@ -208,18 +262,50 @@ internal class KlibAbiDumpMerger {
         return aliases
     }
 
-    private fun LinesProvider.parseFileHeader(): List<String> {
+    private fun LinesProvider.parseFileHeader(): KlibAbiDumpHeader {
         val header = mutableListOf<String>()
+        var targets: String? = null
+        var platform: String? = null
+
+        // read the common head first
         while (hasNext()) {
             val next = peek()!!
-            if ((next.startsWith(COMMENT_PREFIX) && !next.startsWith(TARGETS_LIST_PREFIX)) || next.isBlank()) {
-                header.add(next)
-                next()
-            } else {
+            if (next.isNotBlank() && !next.startsWith(COMMENT_PREFIX)) {
+                throw IllegalStateException("Library header has invalid format at line \"$next\"")
+            }
+            header.add(next)
+            next()
+            if (next.startsWith(LIBRARY_NAME_PREFIX)) {
                 break
             }
         }
-        return header
+        // then try to parse a manifest
+        while (hasNext()) {
+            val next = peek()!!
+            if (!next.startsWith(COMMENT_PREFIX)) break
+            next()
+            when {
+                next.startsWith(PLATFORM_PREFIX) -> {
+                    platform = next.split(": ")[1].trim()
+                }
+
+                next.startsWith(NATIVE_TARGETS_PREFIX) -> {
+                    targets = next.split(": ")[1].trim()
+                }
+            }
+        }
+        if (platform == null) {
+            return KlibAbiDumpHeader(header, null)
+        }
+        // TODO
+        if (targets?.contains(",") == true) throw IllegalStateException("Multi-target klibs are not supported.")
+        val underlyingTarget = when (platform) {
+            "NATIVE" -> konanTargetNameMapping[targets]
+                ?: throw IllegalStateException("The manifest is missing targets for native platform")
+
+            else -> platform.toLowerCase()
+        }
+        return KlibAbiDumpHeader(header, underlyingTarget)
     }
 
     private fun LinesProvider.checkFileFormat(isMergedFile: Boolean) {
@@ -297,11 +383,11 @@ internal class KlibAbiDumpMerger {
     private fun createFormatter(dumpFormat: KlibAbiDumpFormat): KLibsTargetsFormatter {
         return if (dumpFormat.useGroupAliases) {
             for (target in targets) {
-                val node = TargetHierarchy.hierarchyIndex[target.name]
+                val node = TargetHierarchy.hierarchyIndex[target.underlyingTarget]
                 if (node != null && node.allLeafs.size == 1 && node.allLeafs.first() != node.node.name) {
                     throw IllegalStateException(
                         "Can't use target aliases as one of the this dump's targets" +
-                                " has the same name as a group in the default targets hierarchy: ${target.name}"
+                                " has the same name as a group in the default targets hierarchy: $target"
                     )
                 }
             }
@@ -511,8 +597,8 @@ private object DeclarationsComparator : Comparator<DeclarationContainer> {
             c0.text.compareTo(c1.text)
         } else {
             if (c0.targets.size == c1.targets.size) {
-                val c0targets = c0.targets.asSequence().map { it.name }.sorted().iterator()
-                val c1targets = c1.targets.asSequence().map { it.name }.sorted().iterator()
+                val c0targets = c0.targets.asSequence().map { it.toString() }.sorted().iterator()
+                val c1targets = c1.targets.asSequence().map { it.toString() }.sorted().iterator()
                 var result = 0
                 while (c1targets.hasNext() && c0targets.hasNext() && result == 0) {
                     result = c0targets.next().compareTo(c1targets.next())
@@ -538,8 +624,8 @@ private object DefaultFormatter : KLibsTargetsFormatter {
     }
 
     override fun formatDeclarationTargets(targets: Set<Target>): String {
-        return targets.sortedBy { it.name }
-            .joinToString(TARGETS_DELIMITER, TARGETS_LIST_PREFIX, TARGETS_LIST_SUFFIX) { it.name }
+        return targets.map { it.toString() }.sorted()
+            .joinToString(TARGETS_DELIMITER, TARGETS_LIST_PREFIX, TARGETS_LIST_SUFFIX) { it }
     }
 }
 
@@ -556,9 +642,9 @@ private class GroupingFormatter(klibDump: KlibAbiDumpMerger) : KLibsTargetsForma
             .sortedWith(compareBy({ it.value.allLeafs.size }, { it.key }))
             .forEach {
                 // intersect with all targets to use only enabled targets in aliases
-                val availableTargets = it.value.allLeafs.map {
-                    Target(it)
-                }.intersect(allTargets)
+                // intersection is based on underlying target name as a set of such names is fixed
+                val leafs = it.value.allLeafs
+                val availableTargets = allTargets.asSequence().filter { leafs.contains(it.underlyingTarget) }.toSet()
                 if (availableTargets.isNotEmpty()) {
                     aliasesBuilder.add(Alias(it.key, availableTargets))
                 }
@@ -597,15 +683,15 @@ private class GroupingFormatter(klibDump: KlibAbiDumpMerger) : KLibsTargetsForma
     override fun formatHeader(targets: Set<Target>): String {
         return buildString {
             append(
-                targets.asSequence().map { it.name }.sorted().joinToString(
+                targets.asSequence().map { it.toString() }.sorted().joinToString(
                     prefix = TARGETS_LIST_PREFIX,
                     postfix = TARGETS_LIST_SUFFIX,
                     separator = TARGETS_DELIMITER
                 )
             )
             aliases.forEach {
-                append("\n// Alias: ${it.name} => [")
-                append(it.targets.map { it.name }.sorted().joinToString(TARGETS_DELIMITER))
+                append("\n$ALIAS_PREFIX${it.name} => [")
+                append(it.targets.map { it.toString() }.sorted().joinToString(TARGETS_DELIMITER))
                 append(TARGETS_LIST_SUFFIX)
             }
         }
@@ -620,7 +706,7 @@ private class GroupingFormatter(klibDump: KlibAbiDumpMerger) : KLibsTargetsForma
                 resultingTargets.add(alias.name)
             }
         }
-        resultingTargets.addAll(targetsMut.map { it.name })
+        resultingTargets.addAll(targetsMut.map { it.toString() })
         return resultingTargets.sorted().joinToString(
             prefix = TARGETS_LIST_PREFIX,
             postfix = TARGETS_LIST_SUFFIX,

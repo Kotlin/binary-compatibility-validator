@@ -33,6 +33,7 @@ internal object TargetHierarchy {
         Node("js"),
         Node("wasmJs"),
         Node("wasmWasi"),
+        Node("wasm32"),
         Node(
             "native",
             Node(
@@ -44,7 +45,9 @@ internal object TargetHierarchy {
                 "linux",
                 Node("linuxArm64"),
                 Node("linuxArm32Hfp"),
-                Node("linuxX64")
+                Node("linuxX64"),
+                Node("linuxMips32"),
+                Node("linuxMipsel32")
             ),
             Node(
                 "androidNative",
@@ -113,14 +116,34 @@ internal object TargetHierarchy {
     fun targets(targetOrGroup: String): Set<String> {
         return hierarchyIndex[targetOrGroup]?.allLeafs ?: emptySet()
     }
-
-    fun nonLeafTargets(): Set<String> {
-        return hierarchyIndex.values.asSequence()
-            .filter {
-                it.allLeafs.size > 1 || (it.allLeafs.size == 1 && it.allLeafs.first() != it.node.name)
-            }
-            .map { it.node.name }
-            .toSet()
-    }
 }
 
+internal val konanTargetNameMapping = mapOf(
+    "android_x64" to "androidNativeX64",
+    "android_x86" to "androidNativeX86",
+    "android_arm32" to "androidNativeArm32",
+    "android_arm64" to "androidNativeArm64",
+    "ios_arm64" to "iosArm64",
+    "ios_x64" to "iosX64",
+    "ios_simulator_arm64" to "iosSimulatorArm64",
+    "watchos_arm32" to "watchosArm32",
+    "watchos_arm64" to "watchosArm64",
+    "watchos_x64" to "watchosX64",
+    "watchos_simulator_arm64" to "watchosSimulatorArm64",
+    "watchos_device_arm64" to "watchosDeviceArm64",
+    "tvos_arm64" to "tvosArm64",
+    "tvos_x64" to "tvosX64",
+    "tvos_simulator_arm64" to "tvosSimulatorArm64",
+    "linux_x64" to "linuxX64",
+    "mingw_x64" to "mingwX64",
+    "macos_x64" to "macosX64",
+    "macos_arm64" to "macosArm64",
+    "linux_arm64" to "linuxArm64",
+    "ios_arm32" to "iosArm32",
+    "watchos_x86" to "watchosX86",
+    "linux_arm32_hfp" to "linuxArm32Hfp",
+    "mingw_x86" to "mingwX86",
+    "linux_mips32" to "linuxMips32",
+    "linux_mipsel32" to "linuxMipsel32",
+    "wasm32" to "wasm32"
+)

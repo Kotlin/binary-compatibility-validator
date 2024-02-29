@@ -5,6 +5,8 @@
 
 package kotlinx.validation
 
+import kotlinx.validation.klib.Target
+import kotlinx.validation.klib.konanTargetNameMapping
 import org.gradle.api.*
 import org.gradle.api.plugins.*
 import org.gradle.api.provider.*
@@ -12,6 +14,7 @@ import org.gradle.api.tasks.*
 import org.jetbrains.kotlin.gradle.dsl.*
 import org.jetbrains.kotlin.gradle.plugin.*
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+import org.jetbrains.kotlin.gradle.targets.js.KotlinJsTarget
 import org.jetbrains.kotlin.konan.target.HostManager
 import org.jetbrains.kotlin.library.abi.ExperimentalLibraryAbiReader
 import org.jetbrains.kotlin.library.abi.LibraryAbiReader
@@ -534,7 +537,9 @@ private class KlibValidationPipelineBuilder(
             }
             // The actual merge will happen here, where we'll try to infer a dump for the unsupported target and merge
             // it with other supported target dumps.
-            val proxy = unsupportedTargetDumpProxy(klibApiDir, targetConfig, apiBuildDir, supportedTargets.get())
+            val proxy = unsupportedTargetDumpProxy(klibApiDir, targetConfig,
+                extractUnderlyingTarget(currentTarget),
+                apiBuildDir, supportedTargets.get())
             mergeInferredTask.configure {
                 it.addInput(targetName, apiBuildDir)
                 it.dependsOn(proxy)
@@ -612,7 +617,9 @@ private class KlibValidationPipelineBuilder(
 
     private fun Project.unsupportedTargetDumpProxy(
         klibApiDir: Provider<File>,
-        targetConfig: TargetConfig, apiBuildDir: File,
+        targetConfig: TargetConfig,
+        underlyingTarget: String,
+        apiBuildDir: File,
         supportedTargets: Set<String>
     ): TaskProvider<KotlinKlibInferAbiForUnsupportedTargetTask> {
         val targetName = targetConfig.targetName!!
@@ -625,7 +632,8 @@ private class KlibValidationPipelineBuilder(
             inputImageFile = klibApiDir.get().resolve(klibDumpFileName)
             outputApiDir = apiBuildDir.toString()
             outputFile = apiBuildDir.resolve(klibDumpFileName)
-            unsupportedTarget = targetConfig.targetName
+            unsupportedTargetName = targetConfig.targetName
+            unsupportedUnderlyingTarget = underlyingTarget
             dumpFileName = klibDumpFileName
             dependsOn(project.tasks.withType(KotlinKlibAbiBuildTask::class.java))
         }
@@ -645,6 +653,13 @@ private val KotlinTarget.jvmBased: Boolean
         val platformType = this.platformType
         return platformType == KotlinPlatformType.jvm || platformType == KotlinPlatformType.androidJvm
     }
+
+private fun extractUnderlyingTarget(target: KotlinTarget): String {
+    return when (target) {
+        is KotlinNativeTarget -> konanTargetNameMapping[target.konanTarget.name]!!
+        else -> target.name
+    }
+}
 
 private val Project.kotlinMultiplatform
     get() = extensions.getByName("kotlin") as KotlinMultiplatformExtension

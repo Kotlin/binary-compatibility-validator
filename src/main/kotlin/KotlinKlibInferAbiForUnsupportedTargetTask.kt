@@ -32,7 +32,13 @@ public abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask()
      * The name of a target to infer a dump for.
      */
     @Input
-    public lateinit var unsupportedTarget: String
+    public lateinit var unsupportedTargetName: String
+
+    /**
+     * The name of a target to infer a dump for.
+     */
+    @Input
+    public lateinit var unsupportedUnderlyingTarget: String
 
     /**
      * A root directory containing dumps successfully generated for each supported target.
@@ -67,8 +73,9 @@ public abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask()
 
     @TaskAction
     internal fun generate() {
+        val unsupportedTarget = Target(unsupportedTargetName, unsupportedUnderlyingTarget)
         // find a set of supported targets that are closer to unsupported target in the hierarchy
-        val matchingTargets = findMatchingTargets()
+        val matchingTargets = findMatchingTargets(unsupportedTarget)
         val target2outFile = supportedTargets.keysToMap {
             File(outputApiDir).parentFile.resolve(it).resolve(dumpFileName)
         }
@@ -77,7 +84,7 @@ public abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask()
         // a common ABI that should be shared by the unsupported target as well
         val commonDump = KlibAbiDumpMerger()
         for (target in matchingTargets) {
-            commonDump.addIndividualDump(Target(target), target2outFile[target]!!)
+            commonDump.addIndividualDump(target, target2outFile[target]!!)
         }
         commonDump.retainCommonAbi()
 
@@ -87,7 +94,7 @@ public abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask()
         if (inputImageFile.exists()) {
             if (inputImageFile.length() > 0L) {
                 image.loadMergedDump(inputImageFile)
-                image.retainTargetSpecificAbi(Target(unsupportedTarget))
+                image.retainTargetSpecificAbi(unsupportedTarget)
                 // merge common ABI with target-specific ABI
                 commonDump.mergeTargetSpecific(image)
             } else {
@@ -98,7 +105,7 @@ public abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask()
                 )
             }
         }
-        commonDump.overrideTargets(setOf(Target(unsupportedTarget)))
+        commonDump.overrideTargets(setOf(unsupportedTarget))
 
         outputFile.bufferedWriter().use {
             commonDump.dump(it, KlibAbiDumpFormat(includeTargets = false))
@@ -113,8 +120,8 @@ public abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask()
         )
     }
 
-    private fun findMatchingTargets(): Set<String> {
-        var currentGroup: String? = unsupportedTarget
+    private fun findMatchingTargets(unsupportedTarget: Target): Set<String> {
+        var currentGroup: String? = unsupportedTarget.underlyingTarget
         while (currentGroup != null) {
             // If a current group has some supported targets, use them.
             val groupTargets = TargetHierarchy.targets(currentGroup).intersect(supportedTargets)

@@ -1,8 +1,8 @@
 // Merged KLib ABI Dump
-// Targets: [linuxA, linuxB]
+// Targets: [linuxA.linuxX64, linuxB.linuxX64]
 // Rendering settings:
 // - Signature version: 2
-// - Show manifest properties: false
+// - Show manifest properties: true
 // - Show declarations: true
 
 // Library unique name: <testproject>

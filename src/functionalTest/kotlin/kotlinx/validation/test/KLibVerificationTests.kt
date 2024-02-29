@@ -357,6 +357,30 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
     }
 
     @Test
+    fun `infer a dump for a target with custom name`() {
+        val runner = test {
+            settingsGradleKts {
+                resolve("/examples/gradle/settings/settings-name-testproject.gradle.kts")
+            }
+            buildGradleKts {
+                resolve("/examples/gradle/base/withNativePluginAndNoTargets.gradle.kts")
+            }
+            additionalBuildConfig("/examples/gradle/configuration/grouping/clashingTargetNames.gradle.kts")
+            addToSrcSet("/examples/classes/TopLevelDeclarations.kt")
+            addToSrcSet("/examples/classes/AnotherBuildConfigLinuxArm64.kt", "linuxMain")
+            runner {
+                arguments.add("-P$BANNED_TARGETS_PROPERTY_NAME=linuxx")
+                arguments.add(":klibApiDump")
+            }
+        }
+
+        checkKlibDump(
+            runner.build(), "/examples/classes/TopLevelDeclarations.klib.with.linux.dump",
+            dumpTask = ":klibApiDump"
+        )
+    }
+
+    @Test
     fun `klibDump should fail when the only target in the project is disabled`() {
         val runner = test {
             settingsGradleKts {
@@ -429,7 +453,7 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
     }
 
     @Test
-    fun `target name grouping should be disabled on group name clash`() {
+    fun `target name clashing with a group name`() {
         val runner = test {
             settingsGradleKts {
                 resolve("/examples/gradle/settings/settings-name-testproject.gradle.kts")
@@ -439,6 +463,10 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
                 resolve("/examples/gradle/configuration/grouping/clashingTargetNames.gradle.kts")
             }
             addToSrcSet("/examples/classes/AnotherBuildConfig.kt")
+            addToSrcSet("/examples/classes/AnotherBuildConfigLinuxArm64.kt", "linuxArm64Main")
+            kotlin("AnotherBuildConfigLinuxX64.kt", "linuxMain") {
+                resolve("/examples/classes/AnotherBuildConfigLinuxArm64.kt")
+            }
             runner {
                 arguments.add(":klibApiDump")
             }
