@@ -369,13 +369,13 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
             addToSrcSet("/examples/classes/TopLevelDeclarations.kt")
             addToSrcSet("/examples/classes/AnotherBuildConfigLinuxArm64.kt", "linuxMain")
             runner {
-                arguments.add("-P$BANNED_TARGETS_PROPERTY_NAME=linuxx")
+                arguments.add("-P$BANNED_TARGETS_PROPERTY_NAME=linux")
                 arguments.add(":klibApiDump")
             }
         }
 
         checkKlibDump(
-            runner.build(), "/examples/classes/TopLevelDeclarations.klib.with.linux.dump",
+            runner.build(), "/examples/classes/TopLevelDeclarations.klib.with.guessed.linux.dump",
             dumpTask = ":klibApiDump"
         )
     }

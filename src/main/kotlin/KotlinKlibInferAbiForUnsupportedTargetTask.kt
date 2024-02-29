@@ -10,6 +10,7 @@ import kotlinx.validation.klib.KlibAbiDumpMerger
 import kotlinx.validation.klib.Target
 import kotlinx.validation.klib.TargetHierarchy
 import org.gradle.api.DefaultTask
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.*
 import org.jetbrains.kotlin.utils.keysToMap
 import java.io.File
@@ -51,7 +52,7 @@ public abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask()
      * Set of all supported targets.
      */
     @Input
-    public lateinit var supportedTargets: Set<String>
+    public lateinit var supportedTargets: Provider<Set<String>>
 
     /**
      * Previously generated merged ABI dump file, the golden image every dump should be verified against.
@@ -76,7 +77,7 @@ public abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask()
         val unsupportedTarget = Target(unsupportedTargetName, unsupportedUnderlyingTarget)
         // find a set of supported targets that are closer to unsupported target in the hierarchy
         val matchingTargets = findMatchingTargets(unsupportedTarget)
-        val target2outFile = supportedTargets.keysToMap {
+        val target2outFile = supportedTargets.get().keysToMap {
             File(outputApiDir).parentFile.resolve(it).resolve(dumpFileName)
         }
 
@@ -124,7 +125,7 @@ public abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask()
         var currentGroup: String? = unsupportedTarget.underlyingTarget
         while (currentGroup != null) {
             // If a current group has some supported targets, use them.
-            val groupTargets = TargetHierarchy.targets(currentGroup).intersect(supportedTargets)
+            val groupTargets = TargetHierarchy.targets(currentGroup).intersect(supportedTargets.get())
             if (groupTargets.isNotEmpty()) {
                 return groupTargets
             }

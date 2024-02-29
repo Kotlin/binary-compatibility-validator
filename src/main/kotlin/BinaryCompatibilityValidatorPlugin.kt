@@ -5,7 +5,6 @@
 
 package kotlinx.validation
 
-import kotlinx.validation.klib.Target
 import kotlinx.validation.klib.konanTargetNameMapping
 import org.gradle.api.*
 import org.gradle.api.plugins.*
@@ -14,7 +13,6 @@ import org.gradle.api.tasks.*
 import org.jetbrains.kotlin.gradle.dsl.*
 import org.jetbrains.kotlin.gradle.plugin.*
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
-import org.jetbrains.kotlin.gradle.targets.js.KotlinJsTarget
 import org.jetbrains.kotlin.konan.target.HostManager
 import org.jetbrains.kotlin.library.abi.ExperimentalLibraryAbiReader
 import org.jetbrains.kotlin.library.abi.LibraryAbiReader
@@ -499,7 +497,7 @@ private class KlibValidationPipelineBuilder(
     ) {
         val kotlin = project.kotlinMultiplatform
 
-        val supportedTargets = supportedTargets()
+        val supportedTargetsProvider = supportedTargets()
         kotlin.targets.matching { it.emitsKlib }.configureEach { currentTarget ->
             val mainCompilations = currentTarget.mainCompilations
             if (mainCompilations.none()) {
@@ -509,8 +507,7 @@ private class KlibValidationPipelineBuilder(
             val targetName = currentTarget.targetName
             val targetConfig = TargetConfig(project, extension, targetName, intermediateFilesConfig)
             val apiBuildDir = targetConfig.apiDir.map { project.layout.buildDirectory.asFile.get().resolve(it) }.get()
-
-            val targetSupported = targetName in supportedTargets.get()
+            val targetSupported = targetIsSupported(currentTarget)
             // If a target is supported, the workflow is simple: create a dump, then merge it along with other dumps.
             if (targetSupported) {
                 mainCompilations.all {
@@ -539,7 +536,7 @@ private class KlibValidationPipelineBuilder(
             // it with other supported target dumps.
             val proxy = unsupportedTargetDumpProxy(klibApiDir, targetConfig,
                 extractUnderlyingTarget(currentTarget),
-                apiBuildDir, supportedTargets.get())
+                apiBuildDir, supportedTargetsProvider)
             mergeInferredTask.configure {
                 it.addInput(targetName, apiBuildDir)
                 it.dependsOn(proxy)
@@ -547,12 +544,20 @@ private class KlibValidationPipelineBuilder(
         }
         mergeTask.configure {
             it.doFirst {
-                if (supportedTargets.get().isEmpty()) {
+                if (supportedTargetsProvider.get().isEmpty()) {
                     throw IllegalStateException(
                         "KLib ABI dump/validation requires at least one enabled klib target, but none were found."
                     )
                 }
             }
+        }
+    }
+
+    private fun Project.targetIsSupported(target: KotlinTarget): Boolean {
+        if (bannedTargets().contains(target.targetName)) return false
+        return when(target) {
+            is KotlinNativeTarget -> HostManager().isEnabled(target.konanTarget)
+            else -> true
         }
     }
 
@@ -620,7 +625,7 @@ private class KlibValidationPipelineBuilder(
         targetConfig: TargetConfig,
         underlyingTarget: String,
         apiBuildDir: File,
-        supportedTargets: Set<String>
+        supportedTargets: Provider<Set<String>>
     ): TaskProvider<KotlinKlibInferAbiForUnsupportedTargetTask> {
         val targetName = targetConfig.targetName!!
         return project.task<KotlinKlibInferAbiForUnsupportedTargetTask>(targetConfig.apiTaskName("Infer")) {
