@@ -171,6 +171,38 @@ The table below summarizes different scenarios and how the two different approac
 
 The "guessing" approach should succeed it a broader spectrum of scenarios, so we decided to use it.
 
+### Target name representation
+
+Target name grouping and ABI dump inference described above heavily rely on target name.
+Everything works fine with default names unless a user decides to rename a target:
+```kotlin
+kotiln {
+    macosArm64("macos")
+    linuxArm64("linux")
+    iosArm64()
+}
+```
+There are two main issues related to the renaming:
+- target's name could no longer be found among targets constituting a target hierarchy (on the BCV side, not the KGP);
+- new target's name may clash with existing group names or other target names.
+
+However, a klib's manifest contains all the information required to find an actual underlying target (but it does
+not contain a custom name, though). And the same info could be included in a textual klib dump.
+
+To overcome the issue, it is proposed to represent target name as a tuple consisting of "visible" name
+and a canonical underlying target name: `name.canonicalName`.
+
+For the example mentioned above, target such fully qualified target names are:
+- `macos.macosArm64` for `macosArm64("macos")`;
+- `linux.linuxArm64` for `linuxArm64("linux")`;
+- `iosArm64.iosArm64` for `iosArm64()`.
+
+By default, when the visible and canonical names are the same, only one of them could be specified, so
+`iosArm64.iosArm64` could be shortened to `iosArm64`.
+
+Given such compound names, we can correctly perform grouping and inferring by relying only on the underlying canonical
+target name, not on the visible one.
+
 ### Programmatic API for KLib ABI validation
 
 To support scenarios when Gradle plugin could not be used (like in the case of Kotlin stdlib),
