@@ -25,7 +25,7 @@ import java.io.File
  * from it and merged into the common ABI extracted previously.
  * The resulting dump is then used as an inferred dump for the unsupported target.
  */
-public abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask() {
+internal abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask() {
     @get:Internal
     internal val projectName = project.name
 
@@ -33,44 +33,44 @@ public abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask()
      * The name of a target to infer a dump for.
      */
     @Input
-    public lateinit var unsupportedTargetName: String
+    lateinit var unsupportedTargetName: String
 
     /**
      * The name of a target to infer a dump for.
      */
     @Input
-    public lateinit var unsupportedTargetCanonicalName: String
+    lateinit var unsupportedTargetCanonicalName: String
 
     /**
      * A root directory containing dumps successfully generated for each supported target.
      * It is assumed that this directory contains subdirectories named after targets.
      */
     @InputFiles
-    public lateinit var outputApiDir: String
+    lateinit var outputApiDir: String
 
     /**
      * Set of all supported targets.
      */
     @Input
-    public lateinit var supportedTargets: Provider<Set<String>>
+    lateinit var supportedTargets: Provider<Set<String>>
 
     /**
      * Previously generated merged ABI dump file, the golden image every dump should be verified against.
      */
     @InputFiles
-    public lateinit var inputImageFile: File
+    lateinit var inputImageFile: File
 
     /**
      * The name of a dump file.
      */
     @Input
-    public lateinit var dumpFileName: String
+    lateinit var dumpFileName: String
 
     /**
      * A path to an inferred dump file.
      */
     @OutputFile
-    public lateinit var outputFile: File
+    lateinit var outputFile: File
 
     @TaskAction
     internal fun generate() {

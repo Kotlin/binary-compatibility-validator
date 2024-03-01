@@ -16,7 +16,7 @@ import java.io.File
 /**
  * Extracts dump for targets supported by the host compiler from a merged API dump stored in a project.
  */
-public abstract class KotlinKlibExtractSupportedTargetsAbiTask : DefaultTask() {
+internal abstract class KotlinKlibExtractSupportedTargetsAbiTask : DefaultTask() {
     @get:Internal
     internal val projectName = project.name
 
@@ -24,31 +24,31 @@ public abstract class KotlinKlibExtractSupportedTargetsAbiTask : DefaultTask() {
      * Merged KLib dump that should be filtered by this task.
      */
     @InputFiles
-    public lateinit var inputAbiFile: File
+    lateinit var inputAbiFile: File
 
     /**
      * A path to the resulting dump file.
      */
     @OutputFile
-    public lateinit var outputAbiFile: File
+    lateinit var outputAbiFile: File
 
     /**
      * Provider returning targets supported by the host compiler.
      */
     @get:Input
-    public lateinit var targets: Provider<Set<String>>
+    lateinit var targets: Provider<Set<String>>
 
     /**
      * Refer to [KlibValidationSettings.strictValidation] for details.
      */
     @Input
-    public var strictValidation: Boolean = false
+    var strictValidation: Boolean = false
 
     /**
      * Refer to [KlibValidationSettings.useTargetGroupAliases] for details.
      */
     @Input
-    public var groupTargetNames: Boolean = true
+    var groupTargetNames: Boolean = true
 
     @TaskAction
     internal fun generate() {

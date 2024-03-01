@@ -7,8 +7,6 @@ package kotlinx.validation
 
 import kotlinx.validation.klib.KlibAbiDumpFormat
 import kotlinx.validation.klib.KlibAbiDumpMerger
-import kotlinx.validation.klib.Target
-import kotlinx.validation.klib.TargetHierarchy
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.*
 import java.io.File
@@ -16,7 +14,7 @@ import java.io.File
 /**
  * Merges multiple individual KLib ABI dumps into a single merged dump.
  */
-public abstract class KotlinKlibMergeAbiTask : DefaultTask() {
+internal abstract class KotlinKlibMergeAbiTask : DefaultTask() {
     private val targetToFile = mutableMapOf<String, File>()
 
     @get:Internal
@@ -26,7 +24,7 @@ public abstract class KotlinKlibMergeAbiTask : DefaultTask() {
      * Set of targets whose dumps should be merged.
      */
     @get:Input
-    public val targets: Set<String>
+    val targets: Set<String>
         get() = targetToFile.keys
 
     // Required to enforce task rerun on klibs update
@@ -39,19 +37,19 @@ public abstract class KotlinKlibMergeAbiTask : DefaultTask() {
      * A path to a resulting merged dump.
      */
     @OutputFile
-    public lateinit var mergedFile: File
+    lateinit var mergedFile: File
 
     /**
      * The name of a dump file.
      */
     @Input
-    public lateinit var dumpFileName: String
+    lateinit var dumpFileName: String
 
     /**
      * Refer to [KlibValidationSettings.useTargetGroupAliases] for details.
      */
     @Input
-    public var groupTargetNames: Boolean = true
+    var groupTargetNames: Boolean = true
 
     internal fun addInput(target: String, file: File) {
         targetToFile[target] = file
