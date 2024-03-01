@@ -615,4 +615,22 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
             assertTaskFailure(":klibApiCheck")
         }
     }
+
+    @Test
+    fun `validation should fail on target rename`() {
+        val runner = test {
+            baseProjectSetting()
+            addToSrcSet("/examples/classes/AnotherBuildConfig.kt")
+            abiFile(projectName = "testproject") {
+                resolve("/examples/classes/AnotherBuildConfig.klib.renamedTarget.dump")
+            }
+            runApiCheck()
+        }
+        runner.buildAndFail().apply {
+            Assertions.assertThat(output).contains(
+                "  -// Targets: [androidNativeArm32, androidNativeArm64, androidNativeX64, " +
+                        "androidNativeX86, linux.linuxArm64, linuxX64, mingwX64]"
+            )
+        }
+    }
 }

@@ -13,6 +13,8 @@ import org.gradle.api.tasks.*
 import org.jetbrains.kotlin.gradle.dsl.*
 import org.jetbrains.kotlin.gradle.plugin.*
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+import org.jetbrains.kotlin.gradle.targets.js.KotlinWasmTargetType
+import org.jetbrains.kotlin.gradle.targets.js.ir.KotlinJsIrTarget
 import org.jetbrains.kotlin.konan.target.HostManager
 import org.jetbrains.kotlin.library.abi.ExperimentalLibraryAbiReader
 import org.jetbrains.kotlin.library.abi.LibraryAbiReader
@@ -444,7 +446,7 @@ private class KlibValidationPipelineBuilder(
         group = "other"
         strictValidation = extension.klib.strictValidation
         groupTargetNames = extension.klib.useTargetGroupAliases
-        targets = supportedTargets()
+        supportedCanonicalTargets = supportedCanonicalTargetNames()
         inputAbiFile = klibApiDir.get().resolve(klibDumpFileName)
         outputAbiFile = klibOutputDir.resolve(klibDumpFileName)
     }
@@ -497,7 +499,7 @@ private class KlibValidationPipelineBuilder(
     ) {
         val kotlin = project.kotlinMultiplatform
 
-        val supportedTargetsProvider = supportedTargets()
+        val supportedTargetsProvider = supportedCanonicalTargetNames()
         kotlin.targets.matching { it.emitsKlib }.configureEach { currentTarget ->
             val mainCompilations = currentTarget.mainCompilations
             if (mainCompilations.none()) {
@@ -561,7 +563,7 @@ private class KlibValidationPipelineBuilder(
         }
     }
 
-    private fun Project.supportedTargets(): Provider<Set<String>> {
+    private fun Project.supportedCanonicalTargetNames(): Provider<Set<String>> {
         val banned = bannedTargets() // for testing only
         return project.provider {
             val hm = HostManager()
@@ -574,9 +576,8 @@ private class KlibValidationPipelineBuilder(
                         true
                     }
                 }
-                .map {
-                    it.targetName
-                }.toSet()
+                .map { extractUnderlyingTarget(it) }
+                .toSet()
         }
     }
 
@@ -660,9 +661,17 @@ private val KotlinTarget.jvmBased: Boolean
     }
 
 private fun extractUnderlyingTarget(target: KotlinTarget): String {
-    return when (target) {
-        is KotlinNativeTarget -> konanTargetNameMapping[target.konanTarget.name]!!
-        else -> target.name
+    if (target is KotlinNativeTarget) {
+        return konanTargetNameMapping[target.konanTarget.name]!!
+    }
+    return when (target.platformType) {
+        KotlinPlatformType.js -> "js"
+        KotlinPlatformType.wasm -> when ((target as KotlinJsIrTarget).wasmTargetType) {
+            KotlinWasmTargetType.WASI -> "wasmWasi"
+            KotlinWasmTargetType.JS -> "wasmJs"
+            else -> throw IllegalStateException("Unreachable")
+        }
+        else -> throw IllegalArgumentException("Unsupported platform type: ${target.platformType}")
     }
 }
 
