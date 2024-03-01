@@ -638,7 +638,7 @@ private class KlibValidationPipelineBuilder(
             outputApiDir = apiBuildDir.toString()
             outputFile = apiBuildDir.resolve(klibDumpFileName)
             unsupportedTargetName = targetConfig.targetName
-            unsupportedUnderlyingTarget = underlyingTarget
+            unsupportedTargetCanonicalName = underlyingTarget
             dumpFileName = klibDumpFileName
             dependsOn(project.tasks.withType(KotlinKlibAbiBuildTask::class.java))
         }

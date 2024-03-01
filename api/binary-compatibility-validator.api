@@ -125,23 +125,23 @@ public abstract class kotlinx/validation/KotlinKlibInferAbiForUnsupportedTargetT
 	public field outputApiDir Ljava/lang/String;
 	public field outputFile Ljava/io/File;
 	public field supportedTargets Lorg/gradle/api/provider/Provider;
+	public field unsupportedTargetCanonicalName Ljava/lang/String;
 	public field unsupportedTargetName Ljava/lang/String;
-	public field unsupportedUnderlyingTarget Ljava/lang/String;
 	public fun <init> ()V
 	public final fun getDumpFileName ()Ljava/lang/String;
 	public final fun getInputImageFile ()Ljava/io/File;
 	public final fun getOutputApiDir ()Ljava/lang/String;
 	public final fun getOutputFile ()Ljava/io/File;
 	public final fun getSupportedTargets ()Lorg/gradle/api/provider/Provider;
+	public final fun getUnsupportedTargetCanonicalName ()Ljava/lang/String;
 	public final fun getUnsupportedTargetName ()Ljava/lang/String;
-	public final fun getUnsupportedUnderlyingTarget ()Ljava/lang/String;
 	public final fun setDumpFileName (Ljava/lang/String;)V
 	public final fun setInputImageFile (Ljava/io/File;)V
 	public final fun setOutputApiDir (Ljava/lang/String;)V
 	public final fun setOutputFile (Ljava/io/File;)V
 	public final fun setSupportedTargets (Lorg/gradle/api/provider/Provider;)V
+	public final fun setUnsupportedTargetCanonicalName (Ljava/lang/String;)V
 	public final fun setUnsupportedTargetName (Ljava/lang/String;)V
-	public final fun setUnsupportedUnderlyingTarget (Ljava/lang/String;)V
 }
 
 public abstract class kotlinx/validation/KotlinKlibMergeAbiTask : org/gradle/api/DefaultTask {

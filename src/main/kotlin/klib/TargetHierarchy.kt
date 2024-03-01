@@ -147,3 +147,19 @@ internal val konanTargetNameMapping = mapOf(
     "linux_mipsel32" to "linuxMipsel32",
     "wasm32" to "wasm32"
 )
+
+internal val konanTargetNameReverseMapping = konanTargetNameMapping.asSequence().map { it.value to it.key }.toMap()
+
+internal fun platformByCanonicalName(canonicalName: String): String {
+    return when (canonicalName) {
+        "js" -> "JS"
+        "wasmJs" -> "WASM"
+        "wasmWasi" -> "WASM"
+        else -> {
+            require(konanTargetNameReverseMapping.containsKey(canonicalName)) {
+                "Unsupported target: $canonicalName"
+            }
+            return "NATIVE"
+        }
+    }
+}

@@ -39,7 +39,7 @@ public abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask()
      * The name of a target to infer a dump for.
      */
     @Input
-    public lateinit var unsupportedUnderlyingTarget: String
+    public lateinit var unsupportedTargetCanonicalName: String
 
     /**
      * A root directory containing dumps successfully generated for each supported target.
@@ -74,7 +74,7 @@ public abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask()
 
     @TaskAction
     internal fun generate() {
-        val unsupportedTarget = Target(unsupportedTargetName, unsupportedUnderlyingTarget)
+        val unsupportedTarget = Target(unsupportedTargetName, unsupportedTargetCanonicalName)
         // find a set of supported targets that are closer to unsupported target in the hierarchy
         val matchingTargets = findMatchingTargets(unsupportedTarget)
         val target2outFile = supportedTargets.get().keysToMap {
@@ -109,7 +109,7 @@ public abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask()
         commonDump.overrideTargets(setOf(unsupportedTarget))
 
         outputFile.bufferedWriter().use {
-            commonDump.dump(it, KlibAbiDumpFormat(includeTargets = false))
+            commonDump.dump(it, KlibAbiDumpFormat(singleTargetDump = true))
         }
 
         logger.warn(
@@ -122,7 +122,7 @@ public abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask()
     }
 
     private fun findMatchingTargets(unsupportedTarget: Target): Set<String> {
-        var currentGroup: String? = unsupportedTarget.underlyingTarget
+        var currentGroup: String? = unsupportedTarget.canonicalName
         while (currentGroup != null) {
             // If a current group has some supported targets, use them.
             val groupTargets = TargetHierarchy.targets(currentGroup).intersect(supportedTargets.get())

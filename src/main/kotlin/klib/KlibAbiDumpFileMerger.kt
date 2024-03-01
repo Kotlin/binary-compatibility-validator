@@ -9,23 +9,24 @@ import java.io.File
 import java.nio.file.Files
 
 /**
- * Target name consisting of two parts: a [name] that could be configured by a user, and an [underlyingTarget]
+ * Target name consisting of two parts: a [name] that could be configured by a user, and an [canonicalName]
  * that names a target platform and could not be configured by a user.
  *
- * When serialized, the target represented as a tuple `<name>.<underlyingTarget>`, like `ios.iosArm64`.
+ * When serialized, the target represented as a tuple `<name>.<canonicalName>`, like `ios.iosArm64`.
  * If both names are the same (they are by default, unless a user decides to use a custom name), the serialized
  * from is shortened to a single term. For example, `macosArm64.macosArm64` and `macosArm64` are a long and a short
  * serialized forms of the same target.
  */
-internal data class Target(val name: String, val underlyingTarget: String) {
+internal data class Target(val name: String, val canonicalName: String) {
     companion object {
         fun parse(line: String): Target {
+            require(line.isNotBlank()) { "Target name could not be blank." }
             if (!line.contains('.')) {
                 return Target(line)
             }
             val parts = line.split('.')
             if (parts.size != 2 || parts.any { it.isBlank() }) {
-                throw IllegalStateException(
+                throw IllegalArgumentException(
                     "Target has illegal name format: \"$line\", expected: <target name>.<underlying target name>"
                 )
             }
@@ -33,7 +34,7 @@ internal data class Target(val name: String, val underlyingTarget: String) {
         }
     }
 
-    override fun toString(): String = if (name == underlyingTarget) name else "$name.$underlyingTarget"
+    override fun toString(): String = if (name == canonicalName) name else "$name.$canonicalName"
 }
 
 internal fun Target(name: String) = Target(name, name)
@@ -99,7 +100,12 @@ private fun parseBcvTargetsLine(line: String): Set<Target> {
 }
 
 internal data class KlibAbiDumpFormat(
-    val includeTargets: Boolean = true,
+    /**
+     * Reconstruct a dump as it would look like after dumping a klib.
+     * This flag is mostly intended for dumping an inferred ABI and
+     * requires a [KlibAbiDumpMerger] containing only a single target.
+     */
+    val singleTargetDump: Boolean = false,
     val useGroupAliases: Boolean = false
 )
 
@@ -364,16 +370,27 @@ internal class KlibAbiDumpMerger {
 
     fun dump(appendable: Appendable, dumpFormat: KlibAbiDumpFormat = KlibAbiDumpFormat()) {
         val formatter = createFormatter(dumpFormat)
-        if (dumpFormat.includeTargets) {
-            appendable.append(MERGED_DUMP_FILE_HEADER).append('\n')
-            appendable.append(formatter.formatHeader(targets)).append('\n')
-        } else {
+        if (dumpFormat.singleTargetDump) {
             require(targets.size == 1) {
                 "Can skip target inclusion only if the dump contains a single target, but it contains: $targets"
             }
+        } else {
+            appendable.append(MERGED_DUMP_FILE_HEADER).append('\n')
+            appendable.append(formatter.formatHeader(targets)).append('\n')
         }
         headerContent.forEach {
             appendable.append(it).append('\n')
+        }
+        if (dumpFormat.singleTargetDump) {
+            // Reconstruct a manifest partially for a single target dump,
+            // so the dump could be later merged correctly.
+            val canonicalName = targets.single().canonicalName
+            val platform = platformByCanonicalName(canonicalName)
+            appendable.append(PLATFORM_PREFIX).append(platform).append('\n')
+            if (platform == "NATIVE") {
+                val nativeTarget = konanTargetNameReverseMapping[canonicalName]!!
+                appendable.append(NATIVE_TARGETS_PREFIX).append(nativeTarget).append('\n')
+            }
         }
         topLevelDeclaration.children.values.sortedWith(DeclarationsComparator).forEach {
             it.dump(appendable, targetsMut, dumpFormat, formatter)
@@ -383,7 +400,7 @@ internal class KlibAbiDumpMerger {
     private fun createFormatter(dumpFormat: KlibAbiDumpFormat): KLibsTargetsFormatter {
         return if (dumpFormat.useGroupAliases) {
             for (target in targets) {
-                val node = TargetHierarchy.hierarchyIndex[target.underlyingTarget]
+                val node = TargetHierarchy.hierarchyIndex[target.canonicalName]
                 if (node != null && node.allLeafs.size == 1 && node.allLeafs.first() != node.node.name) {
                     throw IllegalStateException(
                         "Can't use target aliases as one of the this dump's targets" +
@@ -494,7 +511,7 @@ internal class DeclarationContainer(val text: String, val parent: DeclarationCon
         appendable: Appendable, allTargets: Set<Target>,
         dumpFormat: KlibAbiDumpFormat, formatter: KLibsTargetsFormatter
     ) {
-        if (targets != allTargets && dumpFormat.includeTargets) {
+        if (targets != allTargets && !dumpFormat.singleTargetDump) {
             // Use the same indentation for target list as for the declaration itself
             appendable.append(" ".repeat(text.depth() * INDENT_WIDTH))
                 .append(formatter.formatDeclarationTargets(targets))
@@ -644,7 +661,7 @@ private class GroupingFormatter(klibDump: KlibAbiDumpMerger) : KLibsTargetsForma
                 // intersect with all targets to use only enabled targets in aliases
                 // intersection is based on underlying target name as a set of such names is fixed
                 val leafs = it.value.allLeafs
-                val availableTargets = allTargets.asSequence().filter { leafs.contains(it.underlyingTarget) }.toSet()
+                val availableTargets = allTargets.asSequence().filter { leafs.contains(it.canonicalName) }.toSet()
                 if (availableTargets.isNotEmpty()) {
                     aliasesBuilder.add(Alias(it.key, availableTargets))
                 }
