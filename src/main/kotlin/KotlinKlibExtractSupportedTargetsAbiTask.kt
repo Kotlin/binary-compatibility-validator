@@ -7,6 +7,7 @@ package kotlinx.validation
 
 import kotlinx.validation.klib.KlibAbiDumpFormat
 import kotlinx.validation.klib.KlibAbiDumpMerger
+import kotlinx.validation.klib.Target
 import org.gradle.api.DefaultTask
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.*
@@ -33,12 +34,9 @@ internal abstract class KotlinKlibExtractSupportedTargetsAbiTask : DefaultTask()
 
     /**
      * Provider returning targets supported by the host compiler.
-     *
-     * Canonical target names ([kotlinx.validation.klib.Target.canonicalName]) are used
-     * instead of user-defined named to filter out only targets that are actually not supported by the host compiler.
      */
     @get:Input
-    lateinit var supportedCanonicalTargets: Provider<Set<String>>
+    lateinit var supportedTargets: Provider<Set<String>>
 
     /**
      * Refer to [KlibValidationSettings.strictValidation] for details.
@@ -58,7 +56,7 @@ internal abstract class KotlinKlibExtractSupportedTargetsAbiTask : DefaultTask()
             error("Project ABI file $inputAbiFile is empty.")
         }
         val dump = KlibAbiDumpMerger().apply { loadMergedDump(inputAbiFile) }
-        val enabledTargets = supportedCanonicalTargets.get()
+        val enabledTargets = supportedTargets.get().map { Target.parse(it).canonicalName }
         val targetsToRemove = dump.targets.filter { it.canonicalName !in enabledTargets }
         if (targetsToRemove.isNotEmpty() && strictValidation) {
             throw IllegalStateException(

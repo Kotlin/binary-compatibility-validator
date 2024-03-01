@@ -5,6 +5,7 @@
 
 package kotlinx.validation
 
+import kotlinx.validation.klib.Target
 import kotlinx.validation.klib.konanTargetNameMapping
 import org.gradle.api.*
 import org.gradle.api.plugins.*
@@ -446,7 +447,7 @@ private class KlibValidationPipelineBuilder(
         group = "other"
         strictValidation = extension.klib.strictValidation
         groupTargetNames = extension.klib.useTargetGroupAliases
-        supportedCanonicalTargets = supportedCanonicalTargetNames()
+        supportedTargets = supportedTargets()
         inputAbiFile = klibApiDir.get().resolve(klibDumpFileName)
         outputAbiFile = klibOutputDir.resolve(klibDumpFileName)
     }
@@ -499,7 +500,7 @@ private class KlibValidationPipelineBuilder(
     ) {
         val kotlin = project.kotlinMultiplatform
 
-        val supportedTargetsProvider = supportedCanonicalTargetNames()
+        val supportedTargetsProvider = supportedTargets()
         kotlin.targets.matching { it.emitsKlib }.configureEach { currentTarget ->
             val mainCompilations = currentTarget.mainCompilations
             if (mainCompilations.none()) {
@@ -563,7 +564,7 @@ private class KlibValidationPipelineBuilder(
         }
     }
 
-    private fun Project.supportedCanonicalTargetNames(): Provider<Set<String>> {
+    private fun Project.supportedTargets(): Provider<Set<String>> {
         val banned = bannedTargets() // for testing only
         return project.provider {
             val hm = HostManager()
@@ -576,7 +577,7 @@ private class KlibValidationPipelineBuilder(
                         true
                     }
                 }
-                .map { extractUnderlyingTarget(it) }
+                .map { Target(it.targetName, extractUnderlyingTarget(it)).toString() }
                 .toSet()
         }
     }
