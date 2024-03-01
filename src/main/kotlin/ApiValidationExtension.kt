@@ -112,7 +112,6 @@ public open class KlibValidationSettings {
      * that will be dumped to prevent changes in a dump file.
      */
     public var signatureVersion: Int? = null
-
     /**
      * Fail validation if some build targets are not supported by the host compiler.
      * By default, ABI dumped only for supported files will be validated. This option makes validation behavior
@@ -125,9 +124,6 @@ public open class KlibValidationSettings {
      *
      * Group aliases are based on [the default hierarchy template](https://kotlinlang.org/docs/multiplatform-hierarchy.html#see-the-full-hierarchy-template)
      * and enabled by default.
-     *
-     * Grouping will not be applied if a project has a target with a custom name that clashes
-     * with one of the group names.
      */
     public var useTargetGroupAliases: Boolean = true
 }
