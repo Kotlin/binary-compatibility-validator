@@ -12,7 +12,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-class TargetHierarchyTest {
+class KlibTargetHierarchyTest {
     @Test
     fun testHierarchy() {
         assertContentEquals(listOf("linuxArm64", "linux", "native", "all"),

@@ -1,5 +1,5 @@
 // Merged KLib ABI Dump
-// Targets: [linuxA.linuxX64, linuxB.linuxX64]
+// Targets: [linuxX64.linuxA, linuxX64.linuxB]
 // Rendering settings:
 // - Signature version: 2
 // - Show manifest properties: true

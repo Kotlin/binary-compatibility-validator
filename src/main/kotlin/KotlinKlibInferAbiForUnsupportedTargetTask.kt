@@ -7,7 +7,7 @@ package kotlinx.validation
 
 import kotlinx.validation.klib.KlibAbiDumpFormat
 import kotlinx.validation.klib.KlibAbiDumpMerger
-import kotlinx.validation.klib.Target
+import kotlinx.validation.api.klib.KlibTarget
 import kotlinx.validation.klib.TargetHierarchy
 import org.gradle.api.DefaultTask
 import org.gradle.api.provider.Provider
@@ -74,20 +74,20 @@ internal abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask
 
     @TaskAction
     internal fun generate() {
-        val unsupportedTarget = Target(unsupportedTargetName, unsupportedTargetCanonicalName)
-        val supportedTargetNames = supportedTargets.get().map { Target.parse(it) }.toSet()
+        val unsupportedTarget = KlibTarget(unsupportedTargetName, unsupportedTargetCanonicalName)
+        val supportedTargetNames = supportedTargets.get().map { KlibTarget.parse(it) }.toSet()
         // Find a set of supported targets that are closer to unsupported target in the hierarchy.
         // Note that dumps are stored using configurable name, but grouped by the canonical target name.
         val matchingTargets = findMatchingTargets(supportedTargetNames, unsupportedTarget)
         val target2outFile = supportedTargetNames.keysToMap {
-            File(outputApiDir).parentFile.resolve(it.name).resolve(dumpFileName)
+            File(outputApiDir).parentFile.resolve(it.configurableName).resolve(dumpFileName)
         }
 
         // given a set of similar targets, combine their ABI files into a single merged dump and consider it
         // a common ABI that should be shared by the unsupported target as well
         val commonDump = KlibAbiDumpMerger()
         for (target in matchingTargets) {
-            commonDump.addIndividualDump(target.name, target2outFile[target]!!)
+            commonDump.addIndividualDump(target.configurableName, target2outFile[target]!!)
         }
         commonDump.retainCommonAbi()
 
@@ -123,12 +123,12 @@ internal abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask
         )
     }
 
-    private fun findMatchingTargets(supportedTargets: Set<Target>, unsupportedTarget: Target): Collection<Target> {
-        var currentGroup: String? = unsupportedTarget.canonicalName
+    private fun findMatchingTargets(supportedTargets: Set<KlibTarget>, unsupportedTarget: KlibTarget): Collection<KlibTarget> {
+        var currentGroup: String? = unsupportedTarget.targetName
         while (currentGroup != null) {
             // If a current group has some supported targets, use them.
             val groupTargets = TargetHierarchy.targets(currentGroup)
-            val matchingTargets = supportedTargets.filter { groupTargets.contains(it.canonicalName) }
+            val matchingTargets = supportedTargets.filter { groupTargets.contains(it.targetName) }
             if (matchingTargets.isNotEmpty()) {
                 return matchingTargets
             }

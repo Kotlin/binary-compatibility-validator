@@ -110,3 +110,16 @@ public final class kotlinx/validation/api/KotlinSignaturesLoadingKt {
 	public static synthetic fun retainExplicitlyIncludedIfDeclared$default (Ljava/util/List;Ljava/util/Collection;Ljava/util/Collection;Ljava/util/Collection;ILjava/lang/Object;)Ljava/util/List;
 }
 
+public final class kotlinx/validation/api/klib/KlibTarget {
+	public static final field Companion Lkotlinx/validation/api/klib/KlibTarget$Companion;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getConfigurableName ()Ljava/lang/String;
+	public final fun getTargetName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class kotlinx/validation/api/klib/KlibTarget$Companion {
+	public final fun parse (Ljava/lang/String;)Lkotlinx/validation/api/klib/KlibTarget;
+}
+

@@ -5,7 +5,7 @@
 
 package kotlinx.validation
 
-import kotlinx.validation.klib.Target
+import kotlinx.validation.api.klib.KlibTarget
 import kotlinx.validation.klib.konanTargetNameMapping
 import org.gradle.api.*
 import org.gradle.api.plugins.*
@@ -577,7 +577,7 @@ private class KlibValidationPipelineBuilder(
                         true
                     }
                 }
-                .map { Target(it.targetName, extractUnderlyingTarget(it)).toString() }
+                .map { KlibTarget(it.targetName, extractUnderlyingTarget(it)).toString() }
                 .toSet()
         }
     }

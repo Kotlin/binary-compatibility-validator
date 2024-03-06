@@ -629,7 +629,7 @@ internal class KLibVerificationTests : BaseKotlinGradleTest() {
         runner.buildAndFail().apply {
             Assertions.assertThat(output).contains(
                 "  -// Targets: [androidNativeArm32, androidNativeArm64, androidNativeX64, " +
-                        "androidNativeX86, linux.linuxArm64, linuxX64, mingwX64]"
+                        "androidNativeX86, linuxArm64.linux, linuxX64, mingwX64]"
             )
         }
     }

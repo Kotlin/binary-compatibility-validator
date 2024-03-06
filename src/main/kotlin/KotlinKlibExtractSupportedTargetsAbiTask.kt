@@ -7,7 +7,7 @@ package kotlinx.validation
 
 import kotlinx.validation.klib.KlibAbiDumpFormat
 import kotlinx.validation.klib.KlibAbiDumpMerger
-import kotlinx.validation.klib.Target
+import kotlinx.validation.api.klib.KlibTarget
 import org.gradle.api.DefaultTask
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.*
@@ -56,8 +56,8 @@ internal abstract class KotlinKlibExtractSupportedTargetsAbiTask : DefaultTask()
             error("Project ABI file $inputAbiFile is empty.")
         }
         val dump = KlibAbiDumpMerger().apply { loadMergedDump(inputAbiFile) }
-        val enabledTargets = supportedTargets.get().map { Target.parse(it).canonicalName }
-        val targetsToRemove = dump.targets.filter { it.canonicalName !in enabledTargets }
+        val enabledTargets = supportedTargets.get().map { KlibTarget.parse(it).targetName }
+        val targetsToRemove = dump.targets.filter { it.targetName !in enabledTargets }
         if (targetsToRemove.isNotEmpty() && strictValidation) {
             throw IllegalStateException(
                 "Validation could not be performed as some targets are not available " +

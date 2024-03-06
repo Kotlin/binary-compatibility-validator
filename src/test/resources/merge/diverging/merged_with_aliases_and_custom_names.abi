@@ -1,6 +1,6 @@
 // Merged KLib ABI Dump
-// Targets: [android.androidNativeArm64, linux.linuxArm64, linuxX64, tvosX64]
-// Alias: linux => [linux.linuxArm64, linuxX64]
+// Targets: [androidNativeArm64.android, linuxArm64.linux, linuxX64, tvosX64]
+// Alias: linux => [linuxArm64.linux, linuxX64]
 // Rendering settings:
 // - Signature version: 2
 // - Show manifest properties: false
@@ -18,13 +18,13 @@ final fun org.example/ShardedClass(kotlin/Int, kotlin/Float, kotlin/Long): org.e
 final fun (kotlin/Long).org.example/add(kotlin/Long): kotlin/Long // org.example/add|add@kotlin.Long(kotlin.Long){}[0]
 // Targets: [linux]
 final fun org.example/add(kotlin/Long, kotlin/Long): kotlin/Long // org.example/add|add(kotlin.Long;kotlin.Long){}[0]
-// Targets: [android.androidNativeArm64]
+// Targets: [androidNativeArm64.android]
 final class org.example/X { // org.example/X|null[0]
     constructor <init>(kotlin/Int) // org.example/X.<init>|<init>(kotlin.Int){}[0]
 }
-// Targets: [android.androidNativeArm64]
+// Targets: [androidNativeArm64.android]
 final fun (org.example/X).org.example/add(org.example/X): org.example/X // org.example/add|add@org.example.X(org.example.X){}[0]
-// Targets: [android.androidNativeArm64]
+// Targets: [androidNativeArm64.android]
 final fun org.example/add(org.example/X, org.example/X): org.example/X // org.example/add|add(org.example.X;org.example.X){}[0]
 // Targets: [tvosX64]
 final fun (kotlin/Int).org.example/add(kotlin/Int): kotlin/Int // org.example/add|add@kotlin.Int(kotlin.Int){}[0]
