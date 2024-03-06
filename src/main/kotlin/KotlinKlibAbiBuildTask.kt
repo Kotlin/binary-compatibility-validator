@@ -5,12 +5,20 @@
 
 package kotlinx.validation
 
+import kotlinx.validation.api.klib.KlibSignatureVersion
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 import org.jetbrains.kotlin.library.abi.*
+import java.io.Serializable
+
+internal class SerializableSignatureVersion(val version: Int) : Serializable {
+    constructor(version: KlibSignatureVersion) : this(version.version)
+
+    fun toKlibSignatureVersion(): KlibSignatureVersion = KlibSignatureVersion(version)
+}
 
 /**
  * Generates a text file with a KLib ABI dump for a single klib.
@@ -34,7 +42,7 @@ internal abstract class KotlinKlibAbiBuildTask : BuildTaskBase() {
      */
     @Optional
     @get:Input
-    var signatureVersion: Int? = null
+    var signatureVersion: SerializableSignatureVersion = SerializableSignatureVersion(KlibSignatureVersion.LATEST)
 
     /**
      * Name of a target [klibFile] was compiled for.
@@ -72,17 +80,17 @@ internal abstract class KotlinKlibAbiBuildTask : BuildTaskBase() {
         }
 
         val supportedVersions = parsedAbi.signatureVersions.asSequence().filter { it.isSupportedByAbiReader }
-        val sigVersion = if (signatureVersion != null) {
+        val sigVersion = if (signatureVersion.toKlibSignatureVersion() != KlibSignatureVersion.LATEST) {
             val versionNumbers = supportedVersions.map { it.versionNumber }.toSortedSet()
-            if (signatureVersion !in versionNumbers) {
+            if (signatureVersion.version !in versionNumbers) {
                 throw IllegalArgumentException(
-                    "Unsupported KLib signature version '$signatureVersion'. " +
+                    "Unsupported KLib signature version '${signatureVersion.version}'. " +
                             "Supported versions are: $versionNumbers"
                 )
             }
-            AbiSignatureVersion.resolveByVersionNumber(signatureVersion!!)
+            AbiSignatureVersion.resolveByVersionNumber(signatureVersion.version)
         } else {
-            supportedVersions.maxByOrNull(AbiSignatureVersion::versionNumber)
+            supportedVersions.filter { it.isSupportedByAbiReader }.maxByOrNull(AbiSignatureVersion::versionNumber)
                 ?: throw IllegalStateException("Can't choose signatureVersion")
         }
 

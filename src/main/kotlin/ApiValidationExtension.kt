@@ -5,6 +5,8 @@
 
 package kotlinx.validation
 
+import kotlinx.validation.api.klib.KlibSignatureVersion
+
 public open class ApiValidationExtension {
 
     /**
@@ -111,7 +113,7 @@ public open class KlibValidationSettings {
      * However, if a klib supports multiple signature versions simultaneously, one my explicitly specify the version
      * that will be dumped to prevent changes in a dump file.
      */
-    public var signatureVersion: Int? = null
+    public var signatureVersion: KlibSignatureVersion = KlibSignatureVersion.LATEST
     /**
      * Fail validation if some build targets are not supported by the host compiler.
      * By default, ABI dumped only for supported files will be validated. This option makes validation behavior

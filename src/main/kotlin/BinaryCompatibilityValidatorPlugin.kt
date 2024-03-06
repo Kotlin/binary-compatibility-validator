@@ -603,7 +603,7 @@ private class KlibValidationPipelineBuilder(
                     "Complementary task and shouldn't be called manually"
             klibFile = project.files(project.provider { compilation.output.classesDirs })
             compilationDependencies = project.files(project.provider { compilation.compileDependencyFiles })
-            signatureVersion = extension.klib.signatureVersion
+            signatureVersion = SerializableSignatureVersion(extension.klib.signatureVersion)
             outputApiFile = apiBuildDir.resolve(klibDumpFileName)
         }
         return buildTask

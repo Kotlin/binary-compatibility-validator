@@ -58,11 +58,11 @@ public abstract interface annotation class kotlinx/validation/ExternalApi : java
 public class kotlinx/validation/KlibValidationSettings {
 	public fun <init> ()V
 	public final fun getEnabled ()Z
-	public final fun getSignatureVersion ()Ljava/lang/Integer;
+	public final fun getSignatureVersion ()Lkotlinx/validation/api/klib/KlibSignatureVersion;
 	public final fun getStrictValidation ()Z
 	public final fun getUseTargetGroupAliases ()Z
 	public final fun setEnabled (Z)V
-	public final fun setSignatureVersion (Ljava/lang/Integer;)V
+	public final fun setSignatureVersion (Lkotlinx/validation/api/klib/KlibSignatureVersion;)V
 	public final fun setStrictValidation (Z)V
 	public final fun setUseTargetGroupAliases (Z)V
 }
@@ -108,6 +108,18 @@ public final class kotlinx/validation/api/KotlinSignaturesLoadingKt {
 	public static synthetic fun loadApiFromJvmClasses$default (Lkotlin/sequences/Sequence;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Ljava/util/List;
 	public static final fun retainExplicitlyIncludedIfDeclared (Ljava/util/List;Ljava/util/Collection;Ljava/util/Collection;Ljava/util/Collection;)Ljava/util/List;
 	public static synthetic fun retainExplicitlyIncludedIfDeclared$default (Ljava/util/List;Ljava/util/Collection;Ljava/util/Collection;Ljava/util/Collection;ILjava/lang/Object;)Ljava/util/List;
+}
+
+public final class kotlinx/validation/api/klib/KlibSignatureVersion {
+	public static final field Companion Lkotlinx/validation/api/klib/KlibSignatureVersion$Companion;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class kotlinx/validation/api/klib/KlibSignatureVersion$Companion {
+	public final fun getLATEST ()Lkotlinx/validation/api/klib/KlibSignatureVersion;
+	public final fun of (I)Lkotlinx/validation/api/klib/KlibSignatureVersion;
 }
 
 public final class kotlinx/validation/api/klib/KlibTarget {

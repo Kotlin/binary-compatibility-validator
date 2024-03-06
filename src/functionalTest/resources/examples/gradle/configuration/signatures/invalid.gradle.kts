@@ -5,6 +5,6 @@
 
 configure<kotlinx.validation.ApiValidationExtension> {
     klib {
-        signatureVersion = 100500
+        signatureVersion = kotlinx.validation.api.klib.KlibSignatureVersion.of(100500)
     }
 }
