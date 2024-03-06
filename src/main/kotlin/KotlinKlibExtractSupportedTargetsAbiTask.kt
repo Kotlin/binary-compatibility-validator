@@ -44,12 +44,6 @@ internal abstract class KotlinKlibExtractSupportedTargetsAbiTask : DefaultTask()
     @Input
     var strictValidation: Boolean = false
 
-    /**
-     * Refer to [KlibValidationSettings.useTargetGroupAliases] for details.
-     */
-    @Input
-    var groupTargetNames: Boolean = true
-
     @TaskAction
     internal fun generate() {
         if (inputAbiFile.length() == 0L) {
@@ -67,10 +61,6 @@ internal abstract class KotlinKlibExtractSupportedTargetsAbiTask : DefaultTask()
         for (target in targetsToRemove) {
             dump.remove(target)
         }
-        outputAbiFile.bufferedWriter().use { dump.dump(it, KlibAbiDumpFormat(useGroupAliases = canUseGroupAliases())) }
-    }
-
-    private fun canUseGroupAliases(): Boolean {
-        return groupTargetNames
+        outputAbiFile.bufferedWriter().use { dump.dump(it) }
     }
 }

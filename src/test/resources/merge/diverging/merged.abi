@@ -1,5 +1,6 @@
 // Merged KLib ABI Dump
 // Targets: [androidNativeArm64, linuxArm64, linuxX64, tvosX64]
+// Alias: linux => [linuxArm64, linuxX64]
 // Rendering settings:
 // - Signature version: 2
 // - Show manifest properties: false
@@ -13,9 +14,9 @@ final class org.example/ShardedClass { // org.example/ShardedClass|null[0]
         final fun <get-value>(): kotlin/Int // org.example/ShardedClass.value.<get-value>|<get-value>(){}[0]
 }
 final fun org.example/ShardedClass(kotlin/Int, kotlin/Float, kotlin/Long): org.example/ShardedClass // org.example/ShardedClass|ShardedClass(kotlin.Int;kotlin.Float;kotlin.Long){}[0]
-// Targets: [linuxArm64, linuxX64]
+// Targets: [linux]
 final fun (kotlin/Long).org.example/add(kotlin/Long): kotlin/Long // org.example/add|add@kotlin.Long(kotlin.Long){}[0]
-// Targets: [linuxArm64, linuxX64]
+// Targets: [linux]
 final fun org.example/add(kotlin/Long, kotlin/Long): kotlin/Long // org.example/add|add(kotlin.Long;kotlin.Long){}[0]
 // Targets: [androidNativeArm64]
 final class org.example/X { // org.example/X|null[0]

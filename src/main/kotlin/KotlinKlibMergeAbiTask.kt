@@ -45,12 +45,6 @@ internal abstract class KotlinKlibMergeAbiTask : DefaultTask() {
     @Input
     lateinit var dumpFileName: String
 
-    /**
-     * Refer to [KlibValidationSettings.useTargetGroupAliases] for details.
-     */
-    @Input
-    var groupTargetNames: Boolean = true
-
     internal fun addInput(target: String, file: File) {
         targetToFile[target] = file
     }
@@ -61,10 +55,6 @@ internal abstract class KotlinKlibMergeAbiTask : DefaultTask() {
         targets.forEach { targetName ->
             builder.addIndividualDump(targetName, targetToFile[targetName]!!.resolve(dumpFileName))
         }
-        mergedFile.bufferedWriter().use { builder.dump(it, KlibAbiDumpFormat(useGroupAliases = canUseGroupAliases())) }
-    }
-
-    private fun canUseGroupAliases(): Boolean {
-        return groupTargetNames
+        mergedFile.bufferedWriter().use { builder.dump(it) }
     }
 }

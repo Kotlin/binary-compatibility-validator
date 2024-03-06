@@ -446,7 +446,6 @@ private class KlibValidationPipelineBuilder(
                 "the golden file stored in the project"
         group = "other"
         strictValidation = extension.klib.strictValidation
-        groupTargetNames = extension.klib.useTargetGroupAliases
         supportedTargets = supportedTargets()
         inputAbiFile = klibApiDir.get().resolve(klibDumpFileName)
         outputAbiFile = klibOutputDir.resolve(klibDumpFileName)
@@ -465,7 +464,6 @@ private class KlibValidationPipelineBuilder(
                 "into a single merged KLib ABI dump"
         dumpFileName = klibDumpFileName
         mergedFile = klibMergeDir.resolve(klibDumpFileName)
-        groupTargetNames = extension.klib.useTargetGroupAliases
     }
 
     private fun Project.mergeKlibsUmbrellaTask(
@@ -477,7 +475,6 @@ private class KlibValidationPipelineBuilder(
                 "different targets into a single merged KLib ABI dump"
         dumpFileName = klibDumpFileName
         mergedFile = klibMergeDir.resolve(klibDumpFileName)
-        groupTargetNames = extension.klib.useTargetGroupAliases
     }
 
     fun Project.bannedTargets(): Set<String> {

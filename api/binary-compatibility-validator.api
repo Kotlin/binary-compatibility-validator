@@ -60,11 +60,9 @@ public class kotlinx/validation/KlibValidationSettings {
 	public final fun getEnabled ()Z
 	public final fun getSignatureVersion ()Lkotlinx/validation/api/klib/KlibSignatureVersion;
 	public final fun getStrictValidation ()Z
-	public final fun getUseTargetGroupAliases ()Z
 	public final fun setEnabled (Z)V
 	public final fun setSignatureVersion (Lkotlinx/validation/api/klib/KlibSignatureVersion;)V
 	public final fun setStrictValidation (Z)V
-	public final fun setUseTargetGroupAliases (Z)V
 }
 
 public class kotlinx/validation/KotlinApiBuildTask : kotlinx/validation/BuildTaskBase {

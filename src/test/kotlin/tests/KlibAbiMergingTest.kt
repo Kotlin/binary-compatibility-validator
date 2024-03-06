@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2023 JetBrains s.r.o.
+ * Copyright 2016-2024 JetBrains s.r.o.
  * Use of this source code is governed by the Apache 2.0 License that can be found in the LICENSE.txt file.
  */
 
@@ -37,14 +37,11 @@ class KlibAbiMergingTest {
         return res.bufferedReader().lineSequence()
     }
 
-    private fun dumpToFile(klib: KlibAbiDumpMerger,
-                           singleTargetDump: Boolean = false,
-                           useAliases: Boolean = false): File {
+    private fun dumpToFile(klib: KlibAbiDumpMerger, singleTargetDump: Boolean = false): File {
         val file = tempDir.newFile()
         FileWriter(file).use {
             klib.dump(it, KlibAbiDumpFormat(
-                singleTargetDump = singleTargetDump,
-                useGroupAliases = useAliases
+                singleTargetDump = singleTargetDump
             ))
         }
         return file
@@ -96,7 +93,7 @@ class KlibAbiMergingTest {
         val klib = KlibAbiDumpMerger()
         klib.addIndividualDump(file("/merge/identical/dump_macos_arm64.abi"))
         klib.addIndividualDump(file("/merge/identical/dump_linux_x64.abi"))
-        val merged = dumpToFile(klib, useAliases = true)
+        val merged = dumpToFile(klib)
 
         // there are no groups other than "all", so no aliases will be added
         assertContentEquals(
@@ -134,24 +131,12 @@ class KlibAbiMergingTest {
             targets.forEach {
                 klib.addIndividualDump(file("/merge/diverging/$it.api"))
             }
-            val merged = dumpToFile(klib, useAliases = true)
+            val merged = dumpToFile(klib)
             assertContentEquals(
                 lines("/merge/diverging/merged_with_aliases.abi"),
                 Files.readAllLines(merged.toPath()).asSequence()
             )
         }
-    }
-
-    @Test
-    fun aliasedDumpParsing() {
-        val klib = KlibAbiDumpMerger()
-        klib.loadMergedDump(file("/merge/diverging/merged_with_aliases.abi"))
-
-        val withoutAliases = dumpToFile(klib, useAliases = false)
-        assertContentEquals(
-            lines("/merge/diverging/merged.abi"),
-            Files.readAllLines(withoutAliases.toPath()).asSequence()
-        )
     }
 
     @Test
@@ -321,7 +306,7 @@ class KlibAbiMergingTest {
             addIndividualDump(file("/merge/diverging/tvOsX64.api"))
         }
 
-        val dump = dumpToFile(lib, useAliases = true)
+        val dump = dumpToFile(lib)
         assertContentEquals(
             lines("/merge/diverging/merged_with_aliases_and_custom_names.abi"),
             Files.readAllLines(dump.toPath()).asSequence()

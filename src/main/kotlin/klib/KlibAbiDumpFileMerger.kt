@@ -75,8 +75,7 @@ internal data class KlibAbiDumpFormat(
      * This flag is mostly intended for dumping an inferred ABI and
      * requires a [KlibAbiDumpMerger] containing only a single target.
      */
-    val singleTargetDump: Boolean = false,
-    val useGroupAliases: Boolean = false
+    val singleTargetDump: Boolean = false
 )
 
 private class KlibAbiDumpHeader(
@@ -339,7 +338,7 @@ internal class KlibAbiDumpMerger {
     }
 
     fun dump(appendable: Appendable, dumpFormat: KlibAbiDumpFormat = KlibAbiDumpFormat()) {
-        val formatter = createFormatter(dumpFormat)
+        val formatter = createFormatter()
         if (dumpFormat.singleTargetDump) {
             require(targets.size == 1) {
                 "Can skip target inclusion only if the dump contains a single target, but it contains: $targets"
@@ -367,21 +366,17 @@ internal class KlibAbiDumpMerger {
         }
     }
 
-    private fun createFormatter(dumpFormat: KlibAbiDumpFormat): KLibsTargetsFormatter {
-        return if (dumpFormat.useGroupAliases) {
-            for (target in targets) {
-                val node = TargetHierarchy.hierarchyIndex[target.targetName]
-                if (node != null && node.allLeafs.size == 1 && node.allLeafs.first() != node.node.name) {
-                    throw IllegalStateException(
-                        "Can't use target aliases as one of the this dump's targets" +
-                                " has the same name as a group in the default targets hierarchy: $target"
-                    )
-                }
+    private fun createFormatter(): KLibsTargetsFormatter {
+        for (target in targets) {
+            val node = TargetHierarchy.hierarchyIndex[target.targetName]
+            if (node != null && node.allLeafs.size == 1 && node.allLeafs.first() != node.node.name) {
+                throw IllegalStateException(
+                    "Can't use target aliases as one of the this dump's targets" +
+                            " has the same name as a group in the default targets hierarchy: $target"
+                )
             }
-            return GroupingFormatter(this)
-        } else {
-            DefaultFormatter
         }
+        return KLibsTargetsFormatter(this)
     }
 
     /**
@@ -599,24 +594,7 @@ private object DeclarationsComparator : Comparator<DeclarationContainer> {
     }
 }
 
-internal interface KLibsTargetsFormatter {
-    fun formatHeader(targets: Set<KlibTarget>): String
-
-    fun formatDeclarationTargets(targets: Set<KlibTarget>): String
-}
-
-private object DefaultFormatter : KLibsTargetsFormatter {
-    override fun formatHeader(targets: Set<KlibTarget>): String {
-        return formatDeclarationTargets(targets)
-    }
-
-    override fun formatDeclarationTargets(targets: Set<KlibTarget>): String {
-        return targets.map { it.toString() }.sorted()
-            .joinToString(TARGETS_DELIMITER, TARGETS_LIST_PREFIX, TARGETS_LIST_SUFFIX) { it }
-    }
-}
-
-private class GroupingFormatter(klibDump: KlibAbiDumpMerger) : KLibsTargetsFormatter {
+internal class KLibsTargetsFormatter(klibDump: KlibAbiDumpMerger) {
     private data class Alias(val name: String, val targets: Set<KlibTarget>)
 
     private val aliases: List<Alias>
@@ -667,7 +645,7 @@ private class GroupingFormatter(klibDump: KlibAbiDumpMerger) : KLibsTargetsForma
         aliases = aliasesBuilder.reversed()
     }
 
-    override fun formatHeader(targets: Set<KlibTarget>): String {
+    fun formatHeader(targets: Set<KlibTarget>): String {
         return buildString {
             append(
                 targets.asSequence().map { it.toString() }.sorted().joinToString(
@@ -684,7 +662,7 @@ private class GroupingFormatter(klibDump: KlibAbiDumpMerger) : KLibsTargetsForma
         }
     }
 
-    override fun formatDeclarationTargets(targets: Set<KlibTarget>): String {
+    fun formatDeclarationTargets(targets: Set<KlibTarget>): String {
         val targetsMut = targets.toMutableSet()
         val resultingTargets = mutableListOf<String>()
         for (alias in aliases) {

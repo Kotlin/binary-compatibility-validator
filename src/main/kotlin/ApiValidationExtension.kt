@@ -120,12 +120,4 @@ public open class KlibValidationSettings {
      * stricter and treats having unsupported targets as an error.
      */
     public var strictValidation: Boolean = false
-    /**
-     * For declarations available only on some targets, replace a comment listing these targets
-     * with a short alias.
-     *
-     * Group aliases are based on [the default hierarchy template](https://kotlinlang.org/docs/multiplatform-hierarchy.html#see-the-full-hierarchy-template)
-     * and enabled by default.
-     */
-    public var useTargetGroupAliases: Boolean = true
 }
