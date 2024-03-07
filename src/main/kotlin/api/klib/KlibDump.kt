@@ -12,6 +12,36 @@ import java.io.FileNotFoundException
 
 /**
  * Represents KLib ABI dump and allows manipulating it.
+ *
+ * Usual [KlibDump] workflows consists of loading, updating and writing a dump back.
+ *
+ * **Creating a textual dump from a klib**
+ * ```kotlin
+ * val dump = KlibDump.fromKlib(File("/path/to/library.klib"))
+ * File("/path/to/dump.klib.api").bufferedWriter().use { dump.saveTo(it) })
+ * ```
+ *
+ * **Loading a dump**
+ * ```kotlin
+ * val dump = KlibDump.from(File("/path/to/dump.klib.api"))
+ * ```
+ *
+ * **Merging multiple dumps into a new merged dump**
+ * ```kotlin
+ * val klibs = listOf(File("/path/to/library-linuxX64.klib"), File("/path/to/library-linuxArm64.klib"), ...)
+ * val mergedDump = KlibDump()
+ * klibs.forEach { mergedDump.mergeFromKlib(it) }
+ * File("/path/to/merged.klib.api").bufferedWriter().use { mergedDump.saveTo(it) }
+ * ```
+ *
+ * **Updating an existing merged dump**
+ * ```kotlin
+ * val mergedDump = KlibDump.from(File("/path/to/merged.klib.api"))
+ * val newTargetDump = KlibDump.fromKlib(File("/path/to/library-linuxX64.klib"))
+ * mergedDump.remove(newTargetDump.targets)
+ * mergedDump.merge(newTargetDump)
+ * File("/path/to/merged.klib.api").bufferedWrite().use { mergedDump.saveTo(it) }
+ * ```
  */
 @ExperimentalBCVApi
 public class KlibDump {
@@ -135,7 +165,7 @@ public class KlibDump {
          * Dumps a public ABI of a klib represented by [klibFile] using [filters]
          * and returns a [KlibDump] representing it.
          *
-         * To control which declarations are dumped, [filters] could be used. By default, no filter will be applied.
+         * To control which declarations are dumped, [filters] could be used. By default, no filters will be applied.
          *
          * If a klib contains only a single target, it's possible to specify a custom configurable target name.
          * Please refer to [KlibTarget.configurableName] for more details on the meaning of that name.
@@ -204,7 +234,7 @@ public fun inferAbi(
 /**
  * Dumps a public ABI of a klib represented by [klibFile] using [filters] and merges it into this dump.
  *
- * To control which declarations are dumped, [filters] could be used. By default, no filter will be applied.
+ * To control which declarations are dumped, [filters] could be used. By default, no filters will be applied.
  *
  * If a klib contains only a single target, it's possible to specify a custom configurable target name.
  * Please refer to [KlibTarget.configurableName] for more details on the meaning of that name.
@@ -221,7 +251,7 @@ public fun inferAbi(
  * @throws FileNotFoundException if [klibFile] does not exist.
  */
 @ExperimentalBCVApi
-public fun KlibDump.mergeKlib(
+public fun KlibDump.mergeFromKlib(
     klibFile: File, configurableTargetName: String? = null,
     filters: KLibDumpFilters = KLibDumpFilters.DEFAULT
 ) {

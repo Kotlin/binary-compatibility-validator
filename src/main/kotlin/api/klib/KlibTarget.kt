@@ -10,15 +10,22 @@ package kotlinx.validation.api.klib
  * Target name consisting of two parts: a [configurableName] that could be configured by a user, and an [targetName]
  * that names a target platform and could not be configured by a user.
  *
- * When serialized, the target represented as a tuple `<name>.<canonicalName>`, like `ios.iosArm64`.
+ * When serialized, the target represented as a tuple `<targetName>.<canonicalName>`, like `ios.iosArm64`.
  * If both names are the same (they are by default, unless a user decides to use a custom name), the serialized
  * from is shortened to a single term. For example, `macosArm64.macosArm64` and `macosArm64` are a long and a short
  * serialized forms of the same target.
  */
 public class KlibTarget internal constructor(
+    /**
+     * A name of a target that could be configured by a user in a build script.
+     * Usually, it's the same name as [targetName].
+     */
     public val configurableName: String,
-    public val targetName: String)
-{
+    /**
+     * An actual name of a target that remains unaffected by a custom name settings in a build script.
+     */
+    public val targetName: String
+) {
     init {
         require(!configurableName.contains(".")) {
             "Configurable name can't contain the '.' character: $configurableName"
@@ -28,15 +35,21 @@ public class KlibTarget internal constructor(
         }
     }
     public companion object {
-        public fun parse(line: String): KlibTarget {
-            require(line.isNotBlank()) { "Target name could not be blank." }
-            if (!line.contains('.')) {
-                return KlibTarget(line)
+        /**
+         * Parses a [KlibTarget] from a [value] string in a long (`<targetName>.<configurableName>`)
+         * or a short (`<targetName>`) format.
+         *
+         * @throws IllegalArgumentException if [value] does not conform the format.
+         */
+        public fun parse(value: String): KlibTarget {
+            require(value.isNotBlank()) { "Target name could not be blank." }
+            if (!value.contains('.')) {
+                return KlibTarget(value)
             }
-            val parts = line.split('.')
+            val parts = value.split('.')
             if (parts.size != 2 || parts.any { it.isBlank() }) {
                 throw IllegalArgumentException(
-                    "Target has illegal name format: \"$line\", expected: <target name>.<underlying target name>"
+                    "Target has illegal name format: \"$value\", expected: <target name>.<underlying target name>"
                 )
             }
             return KlibTarget(parts[1], parts[0])

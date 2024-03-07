@@ -179,6 +179,7 @@ When starting to validate your library public API, we recommend the following wo
 ### Experimental KLib ABI validation support
 
 The KLib validation support is experimental and is a subject to change (applies to both an API and the ABI dump format).
+A project has to use Kotlin 1.9.20 or newer to use this feature.
 
 To validate public ABI of a Kotlin library (KLib) corresponding option should be enabled explicitly:
 ```kotlin
