@@ -69,15 +69,6 @@ private fun parseBcvTargetsLine(line: String): Set<KlibTarget> {
         .toSet()
 }
 
-internal data class KlibAbiDumpFormat(
-    /**
-     * Reconstruct a dump as it would look like after dumping a klib.
-     * This flag is mostly intended for dumping an inferred ABI and
-     * requires a [KlibAbiDumpMerger] containing only a single target.
-     */
-    val singleTargetDump: Boolean = false
-)
-
 private class KlibAbiDumpHeader(
     val content: List<String>,
     val underlyingTarget: String?
@@ -112,8 +103,14 @@ internal class KlibAbiDumpMerger {
 
     public fun addIndividualDump(customTargetName: String, file: File) {
         require(file.exists()) { "File does not exist: $file" }
+
         Files.lines(file.toPath()).use {
-            mergeFile(false, customTargetName, LinesProvider(it.iterator()))
+            val lp = LinesProvider(it.iterator())
+            if (lp.peek()?.startsWith(MERGED_DUMP_FILE_HEADER) == true) {
+                mergeFile(true, null, lp)
+            } else {
+                mergeFile(false, customTargetName, lp)
+            }
         }
     }
 
@@ -125,7 +122,7 @@ internal class KlibAbiDumpMerger {
     }
 
     private fun mergeFile(isMergedFile: Boolean, targetName: String?, lines: LinesProvider) {
-        if (isMergedFile) check(this.targetsMut.isEmpty()) { "Merged dump could only be loaded once." }
+        //if (isMergedFile) check(this.targetsMut.isEmpty()) { "Merged dump could only be loaded once." }
         lines.checkFileFormat(isMergedFile)
 
         val aliases = mutableMapOf<String, Set<KlibTarget>>()
@@ -145,10 +142,15 @@ internal class KlibAbiDumpMerger {
             }
             bcvTargets.add(header.extractTarget(targetName ?: header.underlyingTarget!!))
         }
-        if (isMergedFile || this.targetsMut.isEmpty()) {
+        // TODO
+        if (this.targetsMut.isEmpty()) {
             headerContent.addAll(header.content)
         } else if (headerContent != header.content) {
-            throw IllegalStateException("File header doesn't match the header of other files")
+            // TODO
+            throw IllegalStateException(
+                "File header doesn't match the header of other files\n"
+                        + headerContent.toString() + "\n\n\n" + header.content.toString()
+            )
         }
         this.targetsMut.addAll(bcvTargets)
         topLevelDeclaration.targets.addAll(bcvTargets)
@@ -230,7 +232,7 @@ internal class KlibAbiDumpMerger {
                 trimmedLine.length - 1
             )
                 .split(",")
-                .map { KlibTarget(it.trim()) }
+                .map { KlibTarget.parse(it.trim()) }
                 .toSet()
             aliases[name] = targets
         }
@@ -337,32 +339,15 @@ internal class KlibAbiDumpMerger {
         }
     }
 
-    fun dump(appendable: Appendable, dumpFormat: KlibAbiDumpFormat = KlibAbiDumpFormat()) {
+    fun dump(appendable: Appendable) {
         val formatter = createFormatter()
-        if (dumpFormat.singleTargetDump) {
-            require(targets.size == 1) {
-                "Can skip target inclusion only if the dump contains a single target, but it contains: $targets"
-            }
-        } else {
-            appendable.append(MERGED_DUMP_FILE_HEADER).append('\n')
-            appendable.append(formatter.formatHeader(targets)).append('\n')
-        }
+        appendable.append(MERGED_DUMP_FILE_HEADER).append('\n')
+        appendable.append(formatter.formatHeader(targets)).append('\n')
         headerContent.forEach {
             appendable.append(it).append('\n')
         }
-        if (dumpFormat.singleTargetDump) {
-            // Reconstruct a manifest partially for a single target dump,
-            // so the dump could be later merged correctly.
-            val canonicalName = targets.single().targetName
-            val platform = platformByCanonicalName(canonicalName)
-            appendable.append(PLATFORM_PREFIX).append(platform).append('\n')
-            if (platform == "NATIVE") {
-                val nativeTarget = konanTargetNameReverseMapping[canonicalName]!!
-                appendable.append(NATIVE_TARGETS_PREFIX).append(nativeTarget).append('\n')
-            }
-        }
         topLevelDeclaration.children.values.sortedWith(DeclarationsComparator).forEach {
-            it.dump(appendable, targetsMut, dumpFormat, formatter)
+            it.dump(appendable, targetsMut, formatter)
         }
     }
 
@@ -472,11 +457,8 @@ internal class DeclarationContainer(val text: String, val parent: DeclarationCon
         return child
     }
 
-    fun dump(
-        appendable: Appendable, allTargets: Set<KlibTarget>,
-        dumpFormat: KlibAbiDumpFormat, formatter: KLibsTargetsFormatter
-    ) {
-        if (targets != allTargets && !dumpFormat.singleTargetDump) {
+    fun dump(appendable: Appendable, allTargets: Set<KlibTarget>, formatter: KLibsTargetsFormatter) {
+        if (targets != allTargets/* && !dumpFormat.singleTargetDump*/) {
             // Use the same indentation for target list as for the declaration itself
             appendable.append(" ".repeat(text.depth() * INDENT_WIDTH))
                 .append(formatter.formatDeclarationTargets(targets))
@@ -484,7 +466,7 @@ internal class DeclarationContainer(val text: String, val parent: DeclarationCon
         }
         appendable.append(text).append('\n')
         children.values.sortedWith(DeclarationsComparator).forEach {
-            it.dump(appendable, this.targets, dumpFormat, formatter)
+            it.dump(appendable, this.targets, formatter)
         }
         if (delimiter != null) {
             appendable.append(delimiter).append('\n')

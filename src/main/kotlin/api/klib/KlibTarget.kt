@@ -19,6 +19,14 @@ public class KlibTarget internal constructor(
     public val configurableName: String,
     public val targetName: String)
 {
+    init {
+        require(!configurableName.contains(".")) {
+            "Configurable name can't contain the '.' character: $configurableName"
+        }
+        require(!targetName.contains(".")) {
+            "Target name can't contain the '.' character: $targetName"
+        }
+    }
     public companion object {
         public fun parse(line: String): KlibTarget {
             require(line.isNotBlank()) { "Target name could not be blank." }

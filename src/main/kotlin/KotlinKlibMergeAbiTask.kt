@@ -5,7 +5,6 @@
 
 package kotlinx.validation
 
-import kotlinx.validation.klib.KlibAbiDumpFormat
 import kotlinx.validation.klib.KlibAbiDumpMerger
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.*

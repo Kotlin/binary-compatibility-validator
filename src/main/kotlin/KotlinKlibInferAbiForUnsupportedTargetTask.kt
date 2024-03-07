@@ -5,7 +5,6 @@
 
 package kotlinx.validation
 
-import kotlinx.validation.klib.KlibAbiDumpFormat
 import kotlinx.validation.klib.KlibAbiDumpMerger
 import kotlinx.validation.api.klib.KlibTarget
 import kotlinx.validation.klib.TargetHierarchy
@@ -111,7 +110,7 @@ internal abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask
         commonDump.overrideTargets(setOf(unsupportedTarget))
 
         outputFile.bufferedWriter().use {
-            commonDump.dump(it, KlibAbiDumpFormat(singleTargetDump = true))
+            commonDump.dump(it)
         }
 
         logger.warn(
