@@ -62,14 +62,10 @@ internal abstract class KotlinKlibAbiBuildTask : BuildTaskBase() {
                 add(AbiReadingFilter.ExcludedPackages(ignoredPackages.map { AbiCompoundName(it) }))
             }
             if (ignoredClasses.isNotEmpty()) {
-                add(AbiReadingFilter.ExcludedClasses(ignoredClasses.flatMap {
-                    generateQualifiedNames(it)
-                }))
+                add(AbiReadingFilter.ExcludedClasses(ignoredClasses.toKlibNames()))
             }
             if (nonPublicMarkers.isNotEmpty()) {
-                add(AbiReadingFilter.NonPublicMarkerAnnotations(nonPublicMarkers.flatMap {
-                    generateQualifiedNames(it)
-                }))
+                add(AbiReadingFilter.NonPublicMarkerAnnotations(nonPublicMarkers.toKlibNames()))
             }
         }
 
@@ -100,18 +96,55 @@ internal abstract class KotlinKlibAbiBuildTask : BuildTaskBase() {
     }
 }
 
-@ExperimentalStdlibApi
-@ExperimentalLibraryAbiReader
-internal fun generateQualifiedNames(name: String): List<AbiQualifiedName> {
-    if (!name.contains('.')) {
-        return listOf(AbiQualifiedName(AbiCompoundName(""), AbiCompoundName(name)))
+// We're assuming that all names are in valid binary form as it's described in JVMLS §13.1:
+// https://docs.oracle.com/javase/specs/jls/se21/html/jls-13.html#jls-13.1
+@OptIn(ExperimentalLibraryAbiReader::class)
+private fun Collection<String>.toKlibNames(): List<AbiQualifiedName> =
+    this.map(String::toAbiQualifiedName).filterNotNull()
+
+@OptIn(ExperimentalLibraryAbiReader::class)
+internal fun String.toAbiQualifiedName(): AbiQualifiedName? {
+    if (this.isBlank() || this.contains('/')) return null
+    // Easiest part: dissect package name from the class name
+    val idx = this.lastIndexOf('.')
+    if (idx == -1) {
+        return AbiQualifiedName(AbiCompoundName(""), this.classNameToCompoundName())
+    } else {
+        val packageName = this.substring(0, idx)
+        val className = this.substring(idx + 1)
+        return AbiQualifiedName(AbiCompoundName(packageName), className.classNameToCompoundName())
     }
-    val parts = name.split('.')
-    return buildList {
-        for (packageLength in parts.indices) {
-            val packageName = AbiCompoundName(parts.subList(0, packageLength).joinToString("."))
-            val className = AbiCompoundName(parts.subList(packageLength, parts.size).joinToString("."))
-            add(AbiQualifiedName(packageName, className))
+}
+
+@OptIn(ExperimentalLibraryAbiReader::class)
+private fun String.classNameToCompoundName(): AbiCompoundName {
+    if (this.isEmpty()) return AbiCompoundName(this)
+
+    val segments = mutableListOf<String>()
+    val builder = StringBuilder()
+
+    for (idx in this.indices) {
+        val c = this[idx]
+        // Don't treat a character as a separator if:
+        // - it's not a '$'
+        // - it's at the beginning of the segment
+        // - it's the last character of the string
+        if ( c != '$' || builder.isEmpty() || idx == this.length - 1) {
+            builder.append(c)
+            continue
         }
+        check(c == '$')
+        // class$$$susbclass -> class.$$subclass, were at second $ here.
+        if (builder.last() == '$') {
+            builder.append(c)
+            continue
+        }
+
+        segments.add(builder.toString())
+        builder.clear()
     }
+    if (builder.isNotEmpty()) {
+        segments.add(builder.toString())
+    }
+    return AbiCompoundName(segments.joinToString(separator = "."))
 }

@@ -4,6 +4,6 @@
  */
 
 configure<kotlinx.validation.ApiValidationExtension> {
-    ignoredClasses.add("subclasses.A.B")
-    //ignoredClasses.add("subclasses.A\$B")
+    // ignoredClasses.add("subclasses.A.B")
+    ignoredClasses.add("subclasses.A\$B")
 }
