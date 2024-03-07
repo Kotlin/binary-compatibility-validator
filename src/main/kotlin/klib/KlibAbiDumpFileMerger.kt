@@ -71,14 +71,9 @@ private fun parseBcvTargetsLine(line: String): Set<KlibTarget> {
 
 private class KlibAbiDumpHeader(
     val content: List<String>,
-    val underlyingTarget: String?
+    val underlyingTargets: Set<KlibTarget>
 ) {
-    fun extractTarget(targetName: String): KlibTarget {
-        if (underlyingTarget == "wasm") {
-            return KlibTarget(targetName)
-        }
-        return KlibTarget(targetName, underlyingTarget ?: targetName)
-    }
+    constructor(content: List<String>, underlyingTarget: KlibTarget) : this(content, setOf(underlyingTarget))
 }
 
 /**
@@ -94,59 +89,36 @@ internal class KlibAbiDumpMerger {
      */
     public val targets: Set<KlibTarget> = targetsMut
 
-    public fun loadMergedDump(file: File) {
+    public fun load(file: File, targetName: String? = null) {
         require(file.exists()) { "File does not exist: $file" }
         Files.lines(file.toPath()).use {
-            mergeFile(true, null, LinesProvider(it.iterator()))
+            mergeFile(targetName, LinesProvider(it.iterator()))
         }
     }
 
-    public fun addIndividualDump(customTargetName: String, file: File) {
-        require(file.exists()) { "File does not exist: $file" }
-
-        Files.lines(file.toPath()).use {
-            val lp = LinesProvider(it.iterator())
-            if (lp.peek()?.startsWith(MERGED_DUMP_FILE_HEADER) == true) {
-                mergeFile(true, null, lp)
-            } else {
-                mergeFile(false, customTargetName, lp)
-            }
-        }
-    }
-
-    public fun addIndividualDump(file: File) {
-        require(file.exists()) { "File does not exist: $file" }
-        Files.lines(file.toPath()).use {
-            mergeFile(false, null, LinesProvider(it.iterator()))
-        }
-    }
-
-    private fun mergeFile(isMergedFile: Boolean, targetName: String?, lines: LinesProvider) {
-        //if (isMergedFile) check(this.targetsMut.isEmpty()) { "Merged dump could only be loaded once." }
-        lines.checkFileFormat(isMergedFile)
+    private fun mergeFile(targetName: String?, lines: LinesProvider) {
+        val isMergedFile = lines.determineFileType()
 
         val aliases = mutableMapOf<String, Set<KlibTarget>>()
         val bcvTargets = mutableSetOf<KlibTarget>()
         if (isMergedFile) {
+            lines.next() // skip the heading line
             bcvTargets.addAll(lines.parseTargets())
+            check(bcvTargets.size == 1 || targetName == null) {
+                "Can't use an explicit target name with a multi-target dump. " +
+                        "targetName: $targetName, dump targets: $bcvTargets"
+            }
             aliases.putAll(lines.parseAliases())
         }
-        val header = lines.parseFileHeader()
-        if (!isMergedFile) {
-            if (targetName == null && header.underlyingTarget == "wasm") {
-                throw IllegalStateException(
-                    "Currently, there is no way to distinguish dumps generated for " +
-                            "different Wasm targets (wasmJs and wasmWasi), " +
-                            "please specify the actual target name explicitly"
-                )
-            }
-            bcvTargets.add(header.extractTarget(targetName ?: header.underlyingTarget!!))
+        val header = lines.parseFileHeader(isMergedFile, targetName)
+        bcvTargets.addAll(header.underlyingTargets)
+        bcvTargets.intersect(targets).also {
+            check(it.isEmpty()) { "This dump and a file to merge share some targets: $it" }
         }
-        // TODO
+
         if (this.targetsMut.isEmpty()) {
             headerContent.addAll(header.content)
         } else if (headerContent != header.content) {
-            // TODO
             throw IllegalStateException(
                 "File header doesn't match the header of other files\n"
                         + headerContent.toString() + "\n\n\n" + header.content.toString()
@@ -239,7 +211,10 @@ internal class KlibAbiDumpMerger {
         return aliases
     }
 
-    private fun LinesProvider.parseFileHeader(): KlibAbiDumpHeader {
+    private fun LinesProvider.parseFileHeader(
+        isMergedFile: Boolean,
+        configurableTargetName: String?
+    ): KlibAbiDumpHeader {
         val header = mutableListOf<String>()
         var targets: String? = null
         var platform: String? = null
@@ -261,6 +236,8 @@ internal class KlibAbiDumpMerger {
             val next = peek()!!
             if (!next.startsWith(COMMENT_PREFIX)) break
             next()
+            // There's no manifest in merged files
+            check(!isMergedFile) { "Unexpected header line: $next" }
             when {
                 next.startsWith(PLATFORM_PREFIX) -> {
                     platform = next.split(": ")[1].trim()
@@ -271,40 +248,67 @@ internal class KlibAbiDumpMerger {
                 }
             }
         }
-        if (platform == null) {
-            return KlibAbiDumpHeader(header, null)
+        if (isMergedFile) {
+            return KlibAbiDumpHeader(header, emptySet())
         }
-        // TODO
-        if (targets?.contains(",") == true) throw IllegalStateException("Multi-target klibs are not supported.")
-        val underlyingTarget = when (platform) {
-            "NATIVE" -> konanTargetNameMapping[targets]
-                ?: throw IllegalStateException("The manifest is missing targets for native platform")
 
-            else -> platform.toLowerCase()
-        }
-        return KlibAbiDumpHeader(header, underlyingTarget)
+        // transform a combination of platform name and targets list to a set of KlibTargets
+        return KlibAbiDumpHeader(header, extractTargets(platform, targets, configurableTargetName))
     }
 
-    private fun LinesProvider.checkFileFormat(isMergedFile: Boolean) {
-        val headerLine = if (isMergedFile) {
-            next()
-        } else {
-            peek()!!
-        }
-        val expectedHeader = if (isMergedFile) {
-            MERGED_DUMP_FILE_HEADER
-        } else {
-            REGULAR_DUMP_FILE_HEADER
+    private fun extractTargets(
+        platformString: String?,
+        targetsString: String?,
+        configurableTargetName: String?
+    ): Set<KlibTarget> {
+        check(platformString != null) {
+            "The dump does not contain platform name. Please make sure that the manifest was included in the dump"
         }
 
-        check(headerLine == expectedHeader) {
-            val headerStart = if (headerLine.length > 32) {
-                headerLine.substring(0, 32) + "..."
-            } else {
-                headerLine
-            }
-            "Expected a file staring with \"$expectedHeader\", but the file stats with \"$headerStart\""
+        if (platformString == "WASM") {
+            // Currently, there's no way to distinguish Wasm targets without explicitly specifying a target name
+            check(configurableTargetName != null) { "targetName has to be specified for a Wasm target" }
+            return setOf(KlibTarget(configurableTargetName))
         }
+        if (platformString != "NATIVE") {
+            return if (configurableTargetName == null) {
+                setOf(KlibTarget(platformString.toLowerCase()))
+            } else {
+                setOf(KlibTarget(configurableTargetName, platformString.toLowerCase()))
+            }
+        }
+
+        check(targetsString != null) { "Dump for a native platform missing targets list." }
+
+        val targetsList = targetsString.split(TARGETS_DELIMITER).map {
+            konanTargetNameMapping[it.trim()] ?: throw IllegalStateException("Unknown native target: $it")
+        }
+        check(targetsList.size == 1 || configurableTargetName == null) {
+            "Can't use configurableTargetName ($configurableTargetName) for a multi-target dump: $targetsList"
+        }
+        if (targetsList.size == 1 && configurableTargetName != null) {
+            return setOf(KlibTarget(configurableTargetName, targetsList.first()))
+        }
+        return targetsList.asSequence().map { KlibTarget(it) }.toSet()
+    }
+
+    private fun LinesProvider.determineFileType(): Boolean {
+        val headerLine = peek() ?: throw IllegalStateException("File is empty")
+        if (headerLine.trimEnd() == MERGED_DUMP_FILE_HEADER) {
+            return true
+        }
+        if (headerLine.trimEnd() == REGULAR_DUMP_FILE_HEADER) {
+            return false
+        }
+        val headerStart = if (headerLine.length > 32) {
+            headerLine.substring(0, 32) + "..."
+        } else {
+            headerLine
+        }
+        throw IllegalStateException(
+            "Expected a file staring with \"$REGULAR_DUMP_FILE_HEADER\" " +
+                    "or \"$MERGED_DUMP_FILE_HEADER\", but the file stats with \"$headerStart\""
+        )
     }
 
     private fun LinesProvider.parseDeclaration(

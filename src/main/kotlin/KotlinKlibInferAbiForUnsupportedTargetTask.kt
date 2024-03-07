@@ -86,7 +86,7 @@ internal abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask
         // a common ABI that should be shared by the unsupported target as well
         val commonDump = KlibAbiDumpMerger()
         for (target in matchingTargets) {
-            commonDump.addIndividualDump(target.configurableName, target2outFile[target]!!)
+            commonDump.load(target2outFile[target]!!, target.configurableName)
         }
         commonDump.retainCommonAbi()
 
@@ -95,7 +95,7 @@ internal abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask
         val image = KlibAbiDumpMerger()
         if (inputImageFile.exists()) {
             if (inputImageFile.length() > 0L) {
-                image.loadMergedDump(inputImageFile)
+                image.load(inputImageFile)
                 image.retainTargetSpecificAbi(unsupportedTarget)
                 // merge common ABI with target-specific ABI
                 commonDump.mergeTargetSpecific(image)
