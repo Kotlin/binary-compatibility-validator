@@ -8,8 +8,10 @@ package kotlinx.validation.klib
 import kotlinx.validation.api.klib.KlibTarget
 import java.io.File
 import java.nio.file.Files
+import java.util.*
+import kotlin.Comparator
 
-internal class LinesProvider(private val lines: Iterator<String>) : Iterator<String> {
+private class LinesProvider(private val lines: Iterator<String>) : Iterator<String> {
     private var nextLine: String? = null
 
     public fun peek(): String? {
@@ -87,16 +89,20 @@ internal class KlibAbiDumpMerger {
     /**
      * All targets for which this dump contains declarations.
      */
-    public val targets: Set<KlibTarget> = targetsMut
+    internal val targets: Set<KlibTarget> = targetsMut
 
-    public fun load(file: File, targetName: String? = null) {
+    internal fun merge(file: File, configurableTargetName: String? = null) {
         require(file.exists()) { "File does not exist: $file" }
         Files.lines(file.toPath()).use {
-            mergeFile(targetName, LinesProvider(it.iterator()))
+            merge(it.iterator(), configurableTargetName)
         }
     }
 
-    private fun mergeFile(targetName: String?, lines: LinesProvider) {
+    internal fun merge(lines: Iterator<String>, configurableTargetName: String? = null) {
+        merge(LinesProvider(lines), configurableTargetName)
+    }
+
+    private fun merge(lines: LinesProvider, configurableTargetName: String?) {
         val isMergedFile = lines.determineFileType()
 
         val aliases = mutableMapOf<String, Set<KlibTarget>>()
@@ -104,13 +110,13 @@ internal class KlibAbiDumpMerger {
         if (isMergedFile) {
             lines.next() // skip the heading line
             bcvTargets.addAll(lines.parseTargets())
-            check(bcvTargets.size == 1 || targetName == null) {
+            check(bcvTargets.size == 1 || configurableTargetName == null) {
                 "Can't use an explicit target name with a multi-target dump. " +
-                        "targetName: $targetName, dump targets: $bcvTargets"
+                        "targetName: $configurableTargetName, dump targets: $bcvTargets"
             }
             aliases.putAll(lines.parseAliases())
         }
-        val header = lines.parseFileHeader(isMergedFile, targetName)
+        val header = lines.parseFileHeader(isMergedFile, configurableTargetName)
         bcvTargets.addAll(header.underlyingTargets)
         bcvTargets.intersect(targets).also {
             check(it.isEmpty()) { "This dump and a file to merge share some targets: $it" }
@@ -134,16 +140,21 @@ internal class KlibAbiDumpMerger {
         // and we must pop one or several declarations out of the parsing stack.
         var currentContainer = topLevelDeclaration
         var depth = -1
+        val targetsStack = Stack<Set<KlibTarget>>().apply { push(bcvTargets) }
 
         while (lines.hasNext()) {
             val line = lines.peek()!!
+            if (line.isEmpty()) { lines.next(); continue }
             // TODO: wrap the line and cache the depth inside that wrapper?
             val lineDepth = line.depth()
             when {
                 // The depth is the same as before; we encountered a sibling
                 depth == lineDepth -> {
+                    // pop it off to swap previous value from the same depth,
+                    // parseDeclaration will update it
+                    targetsStack.pop()
                     currentContainer =
-                        lines.parseDeclaration(lineDepth, currentContainer.parent!!, bcvTargets, isMergedFile, aliases)
+                        lines.parseDeclaration(lineDepth, currentContainer.parent!!, targetsStack, aliases)
                 }
                 // The depth is increasing; that means we encountered child declaration
                 depth < lineDepth -> {
@@ -152,7 +163,7 @@ internal class KlibAbiDumpMerger {
                                 "previous: ${currentContainer.text}"
                     }
                     currentContainer =
-                        lines.parseDeclaration(lineDepth, currentContainer, bcvTargets, isMergedFile, aliases)
+                        lines.parseDeclaration(lineDepth, currentContainer, targetsStack, aliases)
                     depth = lineDepth
                 }
                 // Otherwise, we're finishing all the declaration with greater depth compared to the depth of
@@ -162,6 +173,7 @@ internal class KlibAbiDumpMerger {
                 else -> {
                     while (currentContainer.text.depth() > lineDepth) {
                         currentContainer = currentContainer.parent!!
+                        targetsStack.pop()
                     }
                     // If the line is '}' - add it as a terminator to the corresponding declaration, it'll simplify
                     // dumping the merged file back to text format.
@@ -314,32 +326,24 @@ internal class KlibAbiDumpMerger {
     private fun LinesProvider.parseDeclaration(
         depth: Int,
         parent: DeclarationContainer,
-        allTargets: Set<KlibTarget>,
-        isMergedFile: Boolean,
+        parentTargetsStack: Stack<Set<KlibTarget>>,
         aliases: Map<String, Set<KlibTarget>>
     ): DeclarationContainer {
         val line = peek()!!
         return if (line.startsWith(" ".repeat(depth * INDENT_WIDTH) + TARGETS_LIST_PREFIX)) {
-            check(isMergedFile) {
-                "Targets declaration should only be a part of merged file, " +
-                        "and the current file claimed to be a regular dump file:\n$line"
-            }
             next() // skip prefix
-            // Target list means that the declaration following it has a narrower set of targets then its parent,
+            // Target list means that the declaration following it has a narrower set of targets than its parent,
             // so we must use it.
             val targets = parseBcvTargetsLine(line)
             val expandedTargets = targets.flatMap {
                 aliases[it.configurableName] ?: listOf(it)
             }.toSet()
+            parentTargetsStack.push(expandedTargets)
             parent.createOrUpdateChildren(next(), expandedTargets)
         } else {
-            // That's an ugly part:
-            // - for a merged file (isMergedFile==true) we need to use parent declaration targets: if we're in this
-            //   branch, no explicit targets were specified, and new declaration targets should be the same as targets
-            //   of its parent. We can't use allTargets here, as parent may have a more specific set of targets.
-            // - for a single klib dump file, we need to specify the exact target associated with this file and allTargets
-            //   must contain exactly one value here.
-            parent.createOrUpdateChildren(next(), if (isMergedFile) parent.targets else allTargets)
+            // Inherit all targets from a parent
+            parentTargetsStack.push(parentTargetsStack.peek())
+            parent.createOrUpdateChildren(next(), parentTargetsStack.peek())
         }
     }
 
@@ -424,6 +428,30 @@ internal class KlibAbiDumpMerger {
 
         targetsMut.addAll(other.targetsMut)
         topLevelDeclaration.mergeTargetSpecific(other.topLevelDeclaration)
+    }
+
+    /**
+     * Merges other [KlibAbiDumpMerger] into this one.
+     */
+    fun merge(other: KlibAbiDumpMerger) {
+        if (other.targets.isEmpty()) return
+
+        targets.intersect(other.targets).also {
+            require(it.isEmpty()) {
+                "Targets of this dump and the dump to merge into it should not intersect. Common targets: $it"
+            }
+        }
+        if (headerContent != other.headerContent) {
+            // the dump was empty
+            if (headerContent.isEmpty() && targets.isEmpty()) {
+                headerContent.addAll(other.headerContent)
+            } else {
+                throw IllegalArgumentException("Dumps headers does not match")
+            }
+        }
+
+        targetsMut.addAll(other.targetsMut)
+        topLevelDeclaration.merge(other.topLevelDeclaration)
     }
 
     /**
@@ -527,6 +555,30 @@ internal class DeclarationContainer(val text: String, val parent: DeclarationCon
                 it.value.addTargetRecursively(other.targets.first())
             }
         }
+    }
+
+    fun merge(other: DeclarationContainer) {
+        targets.addAll(other.targets)
+        val parent = this
+        other.children.forEach { (line, decl) ->
+            children.compute(line) { _, thisDecl ->
+                if (thisDecl == null) {
+                    decl.deepCopy(parent)
+                } else {
+                    thisDecl.apply { merge(decl) }
+                }
+            }
+        }
+    }
+
+    fun deepCopy(parent: DeclarationContainer): DeclarationContainer {
+        val copy = DeclarationContainer(this.text, parent)
+        copy.delimiter = delimiter
+        copy.targets.addAll(targets)
+        children.forEach { key, value ->
+            copy.children[key] = value.deepCopy(copy)
+        }
+        return copy
     }
 
     private fun addTargetRecursively(first: KlibTarget) {

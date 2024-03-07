@@ -1,6 +1,5 @@
 // KLib ABI Dump
 // Targets: [androidNativeArm32, androidNativeArm64, androidNativeX64, androidNativeX86, linuxArm64, linuxX64, mingwX64]
-// Alias: androidNative => [androidNativeArm32, androidNativeArm64, androidNativeX64, androidNativeX86]
 // Rendering settings:
 // - Signature version: 2
 // - Show manifest properties: true

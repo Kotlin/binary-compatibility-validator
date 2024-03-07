@@ -108,6 +108,59 @@ public final class kotlinx/validation/api/KotlinSignaturesLoadingKt {
 	public static synthetic fun retainExplicitlyIncludedIfDeclared$default (Ljava/util/List;Ljava/util/Collection;Ljava/util/Collection;Ljava/util/Collection;ILjava/lang/Object;)Ljava/util/List;
 }
 
+public final class kotlinx/validation/api/klib/KLibDumpFilters {
+	public static final field Companion Lkotlinx/validation/api/klib/KLibDumpFilters$Companion;
+	public final fun getIgnoredClasses ()Ljava/util/Set;
+	public final fun getIgnoredPackages ()Ljava/util/Set;
+	public final fun getNonPublicMarkers ()Ljava/util/Set;
+	public final fun getSignatureVersion ()Lkotlinx/validation/api/klib/KlibSignatureVersion;
+}
+
+public final class kotlinx/validation/api/klib/KLibDumpFilters$Builder {
+	public fun <init> ()V
+	public final fun build ()Lkotlinx/validation/api/klib/KLibDumpFilters;
+	public final fun getIgnoredClasses ()Ljava/util/Set;
+	public final fun getIgnoredPackages ()Ljava/util/Set;
+	public final fun getNonPublicMarkers ()Ljava/util/Set;
+	public final fun getSignatureVersion ()Lkotlinx/validation/api/klib/KlibSignatureVersion;
+	public final fun setSignatureVersion (Lkotlinx/validation/api/klib/KlibSignatureVersion;)V
+}
+
+public final class kotlinx/validation/api/klib/KLibDumpFilters$Companion {
+	public final fun getDEFAULT ()Lkotlinx/validation/api/klib/KLibDumpFilters;
+}
+
+public final class kotlinx/validation/api/klib/KlibDump {
+	public static final field Companion Lkotlinx/validation/api/klib/KlibDump$Companion;
+	public fun <init> ()V
+	public final fun copy ()Lkotlinx/validation/api/klib/KlibDump;
+	public final fun getTargets ()Ljava/util/Set;
+	public final fun merge (Ljava/io/File;Ljava/lang/String;)V
+	public final fun merge (Lkotlinx/validation/api/klib/KlibDump;)V
+	public static synthetic fun merge$default (Lkotlinx/validation/api/klib/KlibDump;Ljava/io/File;Ljava/lang/String;ILjava/lang/Object;)V
+	public final fun remove (Ljava/lang/Iterable;)V
+	public final fun retain (Ljava/lang/Iterable;)V
+	public final fun saveTo (Ljava/lang/Appendable;)V
+}
+
+public final class kotlinx/validation/api/klib/KlibDump$Companion {
+	public final fun from (Ljava/io/File;Ljava/lang/String;)Lkotlinx/validation/api/klib/KlibDump;
+	public static synthetic fun from$default (Lkotlinx/validation/api/klib/KlibDump$Companion;Ljava/io/File;Ljava/lang/String;ILjava/lang/Object;)Lkotlinx/validation/api/klib/KlibDump;
+	public final fun fromKlib (Ljava/io/File;Ljava/lang/String;Lkotlinx/validation/api/klib/KLibDumpFilters;)Lkotlinx/validation/api/klib/KlibDump;
+	public static synthetic fun fromKlib$default (Lkotlinx/validation/api/klib/KlibDump$Companion;Ljava/io/File;Ljava/lang/String;Lkotlinx/validation/api/klib/KLibDumpFilters;ILjava/lang/Object;)Lkotlinx/validation/api/klib/KlibDump;
+}
+
+public final class kotlinx/validation/api/klib/KlibDumpFiltersKt {
+	public static final fun KLibDumpFilters (Lkotlin/jvm/functions/Function1;)Lkotlinx/validation/api/klib/KLibDumpFilters;
+}
+
+public final class kotlinx/validation/api/klib/KlibDumpKt {
+	public static final fun inferAbi (Lkotlinx/validation/api/klib/KlibTarget;Ljava/lang/Iterable;Lkotlinx/validation/api/klib/KlibDump;)Lkotlinx/validation/api/klib/KlibDump;
+	public static synthetic fun inferAbi$default (Lkotlinx/validation/api/klib/KlibTarget;Ljava/lang/Iterable;Lkotlinx/validation/api/klib/KlibDump;ILjava/lang/Object;)Lkotlinx/validation/api/klib/KlibDump;
+	public static final fun mergeKlib (Lkotlinx/validation/api/klib/KlibDump;Ljava/io/File;Ljava/lang/String;Lkotlinx/validation/api/klib/KLibDumpFilters;)V
+	public static synthetic fun mergeKlib$default (Lkotlinx/validation/api/klib/KlibDump;Ljava/io/File;Ljava/lang/String;Lkotlinx/validation/api/klib/KLibDumpFilters;ILjava/lang/Object;)V
+}
+
 public final class kotlinx/validation/api/klib/KlibSignatureVersion {
 	public static final field Companion Lkotlinx/validation/api/klib/KlibSignatureVersion$Companion;
 	public fun equals (Ljava/lang/Object;)Z

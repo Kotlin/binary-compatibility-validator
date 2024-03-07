@@ -5,6 +5,7 @@
 
 package kotlinx.validation
 
+import kotlinx.validation.api.klib.KlibDump
 import kotlinx.validation.klib.KlibAbiDumpMerger
 import kotlinx.validation.api.klib.KlibTarget
 import org.gradle.api.DefaultTask
@@ -43,13 +44,16 @@ internal abstract class KotlinKlibExtractSupportedTargetsAbiTask : DefaultTask()
     @Input
     var strictValidation: Boolean = false
 
+    @OptIn(ExperimentalBCVApi::class)
     @TaskAction
     internal fun generate() {
         if (inputAbiFile.length() == 0L) {
             error("Project ABI file $inputAbiFile is empty.")
         }
-        val dump = KlibAbiDumpMerger().apply { load(inputAbiFile) }
+        val dump = KlibDump.from(inputAbiFile)
         val enabledTargets = supportedTargets.get().map { KlibTarget.parse(it).targetName }
+        // Filter out only unsupported files.
+        // That ensures that target renaming will be caught and reported as a change.
         val targetsToRemove = dump.targets.filter { it.targetName !in enabledTargets }
         if (targetsToRemove.isNotEmpty() && strictValidation) {
             throw IllegalStateException(
@@ -57,9 +61,7 @@ internal abstract class KotlinKlibExtractSupportedTargetsAbiTask : DefaultTask()
                         "and the strictValidation mode was enabled."
             )
         }
-        for (target in targetsToRemove) {
-            dump.remove(target)
-        }
-        outputAbiFile.bufferedWriter().use { dump.dump(it) }
+        dump.remove(targetsToRemove)
+        outputAbiFile.bufferedWriter().use { dump.saveTo(it) }
     }
 }

@@ -5,8 +5,10 @@
 
 package kotlinx.validation
 
+import kotlinx.validation.api.klib.KlibDump
 import kotlinx.validation.klib.KlibAbiDumpMerger
 import kotlinx.validation.api.klib.KlibTarget
+import kotlinx.validation.api.klib.inferAbi
 import kotlinx.validation.klib.TargetHierarchy
 import org.gradle.api.DefaultTask
 import org.gradle.api.provider.Provider
@@ -71,6 +73,7 @@ internal abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask
     @OutputFile
     lateinit var outputFile: File
 
+    @OptIn(ExperimentalBCVApi::class)
     @TaskAction
     internal fun generate() {
         val unsupportedTarget = KlibTarget(unsupportedTargetName, unsupportedTargetCanonicalName)
@@ -78,27 +81,19 @@ internal abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask
         // Find a set of supported targets that are closer to unsupported target in the hierarchy.
         // Note that dumps are stored using configurable name, but grouped by the canonical target name.
         val matchingTargets = findMatchingTargets(supportedTargetNames, unsupportedTarget)
-        val target2outFile = supportedTargetNames.keysToMap {
-            File(outputApiDir).parentFile.resolve(it.configurableName).resolve(dumpFileName)
+        // Load dumps that are a good fit for inference
+        val supportedTargetDumps = matchingTargets.map { target ->
+            val dumpFile = File(outputApiDir).parentFile.resolve(target.configurableName).resolve(dumpFileName)
+            KlibDump.from(dumpFile, target.configurableName).also {
+                check(it.targets.single() == target)
+            }
         }
 
-        // given a set of similar targets, combine their ABI files into a single merged dump and consider it
-        // a common ABI that should be shared by the unsupported target as well
-        val commonDump = KlibAbiDumpMerger()
-        for (target in matchingTargets) {
-            commonDump.load(target2outFile[target]!!, target.configurableName)
-        }
-        commonDump.retainCommonAbi()
-
-        // load and old dump (that may contain the dump for the unsupported target) and remove all but the declarations
-        // specific to the unsupported target
-        val image = KlibAbiDumpMerger()
+        // Load an old dump, if any
+        var image: KlibDump? = null
         if (inputImageFile.exists()) {
             if (inputImageFile.length() > 0L) {
-                image.load(inputImageFile)
-                image.retainTargetSpecificAbi(unsupportedTarget)
-                // merge common ABI with target-specific ABI
-                commonDump.mergeTargetSpecific(image)
+                image = KlibDump.from(inputImageFile)
             } else {
                 logger.warn(
                     "Project's ABI file exists, but empty: $inputImageFile. " +
@@ -107,10 +102,9 @@ internal abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask
                 )
             }
         }
-        commonDump.overrideTargets(setOf(unsupportedTarget))
 
         outputFile.bufferedWriter().use {
-            commonDump.dump(it)
+            inferAbi(unsupportedTarget, supportedTargetDumps, image).saveTo(it)
         }
 
         logger.warn(
