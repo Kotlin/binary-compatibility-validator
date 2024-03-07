@@ -12,12 +12,24 @@ import org.gradle.plugins.signing.*
 import java.net.*
 
 fun PublishingExtension.mavenRepositoryPublishing(project: Project) {
+    val isSnapshot = project.version.toString().endsWith("-SNAPSHOT")
+
     repositories {
-        maven {
-            url = URI("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
-            credentials {
-                username = project.getSensitiveProperty("libs.sonatype.user")
-                password = project.getSensitiveProperty("libs.sonatype.password")
+        if (isSnapshot) {
+            maven {
+                url = URI("https://maven.pkg.jetbrains.space/kotlin/p/kotlinx/dev")
+                credentials {
+                    username = project.getSensitiveProperty("libs.space.user")
+                    password = project.getSensitiveProperty("libs.space.password")
+                }
+            }
+        } else {
+            maven {
+                url = URI("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
+                credentials {
+                    username = project.getSensitiveProperty("libs.sonatype.user")
+                    password = project.getSensitiveProperty("libs.sonatype.password")
+                }
             }
         }
     }
