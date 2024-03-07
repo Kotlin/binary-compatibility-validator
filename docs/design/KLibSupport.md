@@ -53,7 +53,7 @@ in a file's header.
 
 Here's a brief example of such a merged dump file:
 ```
-// Merged KLib ABI Dump
+// KLib ABI Dump
 // Targets: [androidNativeArm32, androidNativeArm64, androidNativeX64, androidNativeX86, linuxArm64, linuxX64, mingwX64]
 // Alias: linux => [linuxArm64, linuxX64]
 // Rendering settings:
@@ -189,12 +189,12 @@ There are two main issues related to the renaming:
 However, a klib's manifest contains all the information required to find an actual underlying target (but it does
 not contain a custom name, though). And the same info could be included in a textual klib dump.
 
-To overcome the issue, it is proposed to represent target name as a tuple consisting of "visible" name
-and a canonical underlying target name: `name.canonicalName`.
+To overcome the issue, it is proposed to represent target name as a tuple consisting of a "visible" 
+configurable target name and an underlying target name: `targetName.canfigurableName`.
 
 For the example mentioned above, target such fully qualified target names are:
-- `macos.macosArm64` for `macosArm64("macos")`;
-- `linux.linuxArm64` for `linuxArm64("linux")`;
+- `macosArm64.macos` for `macosArm64("macos")`;
+- `linuxArm64.linux` for `linuxArm64("linux")`;
 - `iosArm64.iosArm64` for `iosArm64()`.
 
 By default, when the visible and canonical names are the same, only one of them could be specified, so

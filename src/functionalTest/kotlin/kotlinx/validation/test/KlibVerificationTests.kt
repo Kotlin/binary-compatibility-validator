@@ -22,7 +22,7 @@ import kotlin.test.assertTrue
 
 internal const val BANNED_TARGETS_PROPERTY_NAME = "binary.compatibility.validator.klib.targets.disabled.for.testing"
 
-private fun KLibVerificationTests.checkKlibDump(
+private fun KlibVerificationTests.checkKlibDump(
     buildResult: BuildResult,
     expectedDumpFileName: String,
     projectName: String = "testproject",
@@ -38,7 +38,7 @@ private fun KLibVerificationTests.checkKlibDump(
     Assertions.assertThat(generatedDump.readText()).isEqualToIgnoringNewLines(expected)
 }
 
-internal class KLibVerificationTests : BaseKotlinGradleTest() {
+internal class KlibVerificationTests : BaseKotlinGradleTest() {
     private fun BaseKotlinScope.baseProjectSetting() {
         settingsGradleKts {
             resolve("/examples/gradle/settings/settings-name-testproject.gradle.kts")

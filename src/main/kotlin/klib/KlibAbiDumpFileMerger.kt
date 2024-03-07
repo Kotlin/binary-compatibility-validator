@@ -37,7 +37,7 @@ internal class LinesProvider(private val lines: Iterator<String>) : Iterator<Str
     }
 }
 
-private const val MERGED_DUMP_FILE_HEADER = "// Merged KLib ABI Dump"
+private const val MERGED_DUMP_FILE_HEADER = "// KLib ABI Dump"
 private const val REGULAR_DUMP_FILE_HEADER = "// Rendering settings:"
 private const val COMMENT_PREFIX = "//"
 private const val TARGETS_LIST_PREFIX = "// Targets: ["

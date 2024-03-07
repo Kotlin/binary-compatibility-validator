@@ -1,4 +1,4 @@
-// Merged KLib ABI Dump
+// KLib ABI Dump
 // Targets: [androidNativeArm32, androidNativeArm64, androidNativeX64, androidNativeX86, linuxArm64, linuxX64, mingwX64]
 // Alias: linux => [linuxArm64, linuxX64]
 // Rendering settings:
