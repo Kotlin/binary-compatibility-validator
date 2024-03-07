@@ -157,8 +157,8 @@ public final class kotlinx/validation/api/klib/KlibDumpFiltersKt {
 public final class kotlinx/validation/api/klib/KlibDumpKt {
 	public static final fun inferAbi (Lkotlinx/validation/api/klib/KlibTarget;Ljava/lang/Iterable;Lkotlinx/validation/api/klib/KlibDump;)Lkotlinx/validation/api/klib/KlibDump;
 	public static synthetic fun inferAbi$default (Lkotlinx/validation/api/klib/KlibTarget;Ljava/lang/Iterable;Lkotlinx/validation/api/klib/KlibDump;ILjava/lang/Object;)Lkotlinx/validation/api/klib/KlibDump;
-	public static final fun mergeKlib (Lkotlinx/validation/api/klib/KlibDump;Ljava/io/File;Ljava/lang/String;Lkotlinx/validation/api/klib/KLibDumpFilters;)V
-	public static synthetic fun mergeKlib$default (Lkotlinx/validation/api/klib/KlibDump;Ljava/io/File;Ljava/lang/String;Lkotlinx/validation/api/klib/KLibDumpFilters;ILjava/lang/Object;)V
+	public static final fun mergeFromKlib (Lkotlinx/validation/api/klib/KlibDump;Ljava/io/File;Ljava/lang/String;Lkotlinx/validation/api/klib/KLibDumpFilters;)V
+	public static synthetic fun mergeFromKlib$default (Lkotlinx/validation/api/klib/KlibDump;Ljava/io/File;Ljava/lang/String;Lkotlinx/validation/api/klib/KLibDumpFilters;ILjava/lang/Object;)V
 }
 
 public final class kotlinx/validation/api/klib/KlibSignatureVersion {
