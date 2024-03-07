@@ -704,7 +704,7 @@ internal class KLibsTargetsFormatter(klibDump: KlibAbiDumpMerger) {
         val targetsMut = targets.toMutableSet()
         val resultingTargets = mutableListOf<String>()
         for (alias in aliases) {
-            if (targetsMut.containsAll(alias.targets)) {
+            if (targetsMut == alias.targets) {
                 targetsMut.removeAll(alias.targets)
                 resultingTargets.add(alias.name)
             }
