@@ -331,5 +331,9 @@ class KlibAbiMergingTest {
         )
         val expectedTargets = expectedTargetNames.asSequence().map(KlibTarget::parse).toSet()
         assertEquals(expectedTargets, lib.targets)
+
+        assertFailsWith<IllegalArgumentException> {
+            KlibAbiDumpMerger().merge(file("/merge/stdlib_native_common.abi"), "target")
+        }
     }
 }

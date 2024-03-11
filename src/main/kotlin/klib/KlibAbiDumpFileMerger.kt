@@ -103,13 +103,14 @@ internal class KlibAbiDumpMerger {
     }
 
     private fun merge(lines: LinesProvider, configurableTargetName: String?) {
+        require(lines.peek() != null) { "File is empty" }
         val isMergedFile = lines.determineFileType()
 
         val aliases = mutableMapOf<String, Set<KlibTarget>>()
         val bcvTargets = mutableSetOf<KlibTarget>()
         if (isMergedFile) {
             lines.next() // skip the heading line
-            bcvTargets.addAll(lines.parseTargets())
+            bcvTargets.addAll(lines.parseTargets(configurableTargetName))
             check(bcvTargets.size == 1 || configurableTargetName == null) {
                 "Can't use an explicit target name with a multi-target dump. " +
                         "targetName: $configurableTargetName, dump targets: $bcvTargets"
@@ -189,7 +190,7 @@ internal class KlibAbiDumpMerger {
         }
     }
 
-    private fun LinesProvider.parseTargets(): Set<KlibTarget> {
+    private fun LinesProvider.parseTargets(configurableTargetName: String?): Set<KlibTarget> {
         val line = peek()
         require(line != null) {
             "List of targets expected, but there are no more lines left."
@@ -198,7 +199,14 @@ internal class KlibAbiDumpMerger {
             "The line should starts with $TARGETS_LIST_PREFIX, but was: $line"
         }
         next()
-        return parseBcvTargetsLine(line)
+        val targets = parseBcvTargetsLine(line)
+        require(configurableTargetName == null || targets.size == 1) {
+            "Can't use configurableTargetName ($configurableTargetName) for a multi-target dump: $targets"
+        }
+        if (configurableTargetName != null) {
+            return setOf(KlibTarget(configurableTargetName, targets.first().targetName))
+        }
+        return targets
     }
 
     private fun LinesProvider.parseAliases(): Map<String, Set<KlibTarget>> {
@@ -295,7 +303,7 @@ internal class KlibAbiDumpMerger {
         val targetsList = targetsString.split(TARGETS_DELIMITER).map {
             konanTargetNameMapping[it.trim()] ?: throw IllegalStateException("Unknown native target: $it")
         }
-        check(targetsList.size == 1 || configurableTargetName == null) {
+        require(targetsList.size == 1 || configurableTargetName == null) {
             "Can't use configurableTargetName ($configurableTargetName) for a multi-target dump: $targetsList"
         }
         if (targetsList.size == 1 && configurableTargetName != null) {
@@ -348,6 +356,12 @@ internal class KlibAbiDumpMerger {
     }
 
     fun dump(appendable: Appendable) {
+        if (targets.isEmpty()) {
+            check(topLevelDeclaration.children.isEmpty()) {
+                "Dump containing some declaration should have at least a single target"
+            }
+            return
+        }
         val formatter = createFormatter()
         appendable.append(MERGED_DUMP_FILE_HEADER).append('\n')
         appendable.append(formatter.formatHeader(targets)).append('\n')

@@ -264,14 +264,14 @@ class KlibDumpSamples {
         """.trimIndent())
 
         // Let's use these dumps to infer a public ABI on iosArm64
-        val inferredArm64Dump = inferAbi(
+        val inferredIosArm64Dump = inferAbi(
             unsupportedTarget = unsupportedTarget,
             supportedTargetDumps = listOf(KlibDump.from(linuxDump)),
             oldMergedDump = KlibDump.from(oldMergedDump))
 
-        assertEquals(unsupportedTarget, inferredArm64Dump.targets.single())
+        assertEquals(unsupportedTarget, inferredIosArm64Dump.targets.single())
 
-        val inferredDumpContent = buildString { inferredArm64Dump.saveTo(this) }
+        val inferredDumpContent = buildString { inferredIosArm64Dump.saveTo(this) }
         assertEquals("""
             // KLib ABI Dump
             // Targets: [iosArm64]
