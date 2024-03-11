@@ -9,6 +9,7 @@ import kotlinx.validation.ExperimentalBCVApi
 import org.jetbrains.kotlin.gradle.utils.`is`
 import org.jetbrains.kotlin.library.abi.*
 import java.io.File
+import java.io.FileNotFoundException
 
 /**
  * Filters affecting how the klib ABI will be represented in a dump.
@@ -98,7 +99,7 @@ public fun KLibDumpFilters(builderAction: KLibDumpFilters.Builder.() -> Unit): K
 @ExperimentalBCVApi
 @OptIn(ExperimentalLibraryAbiReader::class)
 internal fun dumpTo(to: Appendable, klibFile: File, filters: KLibDumpFilters) {
-    require(klibFile.exists()) { "File does not exist: ${klibFile.absolutePath}" }
+    if(!klibFile.exists()) { throw FileNotFoundException("File does not exist: ${klibFile.absolutePath}") }
     val abiFilters = mutableListOf<AbiReadingFilter>()
     filters.ignoredClasses.toKlibNames().also {
         if (it.isNotEmpty()) {
@@ -114,7 +115,11 @@ internal fun dumpTo(to: Appendable, klibFile: File, filters: KLibDumpFilters) {
         abiFilters.add(AbiReadingFilter.ExcludedPackages(filters.ignoredPackages.map { AbiCompoundName(it) }))
     }
 
-    val library = LibraryAbiReader.readAbiInfo(klibFile, abiFilters)
+    val library = try {
+        LibraryAbiReader.readAbiInfo(klibFile, abiFilters)
+    } catch (t: Throwable) {
+        throw IllegalStateException("Unable to read klib from ${klibFile.absolutePath}", t)
+    }
 
     val supportedSignatureVersions = library.signatureVersions.asSequence().filter { it.isSupportedByAbiReader }
 

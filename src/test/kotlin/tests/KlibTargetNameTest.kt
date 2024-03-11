@@ -10,6 +10,7 @@ import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNotEquals
 
 class KlibTargetNameTest {
     @Test
@@ -48,5 +49,49 @@ class KlibTargetNameTest {
         assertFailsWith<IllegalArgumentException> {
             KlibTarget("a", "b.c")
         }
+    }
+
+    @Test
+    fun targetsEqual() {
+        assertEquals(KlibTarget.parse("androidNativeArm64"), KlibTarget.parse("androidNativeArm64"))
+        assertNotEquals(KlibTarget.parse("androidNativeArm64"), KlibTarget.parse("androidNativeArm32"))
+
+        assertEquals(
+            KlibTarget.parse("androidNativeArm64.android"), KlibTarget.parse("androidNativeArm64.android")
+        )
+        assertNotEquals(
+            KlibTarget.parse("androidNativeArm64.android"), KlibTarget.parse("androidNativeArm64")
+        )
+
+        assertEquals(
+            KlibTarget.parse("androidNativeArm64.androidNativeArm64"),
+            KlibTarget.parse("androidNativeArm64")
+        )
+    }
+
+    @Test
+    fun targetHashCode() {
+        assertEquals(
+            KlibTarget.parse("androidNativeArm64").hashCode(),
+            KlibTarget.parse("androidNativeArm64").hashCode()
+        )
+        assertNotEquals(
+            KlibTarget.parse("androidNativeArm64").hashCode(),
+            KlibTarget.parse("androidNativeArm32").hashCode()
+        )
+
+        assertEquals(
+            KlibTarget.parse("androidNativeArm64.android").hashCode(),
+            KlibTarget.parse("androidNativeArm64.android").hashCode()
+        )
+        assertNotEquals(
+            KlibTarget.parse("androidNativeArm64.android").hashCode(),
+            KlibTarget.parse("androidNativeArm64").hashCode()
+        )
+
+        assertEquals(
+            KlibTarget.parse("androidNativeArm64.androidNativeArm64").hashCode(),
+            KlibTarget.parse("androidNativeArm64").hashCode()
+        )
     }
 }

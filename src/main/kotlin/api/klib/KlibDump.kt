@@ -71,12 +71,14 @@ public class KlibDump {
      * @throws IllegalArgumentException if this dump and [dumpFile] shares same targets.
      * @throws IllegalArgumentException if [dumpFile] contains multiple targets
      * and [configurableTargetName] is not null.
+     * @throws IllegalArgumentException if [dumpFile] is not a file.
      * @throws FileNotFoundException if [dumpFile] does not exist.
      *
      * @sample samples.KlibDumpSamples.mergeDumps
      */
     public fun merge(dumpFile: File, configurableTargetName: String? = null) {
-        if (!dumpFile.exists()) throw FileNotFoundException(dumpFile.absolutePath)
+        if(!dumpFile.exists()) { throw FileNotFoundException("File does not exist: ${dumpFile.absolutePath}") }
+        require(dumpFile.isFile) { "Not a file: ${dumpFile.absolutePath}" }
         merger.merge(dumpFile, configurableTargetName)
     }
 
@@ -152,12 +154,15 @@ public class KlibDump {
          *
          * @throws IllegalArgumentException if [dumpFile] contains multiple targets
          * and [configurableTargetName] is not null.
+         * @throws IllegalArgumentException if [dumpFile] is empty.
+         * @throws IllegalArgumentException if [dumpFile] is not a file.
          * @throws FileNotFoundException if [dumpFile] does not exist.
          *
          * @sample samples.KlibDumpSamples.mergeDumpObjects
          */
         public fun from(dumpFile: File, configurableTargetName: String? = null): KlibDump {
-            check(dumpFile.exists()) { "File does not exist: ${dumpFile.absolutePath}" }
+            if(!dumpFile.exists()) { throw FileNotFoundException("File does not exist: ${dumpFile.absolutePath}") }
+            require(dumpFile.isFile) { "Not a file: ${dumpFile.absolutePath}" }
             return KlibDump().apply { merge(dumpFile, configurableTargetName) }
         }
 
@@ -177,6 +182,7 @@ public class KlibDump {
          *
          * @throws IllegalArgumentException if [klibFile] contains multiple targets
          * and [configurableTargetName] is not null.
+         * @throws IllegalStateException if a klib could not be loaded from [klibFile].
          * @throws FileNotFoundException if [klibFile] does not exist.
          */
         public fun fromKlib(
@@ -205,6 +211,9 @@ public class KlibDump {
  * The function aimed to facilitate ABI dumps generation for targets that are not supported by a host compiler.
  * In practice, it means generating dumps for Apple targets on non-Apple hosts.
  *
+ * @throws IllegalArgumentException when one of [supportedTargetDumps] contains [unsupportedTarget]
+ * @throws IllegalArgumentException when [supportedTargetDumps] are empty and [oldMergedDump] is null
+ *
  * @sample samples.KlibDumpSamples.inferDump
  */
 @ExperimentalBCVApi
@@ -213,6 +222,14 @@ public fun inferAbi(
     supportedTargetDumps: Iterable<KlibDump>,
     oldMergedDump: KlibDump? = null
 ): KlibDump {
+    require(supportedTargetDumps.iterator().hasNext() || oldMergedDump != null) {
+        "Can't infer a dump without any dumps provided (supportedTargetDumps is empty, oldMergedDump is null)"
+    }
+    supportedTargetDumps.asSequence().flatMap { it.targets }.toSet().also {
+        require(!it.contains(unsupportedTarget)) {
+            "Supported target dumps already contains unsupportedTarget=$unsupportedTarget"
+        }
+    }
 
     val retainedDump = KlibDump().apply {
         if (oldMergedDump != null) {
@@ -248,6 +265,7 @@ public fun inferAbi(
  * @throws IllegalArgumentException if this dump and [klibFile] shares same targets.
  * @throws IllegalArgumentException if [klibFile] contains multiple targets
  * and [configurableTargetName] is not null.
+ * @throws IllegalStateException if a klib could not be loaded from [klibFile].
  * @throws FileNotFoundException if [klibFile] does not exist.
  */
 @ExperimentalBCVApi

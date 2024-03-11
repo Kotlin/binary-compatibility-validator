@@ -27,6 +27,8 @@ class ClassNameConvertionTest {
         checkNames("p.a\$b\$c", AbiQualifiedName("p", "a.b.c"))
         checkNames("org.example.Outer\$Inner\$\$serializer",
             AbiQualifiedName("org.example", "Outer.Inner.\$serializer"))
+        checkNames("org.example.Outer\$Inner\$\$\$serializer",
+            AbiQualifiedName("org.example", "Outer.Inner.\$\$serializer"))
         checkNames("a.b.e.s.c.MapStream\$Stream\$",
             AbiQualifiedName("a.b.e.s.c", "MapStream.Stream\$"))
     }
