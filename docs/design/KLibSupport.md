@@ -86,7 +86,7 @@ is presented only on `linux`-targets (`// Targets: [linux]`).
 The next line declares a target alias (`// Alias: <name> => [<targets>]`). There are only one alias (`linux`).
 Aliases are generated for target groups corresponding to groups from a default hierarchy, that could appear in a file
 and consist of more than a single target.
-For instance, there's no `andoidNative` group alias as there are no declarations having only 
+For instance, there's no `androidNative` group alias as there are no declarations having only 
 corresponding android-native targets and there is no group for `mingwX64` 
 as there would no other targets in such a group.
 After that, a regular KLib ABI dump header continues, with an exception to some declarations being 
@@ -205,8 +205,49 @@ target name, not on the visible one.
 
 ### Programmatic API for KLib ABI validation
 
-To support scenarios when Gradle plugin could not be used (like in the case of Kotlin stdlib),
+To support scenarios, when Gradle plugin could not be used (like in the case of Kotlin stdlib),
 or when the way users build klibs is different from "compile all the klibs here and now", the programmatic API 
 should be provided. The API should simply provide an entry point to all the functionality used by the plugin.
 
-The API is not yet designed and is the subject of further development.
+Initially, it does make sense to provide an API allowing to implement the same functionality as Gradle Plugin does.
+It also seems reasonable to provide an abstraction layer over the Kotlin compiler's API that dumps a klib so that
+when needed, we could alter the dumping procedure without waiting for a Kotlin release.
+
+There are a few entities that should be exposed for now, namely:
+- a config affecting how a klib dump will look like (`KLibDumpFilters`);
+- a class representing a dump (`KlibDump`) and allowing to perform some actions on it,
+namely, load, save, merge and, also infer;
+- a few supplementary classes, like `KlibTarget` and `KlibSignatureVersion` to give a better and more meaningful
+representation for entities that otherwise would be strings or numbers.
+
+There are not some many options that affect a resulting dump, so for the beginning `KLibDumpFilters` may include only
+`nonPublicMarkers`, `ignoredPackages` and `ignoredClasses` to reflect what could be configured through
+`kotlinx.validation.ApiValidationExtension`, and, also a `signatureVersion` (represented by a dedicated class).
+The latter is only required to handle potential klib signature versions update in the future, so by default simply
+the latest version should be used.
+
+As a side note, in the Gradle plugin, `nonPublicMarkers`, `ignoredPackages` and `ignoredClasses` should treat values as 
+regular Java class (or package) names, so that users who already use the BCV could enable KLib validation and everything
+continues works correctly, without any config updates. So for simplicity, API should threat these values the same way.
+
+The main scenarios for KLib dumps we have in the plugin right now are:
+- merging multiple dumps together;
+- extracting declarations for a subset of targets stored in the merged dump;
+- updating the merged dump with an updated dump for one or several targets;
+- inferring a dump for an unsupported target.
+
+To cover these scenarios, the following operations are proposed for the `KlibDump`:
+- `merge`, that combines several dumps together;
+- `remove` and `retain` operations that either removes all the specified targets (along with declarations) from a dump,
+or, contrary, retain only specified targets;
+- `save`, that converts a dump back into textual form;
+- `infer`, that infers the dump for unsupported targets.
+
+Loading a dump extracted from a klib using compiler API into `KlibDump` and then converting it back to a textual dump
+will produce a file that won't be bitwise identical. To hide this inconsistency, it's proposed to always convert a klib
+dump into `KlibDump` when creating a new dump (i.e. there will be no intermediate step that will extract from a klib 
+into a textual form using the compiler API, that then should be loaded into `KlibDump`). So yet another operation that
+should `KlibDump` should have is `mergeFromKlib`, that will create a dump and merge it directly to `KlibDump` given
+a klib file and an optional `KLibDumpFilters`. 
+
+All the API will be explicitly marked as experimental, so we could freely change it in the future.
