@@ -73,7 +73,7 @@ class KlibAbiMergingTest {
 
     @Test
     fun divergingDumpFiles() {
-        val targets = mutableListOf("androidNativeArm64", "linuxArm64", "linuxX64", "tvOsX64")
+        val targets = mutableListOf("androidNativeArm64", "linuxArm64", "linuxX64", "tvosX64")
         val random = Random(42)
         for (i in 0 until 10) {
             val klib = KlibAbiDumpMerger()
