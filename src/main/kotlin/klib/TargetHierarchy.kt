@@ -20,7 +20,7 @@ internal object TargetHierarchy {
         }
     }
 
-    data class NodeClosure(val node: Node, val allLeafs: Set<String>)
+    data class NodeClosure(val node: Node, val depth: Int, val allLeafs: Set<String>)
 
     internal val hierarchyIndex: Map<String, NodeClosure>
 
@@ -82,21 +82,22 @@ internal object TargetHierarchy {
         )
     )
 
-    private fun Node.collectLeafs(to: MutableMap<String, NodeClosure>): Set<String> {
+    private fun Node.collectLeafs(to: MutableMap<String, NodeClosure>, depth: Int): Set<String> {
         val leafs = mutableSetOf<String>()
         if (children.isEmpty()) {
             leafs.add(name)
         } else {
-            children.forEach { leafs.addAll(it.collectLeafs(to)) }
+            children.forEach { leafs.addAll(it.collectLeafs(to, depth + 1)) }
         }
-        to[name] = NodeClosure(this, leafs)
+        to[name] = NodeClosure(this, depth, leafs)
         return leafs
     }
 
     init {
         val index = mutableMapOf<String, NodeClosure>()
-        val leafs = hierarchy.collectLeafs(index)
-        index[hierarchy.name] = NodeClosure(hierarchy, leafs)
+        val rootDepth = 0
+        val leafs = hierarchy.collectLeafs(index, rootDepth + 1)
+        index[hierarchy.name] = NodeClosure(hierarchy, rootDepth, leafs)
         hierarchyIndex = index
     }
 

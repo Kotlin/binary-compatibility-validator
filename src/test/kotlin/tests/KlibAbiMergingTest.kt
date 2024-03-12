@@ -138,7 +138,6 @@ class KlibAbiMergingTest {
     }
 
     @Test
-    @Ignore
     fun read() {
         val klib = KlibAbiDumpMerger()
         klib.merge(file("/merge/idempotent/bcv-klib-test.abi"))

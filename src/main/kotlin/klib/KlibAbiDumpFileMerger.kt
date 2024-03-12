@@ -656,11 +656,14 @@ internal class KLibsTargetsFormatter(klibDump: KlibAbiDumpMerger) {
     private val aliases: List<Alias>
 
     init {
+        // place more specific groups (with a higher depth value) closer to the beginning of the list
+        val nodesDescendingComparator =
+            compareByDescending<Map.Entry<String, TargetHierarchy.NodeClosure>> { it.value.depth }
+                .thenByDescending { it.key }
         val allTargets = klibDump.targets
         val aliasesBuilder = mutableListOf<Alias>()
         TargetHierarchy.hierarchyIndex.entries
-            // place smaller groups (more specific groups) closer to the beginning of the list
-            .sortedWith(compareBy({ it.value.allLeafs.size }, { it.key }))
+            .sortedWith(nodesDescendingComparator)
             .forEach {
                 // intersect with all targets to use only enabled targets in aliases
                 // intersection is based on underlying target name as a set of such names is fixed
