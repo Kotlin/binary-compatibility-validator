@@ -10,14 +10,12 @@ import kotlinx.validation.api.klib.KlibDump
 import kotlinx.validation.api.klib.KlibTarget
 import kotlinx.validation.api.klib.inferAbi
 import kotlinx.validation.api.klib.mergeFromKlib
-import org.jetbrains.kotlin.backend.common.phaser.dumpIrElement
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
 import java.io.FileNotFoundException
 import java.util.*
-import kotlin.math.sin
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
@@ -550,5 +548,95 @@ class KlibDumpTest {
                 )
             )
         }
+    }
+
+    @Test
+    fun iterativeGrouping() {
+        val dump = KlibDump.from(asFile("""
+            // Klib ABI Dump
+            // Targets: [androidNativeArm32, androidNativeArm64, androidNativeX64, androidNativeX86, linuxArm64, linuxX64, mingwX64]
+            // Rendering settings:
+            // - Signature version: 2
+            // - Show manifest properties: true
+            // - Show declarations: true
+            
+            // Library unique name: <testproject>
+            final class org.different.pack/BuildConfig { // org.different.pack/BuildConfig|null[0]
+                constructor <init>() // org.different.pack/BuildConfig.<init>|<init>(){}[0]
+                final fun f1(): kotlin/Int // org.different.pack/BuildConfig.f1|f1(){}[0]
+                final val p1 // org.different.pack/BuildConfig.p1|{}p1[0]
+                    final fun <get-p1>(): kotlin/Int // org.different.pack/BuildConfig.p1.<get-p1>|<get-p1>(){}[0]
+            }
+            // Targets: [androidNativeArm64]
+            final fun (org.different.pack/BuildConfig).org.different.pack/linuxArm64Specific(): kotlin/Int // org.different.pack/linuxArm64Specific|linuxArm64Specific@org.different.pack.BuildConfig(){}[0]
+            // Targets: [linuxArm64, linuxX64]
+            final fun (org.different.pack/BuildConfig).org.different.pack/linuxArm64Specific2(): kotlin/Int // org.different.pack/linuxArm64Specific2|linuxArm64Specific@org.different.pack.BuildConfig(){}[0]
+            // Targets: [androidNativeArm32, androidNativeArm64, androidNativeX64, androidNativeX86, linuxArm64, linuxX64]
+            final fun (org.different.pack/BuildConfig).org.different.pack/linuxArm64Specific3(): kotlin/Int // org.different.pack/linuxArm64Specific3|linuxArm64Specific@org.different.pack.BuildConfig(){}[0]
+            
+        """.trimIndent()))
+
+        val expectedDump = """
+            // Klib ABI Dump
+            // Targets: [androidNativeArm32, androidNativeArm64, androidNativeX64, androidNativeX86, linuxArm64, linuxX64, mingwX64]
+            // Alias: androidNative => [androidNativeArm32, androidNativeArm64, androidNativeX64, androidNativeX86]
+            // Alias: linux => [linuxArm64, linuxX64]
+            // Rendering settings:
+            // - Signature version: 2
+            // - Show manifest properties: true
+            // - Show declarations: true
+            
+            // Library unique name: <testproject>
+            final class org.different.pack/BuildConfig { // org.different.pack/BuildConfig|null[0]
+                constructor <init>() // org.different.pack/BuildConfig.<init>|<init>(){}[0]
+                final fun f1(): kotlin/Int // org.different.pack/BuildConfig.f1|f1(){}[0]
+                final val p1 // org.different.pack/BuildConfig.p1|{}p1[0]
+                    final fun <get-p1>(): kotlin/Int // org.different.pack/BuildConfig.p1.<get-p1>|<get-p1>(){}[0]
+            }
+            // Targets: [androidNative, linux]
+            final fun (org.different.pack/BuildConfig).org.different.pack/linuxArm64Specific3(): kotlin/Int // org.different.pack/linuxArm64Specific3|linuxArm64Specific@org.different.pack.BuildConfig(){}[0]
+            // Targets: [linux]
+            final fun (org.different.pack/BuildConfig).org.different.pack/linuxArm64Specific2(): kotlin/Int // org.different.pack/linuxArm64Specific2|linuxArm64Specific@org.different.pack.BuildConfig(){}[0]
+            // Targets: [androidNativeArm64]
+            final fun (org.different.pack/BuildConfig).org.different.pack/linuxArm64Specific(): kotlin/Int // org.different.pack/linuxArm64Specific|linuxArm64Specific@org.different.pack.BuildConfig(){}[0]
+
+        """.trimIndent()
+        assertEquals(expectedDump, buildString { dump.saveTo(this) })
+    }
+
+    @Test
+    fun similarGroupRemoval() {
+        // native function should use a group alias "ios", not "apple", or "native"
+        val dump = KlibDump.from(asFile("""
+            // Klib ABI Dump
+            // Targets: [iosArm64, iosX64, js]
+            // Rendering settings:
+            // - Signature version: 2
+            // - Show manifest properties: true
+            // - Show declarations: true
+            
+            // Library unique name: <testproject>
+            final fun org.example/common(): kotlin/Int // com.example/common|common(){}[0]
+            // Targets: [iosArm64, iosX64]
+            final fun org.example/native(): kotlin/Int // com.example/native|native(){}[0]
+            
+        """.trimIndent()))
+
+        val expectedDump = """
+            // Klib ABI Dump
+            // Targets: [iosArm64, iosX64, js]
+            // Alias: ios => [iosArm64, iosX64]
+            // Rendering settings:
+            // - Signature version: 2
+            // - Show manifest properties: true
+            // - Show declarations: true
+            
+            // Library unique name: <testproject>
+            final fun org.example/common(): kotlin/Int // com.example/common|common(){}[0]
+            // Targets: [ios]
+            final fun org.example/native(): kotlin/Int // com.example/native|native(){}[0]
+            
+        """.trimIndent()
+        assertEquals(expectedDump, buildString { dump.saveTo(this) })
     }
 }

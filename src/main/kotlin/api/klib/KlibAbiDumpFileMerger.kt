@@ -5,7 +5,6 @@
 
 package kotlinx.validation.api.klib
 
-import kotlinx.validation.api.klib.KlibTarget
 import java.io.File
 import java.nio.file.Files
 import java.util.*
@@ -677,31 +676,62 @@ internal class KLibsTargetsFormatter(klibDump: KlibAbiDumpMerger) {
         // filter out all groups consisting of less than one member
         aliasesBuilder.removeIf { it.targets.size < 2 }
         aliasesBuilder.removeIf { it.targets == allTargets }
-        // collect all actually used target groups and remove all unused aliases
-        val usedAliases = mutableSetOf<Set<KlibTarget>>()
+        filterOutDumplicateGroups(aliasesBuilder)
+        filterOutUnusedGroups(klibDump, aliasesBuilder)
+
+        // reverse the order to place a common group first
+        aliases = aliasesBuilder.reversed()
+    }
+
+    private fun filterOutDumplicateGroups(allGroups: MutableList<Alias>) {
+        // Remove all duplicating groups. At this point, aliases are sorted so
+        // that more specific groups are before more general groups, so we'll remove
+        // more common groups here.
+        for (idx in allGroups.size - 1 downTo 1) {
+            if (allGroups[idx].targets == allGroups[idx - 1].targets) {
+                // TODO: can we avoid shifting the whole trailing part of the list?
+                allGroups.removeAt(idx)
+            }
+        }
+    }
+
+    // TODO: optimize the algorithm
+    private fun filterOutUnusedGroups(klibDump: KlibAbiDumpMerger, allGroups: MutableList<Alias>) {
+        // Collect all target sets that are actually in use
+        val targetSetsInUse = mutableSetOf<Set<KlibTarget>>()
+        val allTargets = klibDump.targets
         fun visitor(decl: DeclarationContainer) {
-            usedAliases.add(decl.targets)
+            if (decl.targets != allTargets) {
+                targetSetsInUse.add(decl.targets)
+            }
             decl.visit(::visitor)
         }
         klibDump.visit(::visitor)
-        aliasesBuilder.removeIf { !usedAliases.contains(it.targets) }
-        // Remove all duplicating groups. At this point, aliases are sorted so
-        // that more specific groups are before more common groups, so we'll remove
-        // more common groups here.
-        val toRemove = mutableListOf<Int>()
-        for (i in aliasesBuilder.indices) {
-            for (j in i + 1 until aliasesBuilder.size) {
-                if (aliasesBuilder[j].targets == aliasesBuilder[i].targets) {
-                    toRemove.add(j)
+        // Scan groups from general to specific and check it there are some
+        // declarations having a target set such that it includes a group.
+        // If there are no such declarations - a group has to be removed.
+        for (idx in allGroups.size - 1 downTo 0) {
+            val alias = allGroups[idx]
+            val updatedTargetSets = mutableSetOf<Set<KlibTarget>>()
+            // scan actually used target sets
+            val targetSetIterator = targetSetsInUse.iterator()
+            while (targetSetIterator.hasNext()) {
+                val s = targetSetIterator.next()
+                // If a target set includes this group, take that set, remove all targets
+                // corresponding to the current group from it and then, later, add the set back.
+                if (s.containsAll(alias.targets)) {
+                    targetSetIterator.remove()
+                    updatedTargetSets.add(s.subtract(alias.targets))
                 }
             }
+            // If updatedTargetSets is empty, there are no target sets including the current group,
+            // so we have to remove the group.
+            if (updatedTargetSets.isEmpty()) {
+                allGroups.removeAt(idx)
+            } else {
+                targetSetsInUse.addAll(updatedTargetSets)
+            }
         }
-        toRemove.sortDescending()
-        toRemove.forEach {
-            aliasesBuilder.removeAt(it)
-        }
-        // reverse the order to place a common group first
-        aliases = aliasesBuilder.reversed()
     }
 
     fun formatHeader(targets: Set<KlibTarget>): String {
@@ -725,10 +755,9 @@ internal class KLibsTargetsFormatter(klibDump: KlibAbiDumpMerger) {
         val mutableTargets = targets.toMutableSet()
         val resultingTargets = mutableListOf<String>()
         for (alias in aliases) {
-            if (mutableTargets == alias.targets) {
-                mutableTargets.clear()
+            if (mutableTargets.containsAll(alias.targets)) {
+                mutableTargets.removeAll(alias.targets)
                 resultingTargets.add(alias.name)
-                break
             }
         }
         resultingTargets.addAll(mutableTargets.map { it.toString() })
