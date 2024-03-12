@@ -101,9 +101,9 @@ public class KlibDump {
     }
 
     /**
-     * Remove all declarations that do not belong to specified targets and remove these targets from the dump.
+     * Removes all declarations that do not belong to specified targets and removes these targets from the dump.
      *
-     * All targets not stored within a dump will be ignored.
+     * All targets in the [targets] collection not contained within this dump will be ignored.
      *
      * @sample samples.KlibDumpSamples.extractTargets
      */
