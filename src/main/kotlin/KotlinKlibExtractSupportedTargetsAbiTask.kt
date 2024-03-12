@@ -8,6 +8,7 @@ package kotlinx.validation
 import kotlinx.validation.api.klib.KlibDump
 import kotlinx.validation.api.klib.KlibAbiDumpMerger
 import kotlinx.validation.api.klib.KlibTarget
+import kotlinx.validation.api.klib.saveTo
 import org.gradle.api.DefaultTask
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.*
@@ -62,6 +63,6 @@ internal abstract class KotlinKlibExtractSupportedTargetsAbiTask : DefaultTask()
             )
         }
         dump.remove(targetsToRemove)
-        outputAbiFile.bufferedWriter().use { dump.saveTo(it) }
+        dump.saveTo(outputAbiFile)
     }
 }

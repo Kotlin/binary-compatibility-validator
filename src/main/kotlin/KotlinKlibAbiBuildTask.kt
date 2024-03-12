@@ -8,6 +8,7 @@ package kotlinx.validation
 import kotlinx.validation.api.klib.KLibDumpFilters
 import kotlinx.validation.api.klib.KlibDump
 import kotlinx.validation.api.klib.KlibSignatureVersion
+import kotlinx.validation.api.klib.saveTo
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -64,8 +65,6 @@ internal abstract class KotlinKlibAbiBuildTask : BuildTaskBase() {
             signatureVersion = this@KotlinKlibAbiBuildTask.signatureVersion.toKlibSignatureVersion()
         })
 
-        outputApiFile.bufferedWriter().use {
-            dump.saveTo(it)
-        }
+        dump.saveTo(outputApiFile)
     }
 }

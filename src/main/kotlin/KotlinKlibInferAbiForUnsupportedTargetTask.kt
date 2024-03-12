@@ -5,9 +5,7 @@
 
 package kotlinx.validation
 
-import kotlinx.validation.api.klib.KlibDump
-import kotlinx.validation.api.klib.KlibTarget
-import kotlinx.validation.api.klib.inferAbi
+import kotlinx.validation.api.klib.*
 import kotlinx.validation.api.klib.TargetHierarchy
 import org.gradle.api.DefaultTask
 import org.gradle.api.provider.Provider
@@ -101,9 +99,7 @@ internal abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask
             }
         }
 
-        outputFile.bufferedWriter().use {
-            inferAbi(unsupportedTarget, supportedTargetDumps, image).saveTo(it)
-        }
+        inferAbi(unsupportedTarget, supportedTargetDumps, image).saveTo(outputFile)
 
         logger.warn(
             "An ABI dump for target $unsupportedTarget was inferred from the ABI generated for the following targets " +
@@ -114,7 +110,10 @@ internal abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask
         )
     }
 
-    private fun findMatchingTargets(supportedTargets: Set<KlibTarget>, unsupportedTarget: KlibTarget): Collection<KlibTarget> {
+    private fun findMatchingTargets(
+        supportedTargets: Set<KlibTarget>,
+        unsupportedTarget: KlibTarget
+    ): Collection<KlibTarget> {
         var currentGroup: String? = unsupportedTarget.targetName
         while (currentGroup != null) {
             // If a current group has some supported targets, use them.

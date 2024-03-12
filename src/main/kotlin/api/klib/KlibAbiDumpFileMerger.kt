@@ -374,7 +374,7 @@ internal class KlibAbiDumpMerger {
         }
     }
 
-    private fun createFormatter(): KLibsTargetsFormatter {
+    private fun createFormatter(): KlibsTargetsFormatter {
         for (target in targets) {
             val node = TargetHierarchy.hierarchyIndex[target.targetName]
             if (node != null && node.allLeafs.size == 1 && node.allLeafs.first() != node.node.name) {
@@ -384,7 +384,7 @@ internal class KlibAbiDumpMerger {
                 )
             }
         }
-        return KLibsTargetsFormatter(this)
+        return KlibsTargetsFormatter(this)
     }
 
     /**
@@ -502,7 +502,7 @@ internal class DeclarationContainer(val text: String, val parent: DeclarationCon
         return child
     }
 
-    fun dump(appendable: Appendable, allTargets: Set<KlibTarget>, formatter: KLibsTargetsFormatter) {
+    fun dump(appendable: Appendable, allTargets: Set<KlibTarget>, formatter: KlibsTargetsFormatter) {
         if (targets != allTargets/* && !dumpFormat.singleTargetDump*/) {
             // Use the same indentation for target list as for the declaration itself
             appendable.append(" ".repeat(text.depth() * INDENT_WIDTH))
@@ -649,7 +649,7 @@ private object DeclarationsComparator : Comparator<DeclarationContainer> {
     }
 }
 
-internal class KLibsTargetsFormatter(klibDump: KlibAbiDumpMerger) {
+internal class KlibsTargetsFormatter(klibDump: KlibAbiDumpMerger) {
     private data class Alias(val name: String, val targets: Set<KlibTarget>)
 
     private val aliases: List<Alias>

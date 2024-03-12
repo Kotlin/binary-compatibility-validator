@@ -6,7 +6,6 @@
 package kotlinx.validation.api.klib
 
 import kotlinx.validation.ExperimentalBCVApi
-import org.jetbrains.kotlin.gradle.utils.`is`
 import org.jetbrains.kotlin.library.abi.*
 import java.io.File
 import java.io.FileNotFoundException
@@ -15,7 +14,7 @@ import java.io.FileNotFoundException
  * Filters affecting how the klib ABI will be represented in a dump.
  */
 @ExperimentalBCVApi
-public class KLibDumpFilters internal constructor(
+public class KlibDumpFilters internal constructor(
     /**
      * Names of packages that should be excluded from a dump.
      * If a package is listed here, none of its declarations will be included in a dump.
@@ -69,8 +68,8 @@ public class KLibDumpFilters internal constructor(
         public var signatureVersion: KlibSignatureVersion = KlibSignatureVersion.LATEST
 
         @PublishedApi
-        internal fun build(): KLibDumpFilters {
-            return KLibDumpFilters(ignoredPackages, ignoredClasses, nonPublicMarkers, signatureVersion)
+        internal fun build(): KlibDumpFilters {
+            return KlibDumpFilters(ignoredPackages, ignoredClasses, nonPublicMarkers, signatureVersion)
         }
     }
 
@@ -79,26 +78,26 @@ public class KLibDumpFilters internal constructor(
          * Default KLib ABI dump filters which declares no filters
          * and uses the latest KLib ABI signature version available.
          */
-        public val DEFAULT: KLibDumpFilters = KLibDumpFilters {}
+        public val DEFAULT: KlibDumpFilters = KLibDumpFilters {}
     }
 }
 
 /**
- * Builds a new [KLibDumpFilters] instance by invoking a [builderAction] on a temporary
- * [KLibDumpFilters.Builder] instance and then converting it into filters.
+ * Builds a new [KlibDumpFilters] instance by invoking a [builderAction] on a temporary
+ * [KlibDumpFilters.Builder] instance and then converting it into filters.
  *
- * Supplied [KLibDumpFilters.Builder] is valid only during the scope of [builderAction] execution.
+ * Supplied [KlibDumpFilters.Builder] is valid only during the scope of [builderAction] execution.
  */
 @ExperimentalBCVApi
-public fun KLibDumpFilters(builderAction: KLibDumpFilters.Builder.() -> Unit): KLibDumpFilters {
-    val builder = KLibDumpFilters.Builder()
+public fun KLibDumpFilters(builderAction: KlibDumpFilters.Builder.() -> Unit): KlibDumpFilters {
+    val builder = KlibDumpFilters.Builder()
     builderAction(builder)
     return builder.build()
 }
 
 @ExperimentalBCVApi
 @OptIn(ExperimentalLibraryAbiReader::class)
-internal fun dumpTo(to: Appendable, klibFile: File, filters: KLibDumpFilters) {
+internal fun dumpTo(to: Appendable, klibFile: File, filters: KlibDumpFilters) {
     if(!klibFile.exists()) { throw FileNotFoundException("File does not exist: ${klibFile.absolutePath}") }
     val abiFilters = mutableListOf<AbiReadingFilter>()
     filters.ignoredClasses.toKlibNames().also {

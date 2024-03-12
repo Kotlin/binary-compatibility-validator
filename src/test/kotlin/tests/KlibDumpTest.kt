@@ -6,10 +6,7 @@
 package tests
 
 import kotlinx.validation.ExperimentalBCVApi
-import kotlinx.validation.api.klib.KlibDump
-import kotlinx.validation.api.klib.KlibTarget
-import kotlinx.validation.api.klib.inferAbi
-import kotlinx.validation.api.klib.mergeFromKlib
+import kotlinx.validation.api.klib.*
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -552,7 +549,9 @@ class KlibDumpTest {
 
     @Test
     fun iterativeGrouping() {
-        val dump = KlibDump.from(asFile("""
+        val dump = KlibDump.from(
+            asFile(
+                """
             // Klib ABI Dump
             // Targets: [androidNativeArm32, androidNativeArm64, androidNativeX64, androidNativeX86, linuxArm64, linuxX64, mingwX64]
             // Rendering settings:
@@ -574,7 +573,9 @@ class KlibDumpTest {
             // Targets: [androidNativeArm32, androidNativeArm64, androidNativeX64, androidNativeX86, linuxArm64, linuxX64]
             final fun (org.different.pack/BuildConfig).org.different.pack/linuxArm64Specific3(): kotlin/Int // org.different.pack/linuxArm64Specific3|linuxArm64Specific@org.different.pack.BuildConfig(){}[0]
             
-        """.trimIndent()))
+        """.trimIndent()
+            )
+        )
 
         val expectedDump = """
             // Klib ABI Dump
@@ -607,7 +608,9 @@ class KlibDumpTest {
     @Test
     fun similarGroupRemoval() {
         // native function should use a group alias "ios", not "apple", or "native"
-        val dump = KlibDump.from(asFile("""
+        val dump = KlibDump.from(
+            asFile(
+                """
             // Klib ABI Dump
             // Targets: [iosArm64, iosX64, js]
             // Rendering settings:
@@ -620,7 +623,9 @@ class KlibDumpTest {
             // Targets: [iosArm64, iosX64]
             final fun org.example/native(): kotlin/Int // com.example/native|native(){}[0]
             
-        """.trimIndent()))
+        """.trimIndent()
+            )
+        )
 
         val expectedDump = """
             // Klib ABI Dump
@@ -638,5 +643,17 @@ class KlibDumpTest {
             
         """.trimIndent()
         assertEquals(expectedDump, buildString { dump.saveTo(this) })
+    }
+
+    @Test
+    fun saveToFile() {
+        val dump = KlibDump.from(asFile(mergedMultitargetDump))
+        val tempFile = tmpFolder.newFile()
+        dump.saveTo(tempFile)
+
+        assertEquals(
+            buildString { dump.saveTo(this) },
+            tempFile.readText(Charsets.US_ASCII)
+        )
     }
 }

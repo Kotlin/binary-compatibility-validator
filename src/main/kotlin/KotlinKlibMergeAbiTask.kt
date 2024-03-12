@@ -6,6 +6,7 @@
 package kotlinx.validation
 
 import kotlinx.validation.api.klib.KlibDump
+import kotlinx.validation.api.klib.saveTo
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.*
 import java.io.File
@@ -51,11 +52,10 @@ internal abstract class KotlinKlibMergeAbiTask : DefaultTask() {
     @OptIn(ExperimentalBCVApi::class)
     @TaskAction
     internal fun merge() {
-        val mergedDump = KlibDump().apply {
+        KlibDump().apply {
             targetToFile.forEach { (targetName, dumpDir) ->
                 merge(dumpDir.resolve(dumpFileName), targetName)
             }
-        }
-        mergedFile.bufferedWriter().use { mergedDump.saveTo(it) }
+        }.saveTo(mergedFile)
     }
 }

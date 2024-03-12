@@ -6,6 +6,7 @@
 package kotlinx.validation.api.klib
 
 import kotlinx.validation.ExperimentalBCVApi
+import org.jetbrains.kotlin.ir.backend.js.MainModule
 import java.io.File
 import java.io.FileNotFoundException
 
@@ -17,7 +18,7 @@ import java.io.FileNotFoundException
  * **Creating a textual dump from a klib**
  * ```kotlin
  * val dump = KlibDump.fromKlib(File("/path/to/library.klib"))
- * File("/path/to/dump.klib.api").bufferedWriter().use { dump.saveTo(it) })
+ * dump.saveTo(File("/path/to/dump.klib.api"))
  * ```
  *
  * **Loading a dump**
@@ -30,7 +31,7 @@ import java.io.FileNotFoundException
  * val klibs = listOf(File("/path/to/library-linuxX64.klib"), File("/path/to/library-linuxArm64.klib"), ...)
  * val mergedDump = KlibDump()
  * klibs.forEach { mergedDump.mergeFromKlib(it) }
- * File("/path/to/merged.klib.api").bufferedWriter().use { mergedDump.saveTo(it) }
+ * mergedDump.saveTo(File("/path/to/merged.klib.api"))
  * ```
  *
  * **Updating an existing merged dump**
@@ -39,7 +40,7 @@ import java.io.FileNotFoundException
  * val newTargetDump = KlibDump.fromKlib(File("/path/to/library-linuxX64.klib"))
  * mergedDump.remove(newTargetDump.targets)
  * mergedDump.merge(newTargetDump)
- * File("/path/to/merged.klib.api").bufferedWrite().use { mergedDump.saveTo(it) }
+ * mergedDump.saveTo(File("/path/to/merged.klib.api"))
  * ```
  */
 @ExperimentalBCVApi
@@ -187,7 +188,7 @@ public class KlibDump {
         public fun fromKlib(
             klibFile: File,
             configurableTargetName: String? = null,
-            filters: KLibDumpFilters = KLibDumpFilters.DEFAULT
+            filters: KlibDumpFilters = KlibDumpFilters.DEFAULT
         ): KlibDump {
             val dump = buildString {
                 dumpTo(this, klibFile, filters)
@@ -270,7 +271,13 @@ public fun inferAbi(
 @ExperimentalBCVApi
 public fun KlibDump.mergeFromKlib(
     klibFile: File, configurableTargetName: String? = null,
-    filters: KLibDumpFilters = KLibDumpFilters.DEFAULT
+    filters: KlibDumpFilters = KlibDumpFilters.DEFAULT
 ) {
     this.merge(KlibDump.fromKlib(klibFile, configurableTargetName, filters))
 }
+
+/**
+ * Serializes the dump and writes it to [file].
+ */
+@ExperimentalBCVApi
+public fun KlibDump.saveTo(file: File): Unit = file.bufferedWriter().use { saveTo(it) }
