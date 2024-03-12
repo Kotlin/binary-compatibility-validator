@@ -15,7 +15,7 @@ import kotlin.test.assertNotEquals
 class KlibTargetNameTest {
     @Test
     fun parse() {
-        assertEquals("a.b", KlibTarget("b", "a").toString())
+        assertEquals("a.b", KlibTarget("a", "b").toString())
         assertEquals("a", KlibTarget("a").toString())
         assertEquals("a", KlibTarget("a", "a").toString())
 

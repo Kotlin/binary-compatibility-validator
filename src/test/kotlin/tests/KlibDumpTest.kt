@@ -43,7 +43,7 @@ private val rawLinuxDump = """
 """.trimIndent()
 
 private val mergedLinuxDump = """
-    // KLib ABI Dump
+    // Klib ABI Dump
     // Targets: [linuxX64]
     // Rendering settings:
     // - Signature version: 2
@@ -63,7 +63,7 @@ private val mergedLinuxDump = """
 
 
 private val mergedLinuxDumpWithTargetSpecificDeclaration = """
-    // KLib ABI Dump
+    // Klib ABI Dump
     // Targets: [linuxArm64, linuxX64]
     // Rendering settings:
     // - Signature version: 2
@@ -88,7 +88,7 @@ private val mergedLinuxDumpWithTargetSpecificDeclaration = """
 """.trimIndent()
 
 private val mergedLinuxArm64Dump = """
-    // KLib ABI Dump
+    // Klib ABI Dump
     // Targets: [linuxArm64]
     // Rendering settings:
     // - Signature version: 2
@@ -107,7 +107,7 @@ private val mergedLinuxArm64Dump = """
 """.trimIndent()
 
 private val mergedLinuxDumpWithCustomName = """
-    // KLib ABI Dump
+    // Klib ABI Dump
     // Targets: [linuxX64.testTarget]
     // Rendering settings:
     // - Signature version: 2
@@ -140,7 +140,7 @@ private val rawMultitargetDump = """
 """.trimIndent()
 
 private val mergedMultitargetDump = """
-    // KLib ABI Dump
+    // Klib ABI Dump
     // Targets: [androidNativeArm32, androidNativeArm64, androidNativeX64, androidNativeX86, iosArm64, iosSimulatorArm64, iosX64, linuxArm32Hfp, linuxArm64, linuxX64, macosArm64, macosX64, mingwX64, tvosArm64, tvosSimulatorArm64, tvosX64, watchosArm32, watchosArm64, watchosDeviceArm64, watchosSimulatorArm64, watchosX64]
     // Rendering settings:
     // - Signature version: 2
@@ -154,7 +154,7 @@ private val mergedMultitargetDump = """
 
 
 private val mergedMultitargetDumpFiltered = """
-    // KLib ABI Dump
+    // Klib ABI Dump
     // Targets: [androidNativeArm32]
     // Rendering settings:
     // - Signature version: 2
@@ -434,7 +434,7 @@ class KlibDumpTest {
         val linuxDump = KlibDump.from(
             asFile(
                 """
-                // KLib ABI Dump
+                // Klib ABI Dump
                 // Targets: [linuxArm64]
                 // Rendering settings:
                 // - Signature version: 2
@@ -459,7 +459,7 @@ class KlibDumpTest {
         val inferredDumpContent = buildString { inferredIosArm64Dump.saveTo(this) }
         assertEquals(
             """
-                // KLib ABI Dump
+                // Klib ABI Dump
                 // Targets: [iosArm64]
                 // Rendering settings:
                 // - Signature version: 2
@@ -480,7 +480,7 @@ class KlibDumpTest {
         val oldDump = KlibDump.from(
             asFile(
                 """
-            // KLib ABI Dump
+            // Klib ABI Dump
             // Targets: [iosArm64, linuxArm64]
             // Rendering settings:
             // - Signature version: 2
@@ -508,7 +508,7 @@ class KlibDumpTest {
         val inferredDumpContent = buildString { inferredIosArm64Dump.saveTo(this) }
         assertEquals(
             """
-                // KLib ABI Dump
+                // Klib ABI Dump
                 // Targets: [iosArm64]
                 // Rendering settings:
                 // - Signature version: 2

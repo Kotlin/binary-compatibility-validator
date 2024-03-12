@@ -76,7 +76,7 @@ internal abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask
     @OptIn(ExperimentalBCVApi::class)
     @TaskAction
     internal fun generate() {
-        val unsupportedTarget = KlibTarget(unsupportedTargetName, unsupportedTargetCanonicalName)
+        val unsupportedTarget = KlibTarget(unsupportedTargetCanonicalName, unsupportedTargetName)
         val supportedTargetNames = supportedTargets.get().map { KlibTarget.parse(it) }.toSet()
         // Find a set of supported targets that are closer to unsupported target in the hierarchy.
         // Note that dumps are stored using configurable name, but grouped by the canonical target name.

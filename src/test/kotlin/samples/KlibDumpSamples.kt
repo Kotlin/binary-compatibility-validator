@@ -77,7 +77,7 @@ class KlibDumpSamples {
         val mergedDumpContent = buildString { mergedDump.saveTo(this) }
 
         assertEquals("""
-            // KLib ABI Dump
+            // Klib ABI Dump
             // Targets: [linuxArm64, linuxX64]
             // Rendering settings:
             // - Signature version: 2
@@ -145,7 +145,7 @@ class KlibDumpSamples {
         val mergedDumpContent = buildString { mergedDump.saveTo(this) }
 
         assertEquals("""
-            // KLib ABI Dump
+            // Klib ABI Dump
             // Targets: [linuxArm64, linuxX64.linuxX86_64]
             // Rendering settings:
             // - Signature version: 2
@@ -167,7 +167,7 @@ class KlibDumpSamples {
         mergedDump.remove(listOf(KlibTarget.parse("linuxX64.linuxX86_64")))
         val filteredDumpContent = buildString { mergedDump.saveTo(this) }
         assertEquals("""
-            // KLib ABI Dump
+            // Klib ABI Dump
             // Targets: [linuxArm64]
             // Rendering settings:
             // - Signature version: 2
@@ -190,7 +190,7 @@ class KlibDumpSamples {
     fun extractTargets() {
         // Oh no, we're running on Windows and Apple targets are unsupported, let's filter it out!
         val mergedDump = createDumpWithContent("""
-            // KLib ABI Dump
+            // Klib ABI Dump
             // Targets: [iosArm64, iosSimulatorArm64, iosX64, linuxArm64, linuxX64]
             // Rendering settings:
             // - Signature version: 2
@@ -214,7 +214,7 @@ class KlibDumpSamples {
 
         val filteredDumpContent = buildString { dump.saveTo(this) }
         assertEquals("""
-            // KLib ABI Dump
+            // Klib ABI Dump
             // Targets: [linuxArm64, linuxX64]
             // Rendering settings:
             // - Signature version: 2
@@ -235,7 +235,7 @@ class KlibDumpSamples {
         val unsupportedTarget = KlibTarget.parse("iosArm64")
         // Thankfully, we have an old merged dump ...
         val oldMergedDump = createDumpWithContent("""
-            // KLib ABI Dump
+            // Klib ABI Dump
             // Targets: [iosArm64, linuxArm64]
             // Rendering settings:
             // - Signature version: 2
@@ -251,7 +251,7 @@ class KlibDumpSamples {
 
         // ... and a new dump for linuxArm64
         val linuxDump = createDumpWithContent("""
-            // KLib ABI Dump
+            // Klib ABI Dump
             // Targets: [linuxArm64]
             // Rendering settings:
             // - Signature version: 2
@@ -273,7 +273,7 @@ class KlibDumpSamples {
 
         val inferredDumpContent = buildString { inferredIosArm64Dump.saveTo(this) }
         assertEquals("""
-            // KLib ABI Dump
+            // Klib ABI Dump
             // Targets: [iosArm64]
             // Rendering settings:
             // - Signature version: 2

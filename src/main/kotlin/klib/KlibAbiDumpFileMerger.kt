@@ -11,7 +11,7 @@ import java.nio.file.Files
 import java.util.*
 import kotlin.Comparator
 
-private class LinesProvider(private val lines: Iterator<String>) : Iterator<String> {
+private class PeekingLineIterator(private val lines: Iterator<String>) : Iterator<String> {
     private var nextLine: String? = null
 
     public fun peek(): String? {
@@ -39,7 +39,7 @@ private class LinesProvider(private val lines: Iterator<String>) : Iterator<Stri
     }
 }
 
-private const val MERGED_DUMP_FILE_HEADER = "// KLib ABI Dump"
+private const val MERGED_DUMP_FILE_HEADER = "// Klib ABI Dump"
 private const val REGULAR_DUMP_FILE_HEADER = "// Rendering settings:"
 private const val COMMENT_PREFIX = "//"
 private const val TARGETS_LIST_PREFIX = "// Targets: ["
@@ -82,27 +82,28 @@ private class KlibAbiDumpHeader(
  * A class representing a textual KLib ABI dump, either a regular one, or a merged.
  */
 internal class KlibAbiDumpMerger {
-    private val targetsMut: MutableSet<KlibTarget> = mutableSetOf()
+    private val _targets: MutableSet<KlibTarget> = mutableSetOf()
     private val headerContent: MutableList<String> = mutableListOf()
     private val topLevelDeclaration: DeclarationContainer = DeclarationContainer("")
 
     /**
      * All targets for which this dump contains declarations.
      */
-    internal val targets: Set<KlibTarget> = targetsMut
+    internal val targets: Set<KlibTarget> = _targets
 
     internal fun merge(file: File, configurableTargetName: String? = null) {
         require(file.exists()) { "File does not exist: $file" }
+        // TODO: replace with file.toPath().useLines once language version get upgraded
         Files.lines(file.toPath()).use {
             merge(it.iterator(), configurableTargetName)
         }
     }
 
     internal fun merge(lines: Iterator<String>, configurableTargetName: String? = null) {
-        merge(LinesProvider(lines), configurableTargetName)
+        merge(PeekingLineIterator(lines), configurableTargetName)
     }
 
-    private fun merge(lines: LinesProvider, configurableTargetName: String?) {
+    private fun merge(lines: PeekingLineIterator, configurableTargetName: String?) {
         require(lines.peek() != null) { "File is empty" }
         val isMergedFile = lines.determineFileType()
 
@@ -123,7 +124,7 @@ internal class KlibAbiDumpMerger {
             check(it.isEmpty()) { "This dump and a file to merge share some targets: $it" }
         }
 
-        if (this.targetsMut.isEmpty()) {
+        if (this._targets.isEmpty()) {
             headerContent.addAll(header.content)
         } else if (headerContent != header.content) {
             throw IllegalStateException(
@@ -131,7 +132,7 @@ internal class KlibAbiDumpMerger {
                         + headerContent.toString() + "\n\n\n" + header.content.toString()
             )
         }
-        this.targetsMut.addAll(bcvTargets)
+        this._targets.addAll(bcvTargets)
         topLevelDeclaration.targets.addAll(bcvTargets)
 
         // All declarations belonging to the same scope have equal indentation.
@@ -141,7 +142,7 @@ internal class KlibAbiDumpMerger {
         // and we must pop one or several declarations out of the parsing stack.
         var currentContainer = topLevelDeclaration
         var depth = -1
-        val targetsStack = Stack<Set<KlibTarget>>().apply { push(bcvTargets) }
+        val targetsStack = mutableListOf<Set<KlibTarget>>().apply { add(bcvTargets) }
 
         while (lines.hasNext()) {
             val line = lines.peek()!!
@@ -153,7 +154,7 @@ internal class KlibAbiDumpMerger {
                 depth == lineDepth -> {
                     // pop it off to swap previous value from the same depth,
                     // parseDeclaration will update it
-                    targetsStack.pop()
+                    targetsStack.removeLast()
                     currentContainer =
                         lines.parseDeclaration(lineDepth, currentContainer.parent!!, targetsStack, aliases)
                 }
@@ -174,7 +175,7 @@ internal class KlibAbiDumpMerger {
                 else -> {
                     while (currentContainer.text.depth() > lineDepth) {
                         currentContainer = currentContainer.parent!!
-                        targetsStack.pop()
+                        targetsStack.removeLast()
                     }
                     // If the line is '}' - add it as a terminator to the corresponding declaration, it'll simplify
                     // dumping the merged file back to text format.
@@ -190,7 +191,7 @@ internal class KlibAbiDumpMerger {
         }
     }
 
-    private fun LinesProvider.parseTargets(configurableTargetName: String?): Set<KlibTarget> {
+    private fun PeekingLineIterator.parseTargets(configurableTargetName: String?): Set<KlibTarget> {
         val line = peek()
         require(line != null) {
             "List of targets expected, but there are no more lines left."
@@ -204,12 +205,12 @@ internal class KlibAbiDumpMerger {
             "Can't use configurableTargetName ($configurableTargetName) for a multi-target dump: $targets"
         }
         if (configurableTargetName != null) {
-            return setOf(KlibTarget(configurableTargetName, targets.first().targetName))
+            return setOf(KlibTarget(targets.first().targetName, configurableTargetName))
         }
         return targets
     }
 
-    private fun LinesProvider.parseAliases(): Map<String, Set<KlibTarget>> {
+    private fun PeekingLineIterator.parseAliases(): Map<String, Set<KlibTarget>> {
         val aliases = mutableMapOf<String, Set<KlibTarget>>()
         while (peek()?.startsWith(ALIAS_PREFIX) == true) {
             val line = next()
@@ -231,7 +232,7 @@ internal class KlibAbiDumpMerger {
         return aliases
     }
 
-    private fun LinesProvider.parseFileHeader(
+    private fun PeekingLineIterator.parseFileHeader(
         isMergedFile: Boolean,
         configurableTargetName: String?
     ): KlibAbiDumpHeader {
@@ -291,10 +292,11 @@ internal class KlibAbiDumpMerger {
             return setOf(KlibTarget(configurableTargetName))
         }
         if (platformString != "NATIVE") {
+            val platformStringLc = platformString.toLowerCase(Locale.getDefault())
             return if (configurableTargetName == null) {
-                setOf(KlibTarget(platformString.toLowerCase()))
+                setOf(KlibTarget(platformStringLc))
             } else {
-                setOf(KlibTarget(configurableTargetName, platformString.toLowerCase()))
+                setOf(KlibTarget(platformStringLc, configurableTargetName))
             }
         }
 
@@ -307,12 +309,12 @@ internal class KlibAbiDumpMerger {
             "Can't use configurableTargetName ($configurableTargetName) for a multi-target dump: $targetsList"
         }
         if (targetsList.size == 1 && configurableTargetName != null) {
-            return setOf(KlibTarget(configurableTargetName, targetsList.first()))
+            return setOf(KlibTarget(targetsList.first(), configurableTargetName))
         }
         return targetsList.asSequence().map { KlibTarget(it) }.toSet()
     }
 
-    private fun LinesProvider.determineFileType(): Boolean {
+    private fun PeekingLineIterator.determineFileType(): Boolean {
         val headerLine = peek() ?: throw IllegalStateException("File is empty")
         if (headerLine.trimEnd() == MERGED_DUMP_FILE_HEADER) {
             return true
@@ -331,10 +333,10 @@ internal class KlibAbiDumpMerger {
         )
     }
 
-    private fun LinesProvider.parseDeclaration(
+    private fun PeekingLineIterator.parseDeclaration(
         depth: Int,
         parent: DeclarationContainer,
-        parentTargetsStack: Stack<Set<KlibTarget>>,
+        parentTargetsStack: MutableList<Set<KlibTarget>>,
         aliases: Map<String, Set<KlibTarget>>
     ): DeclarationContainer {
         val line = peek()!!
@@ -346,12 +348,12 @@ internal class KlibAbiDumpMerger {
             val expandedTargets = targets.flatMap {
                 aliases[it.configurableName] ?: listOf(it)
             }.toSet()
-            parentTargetsStack.push(expandedTargets)
+            parentTargetsStack.add(expandedTargets)
             parent.createOrUpdateChildren(next(), expandedTargets)
         } else {
             // Inherit all targets from a parent
-            parentTargetsStack.push(parentTargetsStack.peek())
-            parent.createOrUpdateChildren(next(), parentTargetsStack.peek())
+            parentTargetsStack.add(parentTargetsStack.last())
+            parent.createOrUpdateChildren(next(), parentTargetsStack.last())
         }
     }
 
@@ -369,7 +371,7 @@ internal class KlibAbiDumpMerger {
             appendable.append(it).append('\n')
         }
         topLevelDeclaration.children.values.sortedWith(DeclarationsComparator).forEach {
-            it.dump(appendable, targetsMut, formatter)
+            it.dump(appendable, _targets, formatter)
         }
     }
 
@@ -391,11 +393,11 @@ internal class KlibAbiDumpMerger {
      * If some declaration was declared only for [target], it will be removed from the dump.
      */
     fun remove(target: KlibTarget) {
-        if (!targetsMut.contains(target)) {
+        if (!_targets.contains(target)) {
             return
         }
 
-        targetsMut.remove(target)
+        _targets.remove(target)
         topLevelDeclaration.remove(target)
     }
 
@@ -406,24 +408,24 @@ internal class KlibAbiDumpMerger {
      * 2) it defined for all [targets], but contains target-specific child declaration.
      */
     fun retainTargetSpecificAbi(target: KlibTarget) {
-        if (!targetsMut.contains(target)) {
-            targetsMut.clear()
+        if (!_targets.contains(target)) {
+            _targets.clear()
             topLevelDeclaration.children.clear()
             topLevelDeclaration.targets.clear()
             return
         }
 
-        topLevelDeclaration.retainSpecific(target, targetsMut)
-        targetsMut.retainAll(setOf(target))
+        topLevelDeclaration.retainSpecific(target, _targets)
+        _targets.retainAll(setOf(target))
     }
 
     /**
      * Remove all declarations that are not defined for all [KlibAbiDumpMerger.targets].
      */
     fun retainCommonAbi() {
-        topLevelDeclaration.retainCommon(targetsMut)
+        topLevelDeclaration.retainCommon(_targets)
         if (topLevelDeclaration.children.isEmpty()) {
-            targetsMut.clear()
+            _targets.clear()
         }
     }
 
@@ -432,15 +434,15 @@ internal class KlibAbiDumpMerger {
      * The dump [other] should contain exactly one target and this dump should not contain that target.
      */
     fun mergeTargetSpecific(other: KlibAbiDumpMerger) {
-        require(other.targetsMut.size == 1) {
+        require(other._targets.size == 1) {
             "The dump to merge in should have a single target, but its targets are: ${other.targets}"
         }
-        require(other.targetsMut.first() !in targetsMut) {
+        require(other._targets.first() !in _targets) {
             "Targets of this dump and the dump to merge into it should not intersect. " +
                     "Common target: ${other.targets.first()}}"
         }
 
-        targetsMut.addAll(other.targetsMut)
+        _targets.addAll(other._targets)
         topLevelDeclaration.mergeTargetSpecific(other.topLevelDeclaration)
     }
 
@@ -464,7 +466,7 @@ internal class KlibAbiDumpMerger {
             }
         }
 
-        targetsMut.addAll(other.targetsMut)
+        _targets.addAll(other._targets)
         topLevelDeclaration.merge(other.topLevelDeclaration)
     }
 
@@ -472,16 +474,14 @@ internal class KlibAbiDumpMerger {
      * For each declaration change targets to a specified [targets] set.
      */
     fun overrideTargets(targets: Set<KlibTarget>) {
-        targetsMut.clear()
-        targetsMut.addAll(targets)
+        _targets.clear()
+        _targets.addAll(targets)
 
         topLevelDeclaration.overrideTargets(targets)
     }
 
     internal fun visit(action: (DeclarationContainer) -> Unit) {
-        topLevelDeclaration.children.forEach {
-            action(it.value)
-        }
+        topLevelDeclaration.children.values.forEach(action)
     }
 }
 
@@ -626,13 +626,17 @@ internal class DeclarationContainer(val text: String, val parent: DeclarationCon
 
 // TODO: optimize
 private object DeclarationsComparator : Comparator<DeclarationContainer> {
+    private fun Set<KlibTarget>.serializeAndSort(): MutableList<String> {
+        return this.mapTo(mutableListOf()) { it.toString() }.apply { sort() }
+    }
+
     override fun compare(c0: DeclarationContainer, c1: DeclarationContainer): Int {
         return if (c0.targets == c1.targets) {
             c0.text.compareTo(c1.text)
         } else {
             if (c0.targets.size == c1.targets.size) {
-                val c0targets = c0.targets.asSequence().map { it.toString() }.sorted().iterator()
-                val c1targets = c1.targets.asSequence().map { it.toString() }.sorted().iterator()
+                val c0targets = c0.targets.serializeAndSort().iterator()
+                val c1targets = c1.targets.serializeAndSort().iterator()
                 var result = 0
                 while (c1targets.hasNext() && c0targets.hasNext() && result == 0) {
                     result = c0targets.next().compareTo(c1targets.next())
@@ -654,7 +658,7 @@ internal class KLibsTargetsFormatter(klibDump: KlibAbiDumpMerger) {
     init {
         val allTargets = klibDump.targets
         val aliasesBuilder = mutableListOf<Alias>()
-        TargetHierarchy.hierarchyIndex.asSequence()
+        TargetHierarchy.hierarchyIndex.entries
             // place smaller groups (more specific groups) closer to the beginning of the list
             .sortedWith(compareBy({ it.value.allLeafs.size }, { it.key }))
             .forEach {
@@ -715,15 +719,16 @@ internal class KLibsTargetsFormatter(klibDump: KlibAbiDumpMerger) {
     }
 
     fun formatDeclarationTargets(targets: Set<KlibTarget>): String {
-        val targetsMut = targets.toMutableSet()
+        val mutableTargets = targets.toMutableSet()
         val resultingTargets = mutableListOf<String>()
         for (alias in aliases) {
-            if (targetsMut == alias.targets) {
-                targetsMut.removeAll(alias.targets)
+            if (mutableTargets == alias.targets) {
+                mutableTargets.clear()
                 resultingTargets.add(alias.name)
+                break
             }
         }
-        resultingTargets.addAll(targetsMut.map { it.toString() })
+        resultingTargets.addAll(mutableTargets.map { it.toString() })
         return resultingTargets.sorted().joinToString(
             prefix = TARGETS_LIST_PREFIX,
             postfix = TARGETS_LIST_SUFFIX,

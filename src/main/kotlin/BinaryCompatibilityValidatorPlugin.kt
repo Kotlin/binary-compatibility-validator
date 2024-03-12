@@ -574,7 +574,7 @@ private class KlibValidationPipelineBuilder(
                         true
                     }
                 }
-                .map { KlibTarget(it.targetName, extractUnderlyingTarget(it)).toString() }
+                .map { KlibTarget(extractUnderlyingTarget(it), it.targetName).toString() }
                 .toSet()
         }
     }

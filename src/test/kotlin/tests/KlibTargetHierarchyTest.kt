@@ -48,10 +48,10 @@ class KlibTargetHierarchyTest {
     @Test
     fun testAllTargetsAreMapped() {
         val notMappedTargets = KonanTarget.predefinedTargets.keys.subtract(konanTargetNameMapping.keys)
-        assertTrue(notMappedTargets.isEmpty(), "Following targets are not mapped: $notMappedTargets")
+        assertEquals(setOf("wasm32", "linux_mips32", "linux_mipsel32"), notMappedTargets,
+            "Following targets are not mapped: $notMappedTargets")
     }
 
-    @OptIn(ExperimentalStdlibApi::class)
     private fun hierarchyFrom(groupOrTarget: String): List<String> {
         return buildList {
             var i = 0

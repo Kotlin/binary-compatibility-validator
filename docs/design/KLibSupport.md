@@ -53,7 +53,7 @@ in a file's header.
 
 Here's a brief example of such a merged dump file:
 ```
-// KLib ABI Dump
+// Klib ABI Dump
 // Targets: [androidNativeArm32, androidNativeArm64, androidNativeX64, androidNativeX86, linuxArm64, linuxX64, mingwX64]
 // Alias: linux => [linuxArm64, linuxX64]
 // Rendering settings:

@@ -17,14 +17,14 @@ package kotlinx.validation.api.klib
  */
 public class KlibTarget internal constructor(
     /**
+     * An actual name of a target that remains unaffected by a custom name settings in a build script.
+     */
+    public val targetName: String,
+    /**
      * A name of a target that could be configured by a user in a build script.
      * Usually, it's the same name as [targetName].
      */
-    public val configurableName: String,
-    /**
-     * An actual name of a target that remains unaffected by a custom name settings in a build script.
-     */
-    public val targetName: String
+    public val configurableName: String
 ) {
     init {
         require(!configurableName.contains(".")) {
@@ -52,7 +52,7 @@ public class KlibTarget internal constructor(
                     "Target has illegal name format: \"$value\", expected: <target name>.<underlying target name>"
                 )
             }
-            return KlibTarget(parts[1], parts[0])
+            return KlibTarget(parts[0], parts[1])
         }
     }
 
@@ -62,9 +62,7 @@ public class KlibTarget internal constructor(
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as KlibTarget
+        if (other !is KlibTarget) return false
 
         if (configurableName != other.configurableName) return false
         if (targetName != other.targetName) return false
