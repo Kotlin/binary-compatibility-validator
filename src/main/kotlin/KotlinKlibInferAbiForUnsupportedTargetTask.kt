@@ -6,14 +6,12 @@
 package kotlinx.validation
 
 import kotlinx.validation.api.klib.KlibDump
-import kotlinx.validation.klib.KlibAbiDumpMerger
 import kotlinx.validation.api.klib.KlibTarget
 import kotlinx.validation.api.klib.inferAbi
-import kotlinx.validation.klib.TargetHierarchy
+import kotlinx.validation.api.klib.TargetHierarchy
 import org.gradle.api.DefaultTask
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.*
-import org.jetbrains.kotlin.utils.keysToMap
 import java.io.File
 
 /**

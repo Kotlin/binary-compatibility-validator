@@ -3,7 +3,7 @@
  * Use of this source code is governed by the Apache 2.0 License that can be found in the LICENSE.txt file.
  */
 
-package kotlinx.validation.klib
+package kotlinx.validation.api.klib
 
 /**
  * A hierarchy of KMP targets that should resemble the default hierarchy template.

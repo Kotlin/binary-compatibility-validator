@@ -6,7 +6,7 @@
 package kotlinx.validation
 
 import kotlinx.validation.api.klib.KlibTarget
-import kotlinx.validation.klib.konanTargetNameMapping
+import kotlinx.validation.api.klib.konanTargetNameMapping
 import org.gradle.api.*
 import org.gradle.api.plugins.*
 import org.gradle.api.provider.*

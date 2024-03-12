@@ -5,7 +5,7 @@
 
 package tests
 
-import kotlinx.validation.klib.KlibAbiDumpMerger
+import kotlinx.validation.api.klib.KlibAbiDumpMerger
 import kotlinx.validation.api.klib.KlibTarget
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder

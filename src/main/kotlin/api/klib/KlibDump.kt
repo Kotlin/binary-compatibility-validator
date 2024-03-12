@@ -6,7 +6,6 @@
 package kotlinx.validation.api.klib
 
 import kotlinx.validation.ExperimentalBCVApi
-import kotlinx.validation.klib.KlibAbiDumpMerger
 import java.io.File
 import java.io.FileNotFoundException
 
