@@ -45,7 +45,7 @@ import java.io.FileNotFoundException
  */
 @ExperimentalBCVApi
 public class KlibDump {
-    internal var merger: KlibAbiDumpMerger = KlibAbiDumpMerger()
+    internal val merger: KlibAbiDumpMerger = KlibAbiDumpMerger()
 
     /**
      * Set of all targets for which this dump contains declarations.
@@ -116,7 +116,7 @@ public class KlibDump {
     /**
      * Remove all declarations that do belong to specified targets and remove these targets from the dump.
      *
-     * All targets not stored within a dump will be ignored.
+     * All targets in the [targets] collection not contained within this dump will be ignored.
      *
      * @sample samples.KlibDumpSamples.mergeDumpObjects
      */

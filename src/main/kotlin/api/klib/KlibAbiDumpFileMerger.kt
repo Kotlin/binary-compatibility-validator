@@ -392,11 +392,9 @@ internal class KlibAbiDumpMerger {
      * If some declaration was declared only for [target], it will be removed from the dump.
      */
     fun remove(target: KlibTarget) {
-        if (!_targets.contains(target)) {
+        if (!_targets.remove(target)) {
             return
         }
-
-        _targets.remove(target)
         topLevelDeclaration.remove(target)
     }
 
