@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>inferAbi</title>
+    <link href="../../images/logo-icon.svg" rel="icon" type="image/svg">
+    <script>var pathToRoot = "../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/sourceset_dependencies.js" async="async"></script>
+<link href="../../styles/style.css" rel="Stylesheet">
+<link href="../../styles/main.css" rel="Stylesheet">
+<link href="../../styles/prism.css" rel="Stylesheet">
+<link href="../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<script type="text/javascript" src="../../scripts/clipboard.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
+</head>
+<body>
+    <div class="root">
+<nav class="navigation" id="navigation-wrapper">
+    <div class="navigation--inner">
+        <div class="navigation-title">
+            <button class="menu-toggle" id="menu-toggle" type="button">toggle menu</button>
+            <div class="library-name">
+                    <a class="library-name--link" href="../../index.html">
+                            binary-compatibility-validator
+                    </a>
+            </div>
+            <div class="library-version">
+0.14.0-SNAPSHOT            </div>
+        </div>
+        <div class="filter-section" id="filter-section">
+                <button class="platform-tag platform-selector jvm-like" data-active="" data-filter=":dokkaHtml/main">jvm</button>
+        </div>
+    </div>
+    <div class="navigation-controls">
+        <button class="navigation-controls--btn navigation-controls--theme" id="theme-toggle-button" type="button">switch theme</button>
+        <div class="navigation-controls--btn navigation-controls--search" id="searchBar" role="button">search in API</div>
+    </div>
+</nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="sidebar--inner" id="sideMenu"></div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="member" id="content" pageIds="binary-compatibility-validator::kotlinx.validation.api.klib//inferAbi/#kotlinx.validation.api.klib.KlibTarget#kotlin.collections.Iterable[kotlinx.validation.api.klib.KlibDump]#kotlinx.validation.api.klib.KlibDump?/PointingToDeclaration//769193423">
+  <div class="breadcrumbs"><a href="../../index.html">binary-compatibility-validator</a><span class="delimiter">/</span><a href="index.html">kotlinx.validation.api.klib</a><span class="delimiter">/</span><span class="current">inferAbi</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>infer</span><wbr></wbr><span><span>Abi</span></span></h1>
+  </div>
+  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="infer-abi.html"><span class="token function">inferAbi</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">unsupportedTarget<span class="token operator">: </span><a href="-klib-target/index.html">KlibTarget</a><span class="token punctuation">, </span></span><span class="parameter ">supportedTargetDumps<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-iterable/index.html">Iterable</a><span class="token operator">&lt;</span><a href="-klib-dump/index.html">KlibDump</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">oldMergedDump<span class="token operator">: </span><a href="-klib-dump/index.html">KlibDump</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="-klib-dump/index.html">KlibDump</a><span class="clearfix"><span class="floating-right">(<a href="https://github.com/Kotlin/binary-compatibility-validator/tree/master/src/main/kotlin/api/klib/KlibDump.kt#L220">source</a>)</span></span></div><p class="paragraph">Infer a possible public ABI for <a href="infer-abi.html">unsupportedTarget</a> as an ABI common across all <a href="infer-abi.html">supportedTargetDumps</a>. If there's an <a href="infer-abi.html">oldMergedDump</a> consisting of declarations of multiple targets, including <a href="infer-abi.html">unsupportedTarget</a>, a portion of that dump specific to the <a href="infer-abi.html">unsupportedTarget</a> will be extracted and merged to the common ABI build from <a href="infer-abi.html">supportedTargetDumps</a>.</p><p class="paragraph">Returned dump contains only declarations for <a href="infer-abi.html">unsupportedTarget</a>.</p><p class="paragraph">The function aimed to facilitate ABI dumps generation for targets that are not supported by a host compiler. In practice, it means generating dumps for Apple targets on non-Apple hosts.</p><h4 class="">Throws</h4><div class="table"><div class="table-row" data-filterable-current=":dokkaHtml/main" data-filterable-set=":dokkaHtml/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-illegal-argument-exception/index.html"><span>Illegal</span><wbr></wbr><span>Argument</span><wbr></wbr><span><span>Exception</span></span></a></div></span></div><div><div class="title"><p class="paragraph">when <a href="infer-abi.html">supportedTargetDumps</a> are empty and <a href="infer-abi.html">oldMergedDump</a> is null</p></div></div></div></div></div><h4 class="">Samples</h4><div class="sample-container"><pre><code class="runnablesample monospace block lang-kotlin" theme="idea">import kotlinx.validation.ExperimentalBCVApi
+import kotlinx.validation.api.klib.KlibDump
+import kotlinx.validation.api.klib.KlibTarget
+import kotlinx.validation.api.klib.inferAbi
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.TemporaryFolder
+import java.io.File
+import kotlin.test.assertEquals
+
+fun main() { 
+   //sampleStart 
+   // We want to get a dump for iosArm64, but our host compiler doesn't support it.
+val unsupportedTarget = KlibTarget.parse(&quot;iosArm64&quot;)
+// Thankfully, we have an old merged dump ...
+val oldMergedDump = createDumpWithContent(&quot;&quot;&quot;
+    // Klib ABI Dump
+    // Targets: [iosArm64, linuxArm64]
+    // Rendering settings:
+    // - Signature version: 2
+    // - Show manifest properties: true
+    // - Show declarations: true
+
+    // Library unique name: &lt;testproject&gt;
+    abstract class examples.classes/Klass // examples.classes/Klass|null[0]
+    // Targets: [iosArm64]
+    abstract interface examples.classes/Iface // examples.classes/Iface|null[0]
+
+&quot;&quot;&quot;.trimIndent())
+
+// ... and a new dump for linuxArm64
+val linuxDump = createDumpWithContent(&quot;&quot;&quot;
+    // Klib ABI Dump
+    // Targets: [linuxArm64]
+    // Rendering settings:
+    // - Signature version: 2
+    // - Show manifest properties: true
+    // - Show declarations: true
+
+    // Library unique name: &lt;testproject&gt;
+    abstract class examples.classes/NewKlass // examples.classes/NewKlass|null[0]
+
+&quot;&quot;&quot;.trimIndent())
+
+// Let's use these dumps to infer a public ABI on iosArm64
+val inferredIosArm64Dump = inferAbi(
+    unsupportedTarget = unsupportedTarget,
+    supportedTargetDumps = listOf(KlibDump.from(linuxDump)),
+    oldMergedDump = KlibDump.from(oldMergedDump))
+
+assertEquals(unsupportedTarget, inferredIosArm64Dump.targets.single())
+
+val inferredDumpContent = buildString { inferredIosArm64Dump.saveTo(this) }
+assertEquals(&quot;&quot;&quot;
+    // Klib ABI Dump
+    // Targets: [iosArm64]
+    // Rendering settings:
+    // - Signature version: 2
+    // - Show manifest properties: true
+    // - Show declarations: true
+
+    // Library unique name: &lt;testproject&gt;
+    abstract class examples.classes/NewKlass // examples.classes/NewKlass|null[0]
+    abstract interface examples.classes/Iface // examples.classes/Iface|null[0]
+
+&quot;&quot;&quot;.trimIndent(),
+    inferredDumpContent) 
+   //sampleEnd
+}</code></pre></div></div></div>
+</div>
+      <div class="footer">
+        <span class="go-to-top-icon"><a href="#content" id="go-to-top-link"></a></span><span>© 2024 Copyright</span><span
+                class="pull-right"><span>Generated by </span><a
+                href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span>
+      </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
