@@ -15,3 +15,6 @@ Provides an API for dumping Kotlin Java libraries public ABI.
 # Package kotlinx.validation.api.klib
 
 Provides an API for dumping Kotlin libraries (KLibs) public ABI and managing resulting dumps.
+
+**This package is experimental, both API and behaviour may change in the future. There are also no guarantees on preserving the behavior of the API until its
+stabilization.**
