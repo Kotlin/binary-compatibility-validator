@@ -1,9 +1,13 @@
+import kotlinx.kover.gradle.plugin.dsl.MetricType
 import kotlinx.validation.build.mavenCentralMetadata
 import kotlinx.validation.build.mavenRepositoryPublishing
 import kotlinx.validation.build.signPublicationIfKeyPresent
 import org.gradle.api.attributes.TestSuiteType.FUNCTIONAL_TEST
+import org.jetbrains.dokka.gradle.DokkaTask
+import org.jetbrains.dokka.gradle.DokkaTaskPartial
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
+import java.net.URL
 
 plugins {
     kotlin("jvm")
@@ -14,6 +18,8 @@ plugins {
     `maven-publish`
     `jvm-test-suite`
     id("org.jetbrains.kotlinx.binary-compatibility-validator")
+    alias(libs.plugins.kover)
+    alias(libs.plugins.dokka)
 }
 
 group = "org.jetbrains.kotlinx"
@@ -60,6 +66,7 @@ val createClasspathManifest = tasks.register("createClasspathManifest") {
 dependencies {
     implementation(gradleApi())
     implementation(libs.kotlinx.metadata)
+    compileOnly(libs.kotlin.compiler.embeddable)
     implementation(libs.ow2.asm)
     implementation(libs.ow2.asmTree)
     implementation(libs.javaDiffUtils)
@@ -76,7 +83,6 @@ dependencies {
 
 tasks.compileKotlin {
     compilerOptions {
-        freeCompilerArgs.add("-Xexplicit-api=strict")
         allWarningsAsErrors.set(true)
         @Suppress("DEPRECATION") // Compatibility with Gradle 7 requires Kotlin 1.4
         languageVersion.set(KotlinVersion.KOTLIN_1_4)
@@ -85,7 +91,9 @@ tasks.compileKotlin {
         // Suppressing "w: Language version 1.4 is deprecated and its support will be removed" message
         // because LV=1.4 in practice is mandatory as it is a default language version in Gradle 7.0+ for users' kts scripts.
         freeCompilerArgs.addAll(
-            "-Xsuppress-version-warnings"
+            "-Xexplicit-api=strict",
+            "-Xsuppress-version-warnings",
+            "-Xopt-in=kotlin.RequiresOptIn"
         )
     }
 }
@@ -107,6 +115,7 @@ tasks.compileTestKotlin {
 tasks.withType<Test>().configureEach {
     systemProperty("overwrite.output", System.getProperty("overwrite.output", "false"))
     systemProperty("testCasesClassesDirs", sourceSets.test.get().output.classesDirs.asPath)
+    systemProperty("kover.enabled", project.findProperty("kover.enabled")?.toString().toBoolean())
     jvmArgs("-ea")
 }
 
@@ -159,6 +168,7 @@ testing {
                 implementation(project())
                 implementation(libs.assertJ.core)
                 implementation(libs.kotlin.test)
+                implementation(libs.kotlin.compiler.embeddable)
             }
         }
 
@@ -194,4 +204,40 @@ testing {
 
 tasks.withType<Sign>().configureEach {
     onlyIf("only sign if signatory is present") { signatory?.keyId != null }
+}
+
+kover {
+    koverReport {
+        filters {
+            excludes {
+                packages("kotlinx.validation.test")
+            }
+        }
+        verify {
+            rule {
+                minBound(80, MetricType.BRANCH)
+                minBound(90, MetricType.LINE)
+            }
+        }
+    }
+    // Unfortunately, we can't test both configuration cache use and the test coverage
+    // simultaneously, so the coverage collection should be enabled explicitly (and that
+    // will disable configuration cache).
+    if (!project.findProperty("kover.enabled")?.toString().toBoolean()) {
+        disable()
+    }
+}
+
+
+tasks.withType<DokkaTask>().configureEach {
+    dokkaSourceSets.configureEach {
+        includes.from("Module.md")
+
+        sourceLink {
+            localDirectory.set(rootDir)
+            remoteUrl.set(URL("https://github.com/Kotlin/binary-compatibility-validator/tree/master"))
+            remoteLineSuffix.set("#L")
+        }
+        samples.from("src/test/kotlin/samples/KlibDumpSamples.kt")
+    }
 }

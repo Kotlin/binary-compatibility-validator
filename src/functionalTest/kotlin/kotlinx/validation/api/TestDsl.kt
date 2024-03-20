@@ -12,8 +12,10 @@ import org.intellij.lang.annotations.Language
 
 public val API_DIR: String = ApiValidationExtension().apiDumpDirectory
 
+private val koverEnabled: Boolean = System.getProperty("kover.enabled").toBoolean()
+
 internal fun BaseKotlinGradleTest.test(
-    gradleVersion: String = "7.4.2",
+    gradleVersion: String = "8.5",
     injectPluginClasspath: Boolean = true,
     fn: BaseKotlinScope.() -> Unit
 ): GradleRunner {
@@ -38,14 +40,19 @@ internal fun BaseKotlinGradleTest.test(
         .withPluginClasspath()
         .withArguments(baseKotlinScope.runner.arguments)
         .withGradleVersion(gradleVersion)
+
+    if (koverEnabled) {
+        // In debug mode, tests will be running inside the same JVM.
+        // That will allow collection coverage info by the Kover.
+        runner.withDebug(true)
+    }
+
     if (injectPluginClasspath) {
         // The hack dating back to https://docs.gradle.org/6.0/userguide/test_kit.html#sub:test-kit-classpath-injection
         // Currently, some tests won't work without it because some classes are missing on the classpath.
         runner.addPluginTestRuntimeClasspath()
     }
     return runner
-    // disabled because of: https://github.com/gradle/gradle/issues/6862
-    // .withDebug(baseKotlinScope.runner.debug)
 }
 
 /**
@@ -116,6 +123,23 @@ internal fun FileContainer.apiFile(projectName: String, fn: AppendableScope.() -
     }
 }
 
+/**
+ * Shortcut for creating a `api/<target>/<project>.klib.api` descriptor using [file][FileContainer.file]
+ */
+internal fun FileContainer.abiFile(projectName: String, target: String, fn: AppendableScope.() -> Unit) {
+    dir(API_DIR) {
+        dir(target) {
+            file("$projectName.klib.api", fn)
+        }
+    }
+}
+
+internal fun FileContainer.abiFile(projectName: String, fn: AppendableScope.() -> Unit) {
+    dir(API_DIR) {
+        file("$projectName.klib.api", fn)
+    }
+}
+
 // not using default argument in apiFile for clarity in tests (explicit "empty" in the name)
 /**
  * Shortcut for creating an empty `api/<project>.api` descriptor by using [file][FileContainer.file]
@@ -165,7 +189,13 @@ internal class AppendableScope(val filePath: String) {
 }
 
 internal class Runner {
-    val arguments: MutableList<String> = mutableListOf("--configuration-cache")
+    val arguments: MutableList<String> = mutableListOf<String>().apply {
+        if (!koverEnabled) {
+            // Configuration cache is incompatible with javaagents being enabled for Gradle
+            // See https://github.com/gradle/gradle/issues/25979
+            add("--configuration-cache")
+        }
+    }
 }
 
 internal fun readFileList(@Language("file-reference") fileName: String): String {
@@ -182,3 +212,29 @@ private fun GradleRunner.addPluginTestRuntimeClasspath() = apply {
     val pluginClasspath = pluginClasspath + cpResource.readLines().map { File(it) }
     withPluginClasspath(pluginClasspath)
 }
+
+internal val commonNativeTargets = listOf(
+    "linuxX64",
+    "linuxArm64",
+    "mingwX64",
+    "androidNativeArm32",
+    "androidNativeArm64",
+    "androidNativeX64",
+    "androidNativeX86"
+)
+
+internal val appleNativeTarget = listOf(
+    "macosX64",
+    "macosArm64",
+    "iosX64",
+    "iosArm64",
+    "iosSimulatorArm64",
+    "tvosX64",
+    "tvosArm64",
+    "tvosSimulatorArm64",
+    "watchosArm32",
+    "watchosArm64",
+    "watchosX64",
+    "watchosSimulatorArm64",
+    "watchosDeviceArm64",
+)

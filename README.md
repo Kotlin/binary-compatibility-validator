@@ -2,6 +2,7 @@
 [![JetBrains official project](https://jb.gg/badges/official.svg)](https://confluence.jetbrains.com/display/ALL/JetBrains+on+GitHub)
 [![Maven Central](https://img.shields.io/maven-central/v/org.jetbrains.kotlinx/binary-compatibility-validator)](https://central.sonatype.com/search?q=org.jetbrains.kotlinx.binary-compatibility-validator)
 [![License](https://img.shields.io/github/license/Kotlin/binary-compatibility-validator)](LICENSE.TXT)
+[![KDoc link](https://img.shields.io/badge/API_reference-KDoc-blue)](https://kotlin.github.io/binary-compatibility-validator/)
 
 # Binary compatibility validator
 
@@ -14,6 +15,7 @@ The tool allows dumping binary API of a JVM part of a Kotlin library that is pub
   * [Tasks](#tasks)
   * [Optional parameters](#optional-parameters)
   * [Workflow](#workflow)
+  * [Experimental KLib ABI validation support](#experimental-klib-abi-validation-support)
 * [What constitutes the public API](#what-constitutes-the-public-api)
   * [Classes](#classes)
   * [Members](#members)
@@ -33,7 +35,7 @@ Binary compatibility validator is a Gradle plugin that can be added to your buil
 - in `build.gradle.kts`
 ```kotlin
 plugins {
-    id("org.jetbrains.kotlinx.binary-compatibility-validator") version "0.14.0"
+    id("org.jetbrains.kotlinx.binary-compatibility-validator") version "0.15.0-Beta.1"
 }
 ```
 
@@ -41,7 +43,7 @@ plugins {
 
 ```groovy
 plugins {
-    id 'org.jetbrains.kotlinx.binary-compatibility-validator' version '0.14.0'
+    id 'org.jetbrains.kotlinx.binary-compatibility-validator' version '0.15.0-Beta.1'
 }
 ```
 
@@ -146,7 +148,7 @@ apiValidation {
 By default, binary compatibility validator analyzes project output class files from `build/classes` directory when building an API dump.
 If you pack these classes into an output jar not in a regular way, for example, by excluding certain classes, applying `shadow` plugin, and so on,
 the API dump built from the original class files may no longer reflect the resulting jar contents accurately.
-In that case, it makes sense to use the resulting jar as an input of the `apuBuild` task:
+In that case, it makes sense to use the resulting jar as an input of the `apiBuild` task:
 
 Kotlin
 ```kotlin
@@ -179,6 +181,59 @@ When starting to validate your library public API, we recommend the following wo
     adjustments in existing one, `check` task will start to fail. `apiDump` should be executed manually,
     the resulting diff in `.api` file should be verified: only signatures you expected to change should be changed.
   * Commit the resulting `.api` diff along with code changes. 
+
+### Experimental KLib ABI validation support
+
+The KLib validation support is experimental and is a subject to change (applies to both an API and the ABI dump format).
+A project has to use Kotlin 1.9.20 or newer to use this feature.
+
+To validate public ABI of a Kotlin library (KLib) corresponding option should be enabled explicitly:
+```kotlin
+apiValidation {
+    @OptIn(kotlinx.validation.ExperimentalBCVApi::class)
+    klib {
+        enabled = true
+    }
+}
+```
+
+When enabled, KLib support adds additional dependencies to existing `apiDump` and `apiCheck` tasks.
+Generate KLib ABI dumps are places alongside JVM dumps (in `api` subfolder, by default) 
+in files named `<project name>.klib.api`.
+The dump file combines all dumps generated for individual targets with declarations specific to some targets being
+annotated with corresponding target names.
+During the validation phase, that file is compared to the dump extracted from the latest version of the library, 
+and any differences between these two files are reported as errors.
+
+Currently, all options described in [Optional parameters](#optional-parameters) section are supported for klibs too.
+The only caveat here is that all class names should be specified in the JVM-format,
+like `package.name.ClassName$SubclassName`.
+
+Please refer to a [design document](docs/design/KLibSupport.md) for details on the format and rationale behind the 
+current implementation.
+
+#### KLib ABI dump generation and validation on Linux and Windows hosts
+
+Currently, compilation to Apple-specific targets (like `iosArm64` or `watchosX86`) supported only on Apple hosts.
+To ease the development on Windows and Linux hosts, binary compatibility validator does not validate ABI for targets
+not supported on the current host, even if `.klib.api` file contains declarations for these targets.
+
+This behavior could be altered to force an error when klibs for some targets could not be compiled:
+```kotlin
+apiValidation {
+    @OptIn(kotlinx.validation.ExperimentalBCVApi::class)
+    klib {
+        enabled = true
+        // treat a target being unsupported on a host as an error
+        strictValidation = true
+    }
+}
+```
+
+When it comes to dump generation (`apiDump` task) on non-Apple hosts, binary compatibility validator attempts
+to infer an ABI from dumps generated for supported targets and an old dump from project's `api` folder (if any).
+Inferred dump may not match an actual dump,
+and it is recommended to update a dump on hosts supporting all required targets, if possible. 
 
 # What constitutes the public API
 
