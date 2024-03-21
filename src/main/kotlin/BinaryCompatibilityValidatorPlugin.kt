@@ -10,8 +10,8 @@ import kotlinx.validation.api.klib.konanTargetNameMapping
 import org.gradle.api.*
 import org.gradle.api.plugins.*
 import org.gradle.api.provider.*
+import org.gradle.api.specs.Spec
 import org.gradle.api.tasks.*
-import org.jetbrains.kotlin.cli.jvm.main
 import org.jetbrains.kotlin.gradle.dsl.*
 import org.jetbrains.kotlin.gradle.plugin.*
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
@@ -473,7 +473,13 @@ private class KlibValidationPipelineBuilder(
                 "into a single merged KLib ABI dump"
         dumpFileName = klibDumpFileName
         mergedFile = klibMergeDir.resolve(klibDumpFileName)
-        compilableTargets = project.compilableTargets()
+        val compilableTargets = project.compilableTargets()
+        filterTargets(Spec<String> {
+                name -> compilableTargets.get()
+            .map(KlibTarget::parse)
+            .map { it.configurableName }
+            .contains(name)
+        })
         onlyIf {
             compilableTargets.get().isNotEmpty()
         }
@@ -488,7 +494,13 @@ private class KlibValidationPipelineBuilder(
                 "different targets into a single merged KLib ABI dump"
         dumpFileName = klibDumpFileName
         mergedFile = klibMergeDir.resolve(klibDumpFileName)
-        compilableTargets = project.compilableTargets()
+        val compilableTargets = project.compilableTargets()
+        filterTargets(Spec<String> {
+            name -> compilableTargets.get()
+                .map(KlibTarget::parse)
+                .map { it.configurableName }
+                .contains(name)
+        })
         onlyIf {
             compilableTargets.get().isNotEmpty()
         }

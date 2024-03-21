@@ -6,10 +6,9 @@
 package kotlinx.validation
 
 import kotlinx.validation.api.klib.KlibDump
-import kotlinx.validation.api.klib.KlibTarget
 import kotlinx.validation.api.klib.saveTo
 import org.gradle.api.DefaultTask
-import org.gradle.api.provider.Provider
+import org.gradle.api.specs.Spec
 import org.gradle.api.tasks.*
 import java.io.File
 
@@ -47,26 +46,23 @@ internal abstract class KotlinKlibMergeAbiTask : DefaultTask() {
     @Input
     lateinit var dumpFileName: String
 
-    /**
-     * Provides serialized [KlibTarget]s having some sources to compile.
-     */
-    @Input
-    lateinit var compilableTargets: Provider<Set<String>>
+    private var targetPredicate: Spec<String> = Spec<String> { true }
 
     internal fun addInput(target: String, file: File) {
         targetToFile[target] = file
     }
 
+    internal fun filterTargets(filter: Spec<String>) {
+        targetPredicate = filter
+    }
+
     @OptIn(ExperimentalBCVApi::class)
     @TaskAction
     internal fun merge() {
-        val compilableTargetNames = compilableTargets.get().map {
-            KlibTarget.parse(it).configurableName
-        }.toSet()
-
+        val filter = targetPredicate
         KlibDump().apply {
             targetToFile.forEach { (targetName, dumpDir) ->
-                if (compilableTargetNames.contains(targetName)) {
+                if (filter.isSatisfiedBy(targetName)) {
                     merge(dumpDir.resolve(dumpFileName), targetName)
                 }
             }
