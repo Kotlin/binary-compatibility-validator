@@ -417,7 +417,7 @@ private class KlibValidationPipelineBuilder(
         projectApiFile = klibApiDir.get().resolve(klibDumpFileName)
         generatedApiFile = klibMergeDir.resolve(klibDumpFileName)
         val compilableTargets = project.compilableTargets()
-        onlyIf {
+        onlyIf("There are no klibs compiled for the project") {
             compilableTargets.get().isNotEmpty()
         }
     }
@@ -433,7 +433,7 @@ private class KlibValidationPipelineBuilder(
         from = klibMergeDir.resolve(klibDumpFileName)
         to = klibApiDir.get().resolve(klibDumpFileName)
         val compTargets = project.compilableTargets()
-        onlyIf {
+        onlyIf("There are no klibs compiled for the project") {
             compTargets.get().isNotEmpty()
         }
     }
@@ -455,7 +455,7 @@ private class KlibValidationPipelineBuilder(
         inputAbiFile = klibApiDir.get().resolve(klibDumpFileName)
         outputAbiFile = klibOutputDir.resolve(klibDumpFileName)
         val compilableTargets = project.compilableTargets()
-        onlyIf {
+        onlyIf("There are no klibs compiled for the project") {
             compilableTargets.get().isNotEmpty()
         }
     }
@@ -473,14 +473,11 @@ private class KlibValidationPipelineBuilder(
                 "into a single merged KLib ABI dump"
         dumpFileName = klibDumpFileName
         mergedFile = klibMergeDir.resolve(klibDumpFileName)
+        // At task configuration time, we don't know if a target will produce any artifacts,
+        // so we initialize it with all possible inputs and then filter them out during merge.
+        filterTargets(project.isTargetWithConfigurableNameCompilable())
         val compilableTargets = project.compilableTargets()
-        filterTargets(Spec<String> {
-                name -> compilableTargets.get()
-            .map(KlibTarget::parse)
-            .map { it.configurableName }
-            .contains(name)
-        })
-        onlyIf {
+        onlyIf("There are no dumps to merge") {
             compilableTargets.get().isNotEmpty()
         }
     }
@@ -494,14 +491,11 @@ private class KlibValidationPipelineBuilder(
                 "different targets into a single merged KLib ABI dump"
         dumpFileName = klibDumpFileName
         mergedFile = klibMergeDir.resolve(klibDumpFileName)
+        // At task configuration time, we don't know if a target will produce any artifacts,
+        // so we initialize it with all possible inputs and then filter them out during merge.
+        filterTargets(project.isTargetWithConfigurableNameCompilable())
         val compilableTargets = project.compilableTargets()
-        filterTargets(Spec<String> {
-            name -> compilableTargets.get()
-                .map(KlibTarget::parse)
-                .map { it.configurableName }
-                .contains(name)
-        })
-        onlyIf {
+        onlyIf("There are no dumps to merge") {
             compilableTargets.get().isNotEmpty()
         }
     }
@@ -613,6 +607,20 @@ private class KlibValidationPipelineBuilder(
                 .filter { it.mainCompilationOrNull?.hasAnySources() == true }
                 .map { KlibTarget(extractUnderlyingTarget(it), it.targetName).toString() }
                 .toSet()
+        }
+    }
+
+    private fun Project.isTargetWithConfigurableNameCompilable(): Spec<String> {
+        val provider = compilableTargets()
+        return object : Spec<String> {
+            var configurableTargetNames: Set<String>? = null
+
+            override fun isSatisfiedBy(element: String?): Boolean {
+                if (configurableTargetNames == null) {
+                    configurableTargetNames = provider.get().map { KlibTarget.parse(it).configurableName }.toSet()
+                }
+                return configurableTargetNames!!.contains(element)
+            }
         }
     }
 
