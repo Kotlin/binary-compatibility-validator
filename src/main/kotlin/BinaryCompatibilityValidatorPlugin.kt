@@ -11,6 +11,7 @@ import org.gradle.api.*
 import org.gradle.api.plugins.*
 import org.gradle.api.provider.*
 import org.gradle.api.tasks.*
+import org.jetbrains.kotlin.cli.jvm.main
 import org.jetbrains.kotlin.gradle.dsl.*
 import org.jetbrains.kotlin.gradle.plugin.*
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
@@ -105,7 +106,7 @@ public class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
         kotlin.targets.matching { it.jvmBased }.all { target ->
             val targetConfig = TargetConfig(project, extension, target.name, jvmDirConfig)
             if (target.platformType == KotlinPlatformType.jvm) {
-                target.mainCompilations.all {
+                target.mainCompilationOrNull?.also {
                     project.configureKotlinCompilation(it, extension, targetConfig, commonApiDump, commonApiCheck)
                 }
             } else if (target.platformType == KotlinPlatformType.androidJvm) {
@@ -219,11 +220,7 @@ private fun Project.configureKotlinCompilation(
 
     val apiBuild = task<KotlinApiBuildTask>(targetConfig.apiTaskName("Build")) {
         // Do not enable task for empty umbrella modules
-        isEnabled =
-            apiCheckEnabled(
-                projectName,
-                extension
-            ) && compilation.allKotlinSourceSets.any { it.kotlin.srcDirs.any { it.exists() } }
+        isEnabled = apiCheckEnabled(projectName, extension) && compilation.hasAnySources()
         // 'group' is not specified deliberately, so it will be hidden from ./gradlew tasks
         description =
             "Builds Kotlin API for 'main' compilations of $projectName. Complementary task and shouldn't be called manually"
@@ -419,6 +416,10 @@ private class KlibValidationPipelineBuilder(
                 project.name
         projectApiFile = klibApiDir.get().resolve(klibDumpFileName)
         generatedApiFile = klibMergeDir.resolve(klibDumpFileName)
+        val compilableTargets = project.compilableTargets()
+        onlyIf {
+            compilableTargets.get().isNotEmpty()
+        }
     }
 
     private fun Project.dumpKlibsTask(
@@ -431,6 +432,10 @@ private class KlibValidationPipelineBuilder(
         group = "other"
         from = klibMergeDir.resolve(klibDumpFileName)
         to = klibApiDir.get().resolve(klibDumpFileName)
+        val compTargets = project.compilableTargets()
+        onlyIf {
+            compTargets.get().isNotEmpty()
+        }
     }
 
     private fun Project.extractAbi(
@@ -449,6 +454,10 @@ private class KlibValidationPipelineBuilder(
         supportedTargets = supportedTargets()
         inputAbiFile = klibApiDir.get().resolve(klibDumpFileName)
         outputAbiFile = klibOutputDir.resolve(klibDumpFileName)
+        val compilableTargets = project.compilableTargets()
+        onlyIf {
+            compilableTargets.get().isNotEmpty()
+        }
     }
 
     private fun Project.mergeInferredKlibsUmbrellaTask(
@@ -464,6 +473,10 @@ private class KlibValidationPipelineBuilder(
                 "into a single merged KLib ABI dump"
         dumpFileName = klibDumpFileName
         mergedFile = klibMergeDir.resolve(klibDumpFileName)
+        compilableTargets = project.compilableTargets()
+        onlyIf {
+            compilableTargets.get().isNotEmpty()
+        }
     }
 
     private fun Project.mergeKlibsUmbrellaTask(
@@ -475,6 +488,10 @@ private class KlibValidationPipelineBuilder(
                 "different targets into a single merged KLib ABI dump"
         dumpFileName = klibDumpFileName
         mergedFile = klibMergeDir.resolve(klibDumpFileName)
+        compilableTargets = project.compilableTargets()
+        onlyIf {
+            compilableTargets.get().isNotEmpty()
+        }
     }
 
     fun Project.bannedTargets(): Set<String> {
@@ -499,10 +516,7 @@ private class KlibValidationPipelineBuilder(
 
         val supportedTargetsProvider = supportedTargets()
         kotlin.targets.matching { it.emitsKlib }.configureEach { currentTarget ->
-            val mainCompilations = currentTarget.mainCompilations
-            if (mainCompilations.none()) {
-                return@configureEach
-            }
+            val mainCompilation = currentTarget.mainCompilationOrNull ?: return@configureEach
 
             val targetName = currentTarget.targetName
             val targetConfig = TargetConfig(project, extension, targetName, intermediateFilesConfig)
@@ -510,19 +524,14 @@ private class KlibValidationPipelineBuilder(
             val targetSupported = targetIsSupported(currentTarget)
             // If a target is supported, the workflow is simple: create a dump, then merge it along with other dumps.
             if (targetSupported) {
-                mainCompilations.all {
-                    val buildTargetAbi = configureKlibCompilation(
-                        it, extension, targetConfig,
-                        apiBuildDir
-                    )
-                    mergeTask.configure {
-                        it.addInput(targetName, apiBuildDir)
-                        it.dependsOn(buildTargetAbi)
-                    }
-                    mergeInferredTask.configure {
-                        it.addInput(targetName, apiBuildDir)
-                        it.dependsOn(buildTargetAbi)
-                    }
+                val buildTargetAbi = configureKlibCompilation(mainCompilation, extension, targetConfig, apiBuildDir)
+                mergeTask.configure {
+                    it.addInput(targetName, apiBuildDir)
+                    it.dependsOn(buildTargetAbi)
+                }
+                mergeInferredTask.configure {
+                    it.addInput(targetName, apiBuildDir)
+                    it.dependsOn(buildTargetAbi)
                 }
                 return@configureEach
             }
@@ -534,9 +543,12 @@ private class KlibValidationPipelineBuilder(
             }
             // The actual merge will happen here, where we'll try to infer a dump for the unsupported target and merge
             // it with other supported target dumps.
-            val proxy = unsupportedTargetDumpProxy(klibApiDir, targetConfig,
+            val proxy = unsupportedTargetDumpProxy(
+                mainCompilation,
+                klibApiDir, targetConfig,
                 extractUnderlyingTarget(currentTarget),
-                apiBuildDir, supportedTargetsProvider)
+                apiBuildDir, supportedTargetsProvider
+            )
             mergeInferredTask.configure {
                 it.addInput(targetName, apiBuildDir)
                 it.dependsOn(proxy)
@@ -555,18 +567,20 @@ private class KlibValidationPipelineBuilder(
 
     private fun Project.targetIsSupported(target: KotlinTarget): Boolean {
         if (bannedTargets().contains(target.targetName)) return false
-        return when(target) {
+        return when (target) {
             is KotlinNativeTarget -> HostManager().isEnabled(target.konanTarget)
             else -> true
         }
     }
 
+    // Compilable targets supported by the host compiler
     private fun Project.supportedTargets(): Provider<Set<String>> {
         val banned = bannedTargets() // for testing only
         return project.provider {
             val hm = HostManager()
             project.kotlinMultiplatform.targets.matching { it.emitsKlib }
                 .asSequence()
+                .filter { it.mainCompilationOrNull?.hasAnySources() == true }
                 .filter {
                     if (it is KotlinNativeTarget) {
                         hm.isEnabled(it.konanTarget) && it.targetName !in banned
@@ -579,6 +593,16 @@ private class KlibValidationPipelineBuilder(
         }
     }
 
+    // Targets having some sources to compile
+    private fun Project.compilableTargets(): Provider<Set<String>> {
+        return project.provider {
+            project.kotlinMultiplatform.targets.matching { it.emitsKlib }
+                .asSequence()
+                .filter { it.mainCompilationOrNull?.hasAnySources() == true }
+                .map { KlibTarget(extractUnderlyingTarget(it), it.targetName).toString() }
+                .toSet()
+        }
+    }
 
     private fun Project.configureKlibCompilation(
         compilation: KotlinCompilation<KotlinCommonOptions>,
@@ -590,11 +614,7 @@ private class KlibValidationPipelineBuilder(
         val buildTask = project.task<KotlinKlibAbiBuildTask>(targetConfig.apiTaskName("Build")) {
             target = targetConfig.targetName!!
             // Do not enable task for empty umbrella modules
-            isEnabled =
-                klibAbiCheckEnabled(
-                    projectName,
-                    extension
-                ) && compilation.allKotlinSourceSets.any { it.kotlin.srcDirs.any { it.exists() } }
+            isEnabled = klibAbiCheckEnabled(projectName, extension) && compilation.hasAnySources()
             // 'group' is not specified deliberately, so it will be hidden from ./gradlew tasks
             description = "Builds Kotlin KLib ABI dump for 'main' compilations of $projectName. " +
                     "Complementary task and shouldn't be called manually"
@@ -620,6 +640,7 @@ private class KlibValidationPipelineBuilder(
     }
 
     private fun Project.unsupportedTargetDumpProxy(
+        compilation: KotlinCompilation<KotlinCommonOptions>,
         klibApiDir: Provider<File>,
         targetConfig: TargetConfig,
         underlyingTarget: String,
@@ -628,7 +649,7 @@ private class KlibValidationPipelineBuilder(
     ): TaskProvider<KotlinKlibInferAbiForUnsupportedTargetTask> {
         val targetName = targetConfig.targetName!!
         return project.task<KotlinKlibInferAbiForUnsupportedTargetTask>(targetConfig.apiTaskName("Infer")) {
-            isEnabled = klibAbiCheckEnabled(project.name, extension)
+            isEnabled = klibAbiCheckEnabled(project.name, extension) && compilation.hasAnySources()
             description = "Try to infer the dump for unsupported target $targetName using dumps " +
                     "generated for supported targets."
             group = "other"
@@ -676,10 +697,14 @@ private fun extractUnderlyingTarget(target: KotlinTarget): String {
 private val Project.kotlinMultiplatform
     get() = extensions.getByName("kotlin") as KotlinMultiplatformExtension
 
-private val KotlinTarget.mainCompilations
-    get() = compilations.matching { it.name == "main" }
+private val KotlinTarget.mainCompilationOrNull: KotlinCompilation<KotlinCommonOptions>?
+    get() = compilations.firstOrNull { it.name == KotlinCompilation.MAIN_COMPILATION_NAME }
 
 private val Project.jvmDumpFileName: String
     get() = "$name.api"
 private val Project.klibDumpFileName: String
     get() = "$name.klib.api"
+
+private fun KotlinCompilation<KotlinCommonOptions>.hasAnySources(): Boolean = allKotlinSourceSets.any {
+    it.kotlin.srcDirs.any(File::exists)
+}
