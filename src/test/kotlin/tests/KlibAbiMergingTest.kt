@@ -5,6 +5,7 @@
 
 package tests
 
+import kotlinx.validation.api.klib.BasicDeclarationKind
 import kotlinx.validation.api.klib.KlibAbiDumpMerger
 import kotlinx.validation.api.klib.KlibTarget
 import org.junit.Rule
@@ -335,5 +336,57 @@ class KlibAbiMergingTest {
         assertFailsWith<IllegalArgumentException> {
             KlibAbiDumpMerger().merge(file("/merge/stdlib_native_common.abi"), "target")
         }
+    }
+
+    @Test
+    fun declarationsClassification() {
+        val declarations = mapOf(
+            "abstract class examples.classes/AC { // examples.classes/AC|null[0]" to BasicDeclarationKind.Class,
+            "final class examples.classes/C { // examples.classes/C|null[0]" to BasicDeclarationKind.Class,
+            "final inner class Inner { // examples.classes/Outer.Nested.Inner|null[0]" to BasicDeclarationKind.Class,
+            "open annotation class examples.classes/A : kotlin/Annotation { // examples.classes/A|null[0]" to BasicDeclarationKind.Class,
+            "final object examples.classes/O // examples.classes/O|null[0]" to BasicDeclarationKind.Class,
+            "abstract interface examples.classes/I // examples.classes/I|null[0]" to BasicDeclarationKind.Class,
+            "final value class classifiers.test/ValueClass { // classifiers.test/ValueClass|null[0]" to BasicDeclarationKind.Class,
+            "abstract fun interface classifiers.test/FunctionInterface { // classifiers.test/FunctionInterface|null[0]" to BasicDeclarationKind.Class,
+            "final enum class examples.classes/E : kotlin/Enum<examples.classes/E> { // examples.classes/E|null[0]" to BasicDeclarationKind.Class,
+
+            "constructor <init>(kotlin/Int) // examples.classes/D.<init>|<init>(kotlin.Int){}[0]" to BasicDeclarationKind.Constructor,
+
+            "final fun <get-entries>(): kotlin.enums/EnumEntries<examples.classes/E> // examples.classes/E.entries.<get-entries>|<get-entries>#static(){}[0]" to BasicDeclarationKind.Function,
+            "final fun values(): kotlin/Array<examples.classes/E> // examples.classes/E.values|values#static(){}[0]" to BasicDeclarationKind.Function,
+            "open fun o(): kotlin/Int // examples.classes/OC.o|o(){}[0]" to BasicDeclarationKind.Function,
+            "final inline fun examples.classes/testInlineFun() // examples.classes/testInlineFun|testInlineFun(){}[0]" to BasicDeclarationKind.Function,
+            "final fun <#A: kotlin/Any?> examples.classes/consume(#A) // examples.classes/consume|consume(0:0){0§<kotlin.Any?>}[0]" to BasicDeclarationKind.Function,
+            "abstract fun a() // examples.classes/AC.a|a(){}[0]" to BasicDeclarationKind.Function,
+            "final fun (kotlin/Int).callables.test/regularFun(): kotlin/String // callables.test/regularFun|regularFun@kotlin.Int(){}[0]" to BasicDeclarationKind.Function,
+            "final fun context(kotlin/Number) (kotlin/Number).callables.test/regularFun(): kotlin/String // callables.test/regularFun|regularFun!kotlin.Int@kotlin.Number(){}[0]" to BasicDeclarationKind.Function,
+
+            "final val entries // examples.classes/E.entries|#static{}entries[0]" to BasicDeclarationKind.Property,
+            "final const val examples.classes/con // examples.classes/con|{}con[0]" to BasicDeclarationKind.Property,
+            "final var examples.classes/r // examples.classes/r|{}r[0]" to BasicDeclarationKind.Property,
+
+            "enum entry A // examples.classes/E.A|null[0]" to BasicDeclarationKind.EnumEntry,
+
+            "" to BasicDeclarationKind.Empty,
+            " " to BasicDeclarationKind.Empty,
+            "\t" to BasicDeclarationKind.Empty
+        )
+
+        declarations.forEach { (declaration, expectedKind) ->
+            assertEquals(expectedKind, BasicDeclarationKind.detect(declaration),
+                "Invalid kind for declaration: '${declaration}'")
+        }
+    }
+
+    @Test
+    fun declarationsOrdering() {
+        val dump = dumpToFile(KlibAbiDumpMerger().apply {
+            merge(file("/merge/ordering/unordered.klib.api"))
+        })
+        assertContentEquals(
+            lines("/merge/ordering/ordered.klib.api"),
+            Files.readAllLines(dump.toPath()).asSequence()
+        )
     }
 }

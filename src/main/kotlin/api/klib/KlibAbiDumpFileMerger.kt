@@ -482,6 +482,54 @@ internal class KlibAbiDumpMerger {
     }
 }
 
+// Represents coarse-grained declaration's kind for ordering purposes.
+internal enum class BasicDeclarationKind(val topLevelWeight: Int, val nestedWeight: Int) {
+    Empty(-1, -1),
+    Class(0, 3),
+    Property(1, 0),
+    Function(3, 2),
+    Constructor(4, 1),
+    EnumEntry(4, 4);
+
+    companion object {
+        internal fun detect(declaration: String): BasicDeclarationKind {
+            if (declaration.isBlank()) return BasicDeclarationKind.Empty
+            val scanner = Scanner(declaration.trim())
+            while (scanner.hasNext()) {
+                val token = scanner.next()
+                when (token) {
+                    "constructor" -> return BasicDeclarationKind.Constructor
+                    "val" -> return BasicDeclarationKind.Property
+                    "var" -> return BasicDeclarationKind.Property
+                    "const" -> {
+                        scanner.next("val")
+                        return BasicDeclarationKind.Property
+                    }
+
+                    "interface" -> return BasicDeclarationKind.Class
+                    "annotation" -> return BasicDeclarationKind.Class
+                    "class" -> return BasicDeclarationKind.Class
+                    "object" -> return BasicDeclarationKind.Class
+                    "enum" -> {
+                        val next = scanner.next()
+                        return when (next) {
+                            "class" -> BasicDeclarationKind.Class
+                            "entry" -> BasicDeclarationKind.EnumEntry
+                            else -> throw IllegalStateException("Unclassified declaration: '${declaration.trim()}'")
+                        }
+                    }
+
+                    "fun" -> {
+                        val next = scanner.next()
+                        return if (next == "interface") BasicDeclarationKind.Class else BasicDeclarationKind.Function
+                    }
+                }
+            }
+            throw IllegalStateException("Unclassified declaration: '${declaration.trim()}'")
+        }
+    }
+}
+
 /**
  * A class representing a single declaration from a KLib API dump along with all its children
  * declarations.
@@ -490,6 +538,7 @@ internal class DeclarationContainer(val text: String, val parent: DeclarationCon
     val targets: MutableSet<KlibTarget> = mutableSetOf()
     val children: MutableMap<String, DeclarationContainer> = mutableMapOf()
     var delimiter: String? = null
+    val declarationKind by lazy { BasicDeclarationKind.detect(text) }
 
     fun createOrUpdateChildren(text: String, targets: Set<KlibTarget>): DeclarationContainer {
         val child = children.computeIfAbsent(text) {
@@ -629,7 +678,18 @@ private object DeclarationsComparator : Comparator<DeclarationContainer> {
 
     override fun compare(c0: DeclarationContainer, c1: DeclarationContainer): Int {
         return if (c0.targets == c1.targets) {
-            c0.text.compareTo(c1.text)
+            check(c0.parent === c1.parent) { "Can only compare sibling declarations" }
+            if (c0.declarationKind === c1.declarationKind) {
+                c0.text.compareTo(c1.text)
+            } else {
+                val isTopLev = c0.parent?.parent == null
+                val dw = if (isTopLev) {
+                    c0.declarationKind.topLevelWeight.compareTo(c1.declarationKind.topLevelWeight)
+                } else {
+                    c0.declarationKind.nestedWeight.compareTo(c1.declarationKind.nestedWeight)
+                }
+                if (dw == 0) c0.text.compareTo(c1.text) else dw
+            }
         } else {
             if (c0.targets.size == c1.targets.size) {
                 val c0targets = c0.targets.serializeAndSort().iterator()

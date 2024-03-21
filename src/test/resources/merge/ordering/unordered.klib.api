@@ -1,0 +1,76 @@
+// Klib ABI Dump
+// Targets: [androidNativeArm32, androidNativeArm64, iosSimulatorArm64, js, linuxArm64, linuxX64, macosArm64, tvosArm64, tvosSimulatorArm64, tvosX64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <org.example:bcv-klib-test>
+abstract class org.example/AC { // org.example/AC|null[0]
+    constructor <init>() // org.example/AC.<init>|<init>(){}[0]
+}
+abstract fun interface org.example/FI { // org.example/FI|null[0]
+    abstract fun f() // org.example/FI.f|f(){}[0]
+}
+abstract interface org.example/I { // org.example/I|null[0]
+    abstract fun f() // org.example/I.f|f(){}[0]
+}
+final class org.example/FC { // org.example/FC|null[0]
+    constructor <init>() // org.example/FC.<init>|<init>(){}[0]
+    final class NC { // org.example/FC.NC|null[0]
+        constructor <init>(kotlin/Int) // org.example/FC.NC.<init>|<init>(kotlin.Int){}[0]
+        final fun vf(): kotlin/Int // org.example/FC.NC.vf|vf(){}[0]
+        final inner class IC { // org.example/FC.NC.IC|null[0]
+            constructor <init>() // org.example/FC.NC.IC.<init>|<init>(){}[0]
+        }
+        final val x // org.example/FC.NC.x|{}x[0]
+            final fun <get-x>(): kotlin/Int // org.example/FC.NC.x.<get-x>|<get-x>(){}[0]
+        final var v // org.example/FC.NC.v|{}v[0]
+            final fun <get-v>(): kotlin/Int // org.example/FC.NC.v.<get-v>|<get-v>(){}[0]
+            final fun <set-v>(kotlin/Int) // org.example/FC.NC.v.<set-v>|<set-v>(kotlin.Int){}[0]
+        final var y // org.example/FC.NC.y|{}y[0]
+            final fun <get-y>(): kotlin/Int // org.example/FC.NC.y.<get-y>|<get-y>(){}[0]
+            final fun <set-y>(kotlin/Int) // org.example/FC.NC.y.<set-y>|<set-y>(kotlin.Int){}[0]
+    }
+}
+final const val org.example/z // org.example/z|{}z[0]
+    final fun <get-z>(): kotlin/Int // org.example/z.<get-z>|<get-z>(){}[0]
+final enum class org.example/E : kotlin/Enum<org.example/E> { // org.example/E|null[0]
+    enum entry A // org.example/E.A|null[0]
+    enum entry B // org.example/E.B|null[0]
+    enum entry C // org.example/E.C|null[0]
+    final class NC { // org.example/E.NC|null[0]
+        constructor <init>() // org.example/E.NC.<init>|<init>(){}[0]
+    }
+    final fun valueOf(kotlin/String): org.example/E // org.example/E.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<org.example/E> // org.example/E.values|values#static(){}[0]
+    final object Companion { // org.example/E.Companion|null[0]
+        final fun of(kotlin/String): org.example/E // org.example/E.Companion.of|of(kotlin.String){}[0]
+    }
+    final val entries // org.example/E.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<org.example/E> // org.example/E.entries.<get-entries>|<get-entries>#static(){}[0]
+    final val i // org.example/E.i|{}i[0]
+        final fun <get-i>(): kotlin/Int // org.example/E.i.<get-i>|<get-i>(){}[0]
+    final val i2 // org.example/E.i2|{}i2[0]
+        final fun <get-i2>(): kotlin/Int // org.example/E.i2.<get-i2>|<get-i2>(){}[0]
+}
+final inline fun org.example/inl(): kotlin/Nothing // org.example/inl|inl(){}[0]
+final val org.example/x // org.example/x|{}x[0]
+    final fun <get-x>(): kotlin/Int // org.example/x.<get-x>|<get-x>(){}[0]
+final value class org.example/VC { // org.example/VC|null[0]
+    constructor <init>(kotlin/Int) // org.example/VC.<init>|<init>(kotlin.Int){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // org.example/VC.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // org.example/VC.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // org.example/VC.toString|toString(){}[0]
+    final val v // org.example/VC.v|{}v[0]
+        final fun <get-v>(): kotlin/Int // org.example/VC.v.<get-v>|<get-v>(){}[0]
+}
+final var org.example/y // org.example/y|{}y[0]
+    final fun <get-y>(): kotlin/Int // org.example/y.<get-y>|<get-y>(){}[0]
+    final fun <set-y>(kotlin/Int) // org.example/y.<set-y>|<set-y>(kotlin.Int){}[0]
+open annotation class org.example/AnnC : kotlin/Annotation { // org.example/AnnC|null[0]
+    constructor <init>() // org.example/AnnC.<init>|<init>(){}[0]
+}
+open class org.example/OC { // org.example/OC|null[0]
+    constructor <init>() // org.example/OC.<init>|<init>(){}[0]
+}
