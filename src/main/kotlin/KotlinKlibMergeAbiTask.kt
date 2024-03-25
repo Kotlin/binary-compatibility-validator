@@ -8,7 +8,6 @@ package kotlinx.validation
 import kotlinx.validation.api.klib.KlibDump
 import kotlinx.validation.api.klib.saveTo
 import org.gradle.api.DefaultTask
-import org.gradle.api.specs.Spec
 import org.gradle.api.tasks.*
 import java.io.File
 
@@ -46,24 +45,18 @@ internal abstract class KotlinKlibMergeAbiTask : DefaultTask() {
     @Input
     lateinit var dumpFileName: String
 
-    private var targetPredicate: Spec<String> = Spec<String> { true }
-
     internal fun addInput(target: String, file: File) {
         targetToFile[target] = file
-    }
-
-    internal fun filterTargets(filter: Spec<String>) {
-        targetPredicate = filter
     }
 
     @OptIn(ExperimentalBCVApi::class)
     @TaskAction
     internal fun merge() {
-        val filter = targetPredicate
         KlibDump().apply {
             targetToFile.forEach { (targetName, dumpDir) ->
-                if (filter.isSatisfiedBy(targetName)) {
-                    merge(dumpDir.resolve(dumpFileName), targetName)
+                val dumpFile = dumpDir.resolve(dumpFileName)
+                if (dumpFile.exists()) {
+                    merge(dumpFile, targetName)
                 }
             }
         }.saveTo(mergedFile)
