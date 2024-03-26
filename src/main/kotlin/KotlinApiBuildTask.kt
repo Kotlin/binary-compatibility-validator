@@ -9,11 +9,14 @@ import kotlinx.validation.api.*
 import org.gradle.api.*
 import org.gradle.api.file.*
 import org.gradle.api.tasks.*
+import java.io.File
 import java.util.jar.JarFile
 import javax.inject.Inject
 
 public open class KotlinApiBuildTask @Inject constructor(
 ) : BuildTaskBase() {
+    @OutputFile
+    public lateinit var outputApiFile: File
 
     @InputFiles
     @Optional

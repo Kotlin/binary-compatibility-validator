@@ -8,14 +8,9 @@ package kotlinx.validation
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.OutputFile
-import java.io.File
 
 public abstract class BuildTaskBase : DefaultTask() {
     private val extension = project.apiValidationExtensionOrNull
-
-    @OutputFile
-    public lateinit var outputApiFile: File
 
     private var _ignoredPackages: Set<String>? = null
     @get:Input

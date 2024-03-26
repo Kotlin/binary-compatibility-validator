@@ -5,51 +5,56 @@
 
 package kotlinx.validation
 
-import kotlinx.validation.api.klib.KLibDumpFilters
-import kotlinx.validation.api.klib.KlibDump
-import kotlinx.validation.api.klib.KlibSignatureVersion
-import kotlinx.validation.api.klib.saveTo
+import kotlinx.validation.api.klib.*
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 
 /**
  * Generates a text file with a KLib ABI dump for a single klib.
  */
 internal abstract class KotlinKlibAbiBuildTask : BuildTaskBase() {
+    @get:OutputFile
+    public abstract val outputApiFile: RegularFileProperty
 
     /**
      * Collection consisting of a single path to compiled klib (either file, or directory).
      */
     @get:InputFiles
-    val klibFile: ConfigurableFileCollection = project.objects.fileCollection()
+    public abstract val klibFile: ConfigurableFileCollection
 
     /**
      * Refer to [KlibValidationSettings.signatureVersion] for details.
      */
     @get:Input
-    var signatureVersion: KlibSignatureVersion = KlibSignatureVersion.LATEST
+    public val signatureVersion: Property<KlibSignatureVersion> =
+        project.objects.property(KlibSignatureVersion::class.java)
+            .convention(KlibSignatureVersion.LATEST)
 
     /**
-     * Name of a target [klibFile] was compiled for.
+     * A target [klibFile] was compiled for.
      */
-    @Input
-    lateinit var target: String
+    @get:Input
+    public abstract val target: Property<KlibTarget>
 
     @OptIn(ExperimentalBCVApi::class)
     @TaskAction
     internal fun generate() {
-        outputApiFile.delete()
-        outputApiFile.parentFile.mkdirs()
+        val outputFile = outputApiFile.asFile.get()
+        outputFile.delete()
+        outputFile.parentFile.mkdirs()
 
-        val dump = KlibDump.fromKlib(klibFile.singleFile, target, KLibDumpFilters {
+        val dump = KlibDump.fromKlib(klibFile.singleFile, target.get().configurableName, KLibDumpFilters {
             ignoredClasses.addAll(this@KotlinKlibAbiBuildTask.ignoredClasses)
             ignoredPackages.addAll(this@KotlinKlibAbiBuildTask.ignoredPackages)
             nonPublicMarkers.addAll(this@KotlinKlibAbiBuildTask.nonPublicMarkers)
-            signatureVersion = this@KotlinKlibAbiBuildTask.signatureVersion
+            signatureVersion = this@KotlinKlibAbiBuildTask.signatureVersion.get()
         })
 
-        dump.saveTo(outputApiFile)
+        dump.saveTo(outputFile)
     }
 }
