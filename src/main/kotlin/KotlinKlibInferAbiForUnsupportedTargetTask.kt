@@ -23,9 +23,6 @@ import java.io.File
  * The resulting dump is then used as an inferred dump for the unsupported target.
  */
 internal abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask() {
-    @get:Internal
-    internal val projectName = project.name
-
     /**
      * The name of a target to infer a dump for.
      */
@@ -33,29 +30,16 @@ internal abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask
     lateinit var unsupportedTarget: KlibTarget
 
     /**
-     * A root directory containing dumps successfully generated for each supported target.
-     * It is assumed that this directory contains subdirectories named after targets.
-     */
-    @InputFiles
-    lateinit var outputApiDir: String
-
-    /**
      * Set of all supported targets.
      */
-    @get:Input
-    val supportedTargets: ListProperty<KlibTarget> = project.objects.listProperty(KlibTarget::class.java)
+    @Nested
+    val dumps: ListProperty<GeneratedDump> = project.objects.listProperty(GeneratedDump::class.java)
 
     /**
      * Previously generated merged ABI dump file, the golden image every dump should be verified against.
      */
     @InputFiles
     lateinit var inputImageFile: File
-
-    /**
-     * The name of a dump file.
-     */
-    @Input
-    lateinit var dumpFileName: String
 
     /**
      * A path to an inferred dump file.
@@ -66,13 +50,15 @@ internal abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask
     @OptIn(ExperimentalBCVApi::class)
     @TaskAction
     internal fun generate() {
-        val supportedTargetNames = supportedTargets.get().toSet()
+        val availableDumps = dumps.get().map {
+            it.target to it.dumpFile.asFile.get()
+        }.filter { it.second.exists() }.toMap()
         // Find a set of supported targets that are closer to unsupported target in the hierarchy.
         // Note that dumps are stored using configurable name, but grouped by the canonical target name.
-        val matchingTargets = findMatchingTargets(supportedTargetNames, unsupportedTarget)
+        val matchingTargets = findMatchingTargets(availableDumps.keys, unsupportedTarget)
         // Load dumps that are a good fit for inference
         val supportedTargetDumps = matchingTargets.map { target ->
-            val dumpFile = File(outputApiDir).parentFile.resolve(target.configurableName).resolve(dumpFileName)
+            val dumpFile = availableDumps[target]!!
             KlibDump.from(dumpFile, target.configurableName).also {
                 check(it.targets.single() == target)
             }

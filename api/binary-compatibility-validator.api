@@ -85,6 +85,10 @@ public class kotlinx/validation/KotlinApiCompareTask : org/gradle/api/DefaultTas
 	public final fun setProjectApiFile (Ljava/io/File;)V
 }
 
+public final class kotlinx/validation/_UtilsKt {
+	public static final fun toKlibTarget (Lorg/jetbrains/kotlin/gradle/plugin/KotlinTarget;)Lkotlinx/validation/api/klib/KlibTarget;
+}
+
 public final class kotlinx/validation/api/ClassBinarySignature {
 	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Lkotlinx/validation/api/AccessFlags;ZZLjava/util/List;)Lkotlinx/validation/api/ClassBinarySignature;
 	public static synthetic fun copy$default (Lkotlinx/validation/api/ClassBinarySignature;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Lkotlinx/validation/api/AccessFlags;ZZLjava/util/List;ILjava/lang/Object;)Lkotlinx/validation/api/ClassBinarySignature;
