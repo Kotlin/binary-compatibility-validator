@@ -522,12 +522,12 @@ private class KlibValidationPipelineBuilder(
             if (targetSupported) {
                 val buildTargetAbi = configureKlibCompilation(mainCompilation, extension, targetConfig, apiBuildDir)
                 mergeTask.configure {
-                    it.addInput(targetName, apiBuildDir)
-                    it.dependsOn(buildTargetAbi)
+                    it.dumps.add(GeneratedDump(targetName,
+                        objects.fileProperty().fileProvider(buildTargetAbi.map { it.outputApiFile })))
                 }
                 mergeInferredTask.configure {
-                    it.addInput(targetName, apiBuildDir)
-                    it.dependsOn(buildTargetAbi)
+                    it.dumps.add(GeneratedDump(targetName,
+                        objects.fileProperty().fileProvider(buildTargetAbi.map { it.outputApiFile })))
                 }
                 return@configureEach
             }
@@ -546,8 +546,8 @@ private class KlibValidationPipelineBuilder(
                 apiBuildDir, supportedTargetsProvider
             )
             mergeInferredTask.configure {
-                it.addInput(targetName, apiBuildDir)
-                it.dependsOn(proxy)
+                it.dumps.add(GeneratedDump(targetName,
+                    objects.fileProperty().fileProvider(proxy.map { it.outputFile })))
             }
         }
         mergeTask.configure {
