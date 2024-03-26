@@ -219,7 +219,9 @@ private fun Project.configureKotlinCompilation(
 
     val apiBuild = task<KotlinApiBuildTask>(targetConfig.apiTaskName("Build")) {
         // Do not enable task for empty umbrella modules
-        isEnabled = apiCheckEnabled(projectName, extension) && compilation.hasAnySources()
+        isEnabled = apiCheckEnabled(projectName, extension)
+        val hasSourcesPredicate = compilation.hasAnySourcesPredicate()
+        onlyIf { hasSourcesPredicate.get() }
         // 'group' is not specified deliberately, so it will be hidden from ./gradlew tasks
         description =
             "Builds Kotlin API for 'main' compilations of $projectName. Complementary task and shouldn't be called manually"
@@ -601,7 +603,9 @@ private class KlibValidationPipelineBuilder(
         val buildTask = project.task<KotlinKlibAbiBuildTask>(targetConfig.apiTaskName("Build")) {
             target = targetConfig.targetName!!
             // Do not enable task for empty umbrella modules
-            isEnabled = klibAbiCheckEnabled(projectName, extension) && compilation.hasAnySources()
+            isEnabled = klibAbiCheckEnabled(projectName, extension)
+            val hasSourcesPredicate = compilation.hasAnySourcesPredicate()
+            onlyIf { hasSourcesPredicate.get() }
             // 'group' is not specified deliberately, so it will be hidden from ./gradlew tasks
             description = "Builds Kotlin KLib ABI dump for 'main' compilations of $projectName. " +
                     "Complementary task and shouldn't be called manually"
@@ -636,7 +640,9 @@ private class KlibValidationPipelineBuilder(
     ): TaskProvider<KotlinKlibInferAbiForUnsupportedTargetTask> {
         val targetName = targetConfig.targetName!!
         return project.task<KotlinKlibInferAbiForUnsupportedTargetTask>(targetConfig.apiTaskName("Infer")) {
-            isEnabled = klibAbiCheckEnabled(project.name, extension) && compilation.hasAnySources()
+            isEnabled = klibAbiCheckEnabled(project.name, extension)
+            val hasSourcesPredicate = compilation.hasAnySourcesPredicate()
+            onlyIf { hasSourcesPredicate.get() }
             description = "Try to infer the dump for unsupported target $targetName using dumps " +
                     "generated for supported targets."
             group = "other"
@@ -694,4 +700,8 @@ private val Project.klibDumpFileName: String
 
 private fun KotlinCompilation<KotlinCommonOptions>.hasAnySources(): Boolean = allKotlinSourceSets.any {
     it.kotlin.srcDirs.any(File::exists)
+}
+
+private fun KotlinCompilation<KotlinCommonOptions>.hasAnySourcesPredicate(): Provider<Boolean> = project.provider {
+    this.hasAnySources()
 }
