@@ -174,7 +174,7 @@ public final class kotlinx/validation/api/klib/KlibSignatureVersion$Companion {
 	public final fun of (I)Lkotlinx/validation/api/klib/KlibSignatureVersion;
 }
 
-public final class kotlinx/validation/api/klib/KlibTarget {
+public final class kotlinx/validation/api/klib/KlibTarget : java/io/Serializable {
 	public static final field Companion Lkotlinx/validation/api/klib/KlibTarget$Companion;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getConfigurableName ()Ljava/lang/String;
