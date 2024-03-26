@@ -614,9 +614,8 @@ private class KlibValidationPipelineBuilder(
             // 'group' is not specified deliberately, so it will be hidden from ./gradlew tasks
             description = "Builds Kotlin KLib ABI dump for 'main' compilations of $projectName. " +
                     "Complementary task and shouldn't be called manually"
-            klibFile = project.files(project.provider { compilation.output.classesDirs })
-            compilationDependencies = project.files(project.provider { compilation.compileDependencyFiles })
-            signatureVersion = SerializableSignatureVersion(extension.klib.signatureVersion)
+            klibFile.from(project.provider { compilation.output.classesDirs })
+            signatureVersion = extension.klib.signatureVersion
             outputApiFile = apiBuildDir.resolve(klibDumpFileName)
         }
         return buildTask
