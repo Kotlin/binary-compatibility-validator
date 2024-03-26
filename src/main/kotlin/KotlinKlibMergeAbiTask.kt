@@ -15,7 +15,7 @@ import org.gradle.api.tasks.*
 /**
  * Merges multiple individual KLib ABI dumps into a single merged dump.
  */
-internal abstract class KotlinKlibMergeAbiTask : DefaultTask() {
+public abstract class KotlinKlibMergeAbiTask : DefaultTask() {
     /**
      * Dumps to merge.
      *
@@ -26,7 +26,7 @@ internal abstract class KotlinKlibMergeAbiTask : DefaultTask() {
     public abstract val dumps: ListProperty<GeneratedDump>
 
     /**
-     * A path to a resulting merged dump.
+     * A path to a resulting merged dump file.
      */
     @get:OutputFile
     public abstract val mergedApiFile: RegularFileProperty

@@ -91,6 +91,36 @@ public class kotlinx/validation/KotlinApiCompareTask : org/gradle/api/DefaultTas
 	public final fun setProjectApiFile (Ljava/io/File;)V
 }
 
+public abstract class kotlinx/validation/KotlinKlibAbiBuildTask : kotlinx/validation/BuildTaskBase {
+	public fun <init> ()V
+	public abstract fun getKlibFile ()Lorg/gradle/api/file/ConfigurableFileCollection;
+	public abstract fun getOutputAbiFile ()Lorg/gradle/api/file/RegularFileProperty;
+	public final fun getSignatureVersion ()Lorg/gradle/api/provider/Property;
+	public abstract fun getTarget ()Lorg/gradle/api/provider/Property;
+}
+
+public abstract class kotlinx/validation/KotlinKlibExtractAbiTask : org/gradle/api/DefaultTask {
+	public fun <init> ()V
+	public abstract fun getInputAbiFile ()Lorg/gradle/api/file/RegularFileProperty;
+	public abstract fun getOutputAbiFile ()Lorg/gradle/api/file/RegularFileProperty;
+	public abstract fun getRequiredTargets ()Lorg/gradle/api/provider/ListProperty;
+	public final fun getStrictValidation ()Lorg/gradle/api/provider/Property;
+}
+
+public abstract class kotlinx/validation/KotlinKlibInferAbiTask : org/gradle/api/DefaultTask {
+	public fun <init> ()V
+	public abstract fun getInputDumps ()Lorg/gradle/api/provider/ListProperty;
+	public abstract fun getOldMergedKlibDump ()Lorg/gradle/api/file/RegularFileProperty;
+	public abstract fun getOutputAbiFile ()Lorg/gradle/api/file/RegularFileProperty;
+	public abstract fun getTarget ()Lorg/gradle/api/provider/Property;
+}
+
+public abstract class kotlinx/validation/KotlinKlibMergeAbiTask : org/gradle/api/DefaultTask {
+	public fun <init> ()V
+	public abstract fun getDumps ()Lorg/gradle/api/provider/ListProperty;
+	public abstract fun getMergedApiFile ()Lorg/gradle/api/file/RegularFileProperty;
+}
+
 public final class kotlinx/validation/_UtilsKt {
 	public static final fun toKlibTarget (Lorg/jetbrains/kotlin/gradle/plugin/KotlinTarget;)Lkotlinx/validation/api/klib/KlibTarget;
 }
