@@ -10,7 +10,6 @@ import kotlinx.validation.api.klib.konanTargetNameMapping
 import org.gradle.api.*
 import org.gradle.api.plugins.*
 import org.gradle.api.provider.*
-import org.gradle.api.specs.Spec
 import org.gradle.api.tasks.*
 import org.jetbrains.kotlin.gradle.dsl.*
 import org.jetbrains.kotlin.gradle.plugin.*
@@ -416,10 +415,8 @@ private class KlibValidationPipelineBuilder(
                 project.name
         projectApiFile = klibApiDir.get().resolve(klibDumpFileName)
         generatedApiFile = klibMergeDir.resolve(klibDumpFileName)
-        val compilableTargets = project.compilableTargets()
-        onlyIf("There are no klibs compiled for the project") {
-            compilableTargets.get().isNotEmpty()
-        }
+        val hasCompilableTargets = project.compilableTargetsPredicate()
+        onlyIf("There are no klibs compiled for the project") { hasCompilableTargets.get() }
     }
 
     private fun Project.dumpKlibsTask(
@@ -432,10 +429,8 @@ private class KlibValidationPipelineBuilder(
         group = "other"
         from = klibMergeDir.resolve(klibDumpFileName)
         to = klibApiDir.get().resolve(klibDumpFileName)
-        val compTargets = project.compilableTargets()
-        onlyIf("There are no klibs compiled for the project") {
-            compTargets.get().isNotEmpty()
-        }
+        val hasCompilableTargets = project.compilableTargetsPredicate()
+        onlyIf("There are no klibs compiled for the project") { hasCompilableTargets.get() }
     }
 
     private fun Project.extractAbi(
@@ -454,10 +449,8 @@ private class KlibValidationPipelineBuilder(
         supportedTargets = supportedTargets()
         inputAbiFile = klibApiDir.get().resolve(klibDumpFileName)
         outputAbiFile = klibOutputDir.resolve(klibDumpFileName)
-        val compilableTargets = project.compilableTargets()
-        onlyIf("There are no klibs compiled for the project") {
-            compilableTargets.get().isNotEmpty()
-        }
+        val hasCompilableTargets = project.compilableTargetsPredicate()
+        onlyIf("There are no klibs compiled for the project") { hasCompilableTargets.get() }
     }
 
     private fun Project.mergeInferredKlibsUmbrellaTask(
@@ -473,10 +466,8 @@ private class KlibValidationPipelineBuilder(
                 "into a single merged KLib ABI dump"
         dumpFileName = klibDumpFileName
         mergedFile = klibMergeDir.resolve(klibDumpFileName)
-        val compilableTargets = project.compilableTargets()
-        onlyIf("There are no dumps to merge") {
-            compilableTargets.get().isNotEmpty()
-        }
+        val hasCompilableTargets = project.compilableTargetsPredicate()
+        onlyIf("There are no dumps to merge") { hasCompilableTargets.get() }
     }
 
     private fun Project.mergeKlibsUmbrellaTask(
@@ -488,10 +479,8 @@ private class KlibValidationPipelineBuilder(
                 "different targets into a single merged KLib ABI dump"
         dumpFileName = klibDumpFileName
         mergedFile = klibMergeDir.resolve(klibDumpFileName)
-        val compilableTargets = project.compilableTargets()
-        onlyIf("There are no dumps to merge") {
-            compilableTargets.get().isNotEmpty()
-        }
+        val hasCompilableTargets = project.compilableTargetsPredicate()
+        onlyIf("There are no dumps to merge") { hasCompilableTargets.get() }
     }
 
     fun Project.bannedTargets(): Set<String> {
@@ -593,28 +582,12 @@ private class KlibValidationPipelineBuilder(
         }
     }
 
-    // Targets having some sources to compile
-    private fun Project.compilableTargets(): Provider<Set<String>> {
+    // Returns a predicate that checks if there are any compilable targets
+    private fun Project.compilableTargetsPredicate(): Provider<Boolean> {
         return project.provider {
             project.kotlinMultiplatform.targets.matching { it.emitsKlib }
                 .asSequence()
-                .filter { it.mainCompilationOrNull?.hasAnySources() == true }
-                .map { KlibTarget(extractUnderlyingTarget(it), it.targetName).toString() }
-                .toSet()
-        }
-    }
-
-    private fun Project.isTargetWithConfigurableNameCompilable(): Spec<String> {
-        val provider = compilableTargets()
-        return object : Spec<String> {
-            var configurableTargetNames: Set<String>? = null
-
-            override fun isSatisfiedBy(element: String?): Boolean {
-                if (configurableTargetNames == null) {
-                    configurableTargetNames = provider.get().map { KlibTarget.parse(it).configurableName }.toSet()
-                }
-                return configurableTargetNames!!.contains(element)
-            }
+                .any { it.mainCompilationOrNull?.hasAnySources() == true }
         }
     }
 
