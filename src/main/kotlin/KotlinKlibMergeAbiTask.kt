@@ -6,10 +6,8 @@
 package kotlinx.validation
 
 import kotlinx.validation.api.klib.KlibDump
-import kotlinx.validation.api.klib.KlibTarget
 import kotlinx.validation.api.klib.saveTo
 import org.gradle.api.DefaultTask
-import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.*
 import java.io.File
