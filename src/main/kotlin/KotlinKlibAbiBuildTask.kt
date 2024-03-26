@@ -17,12 +17,10 @@ import org.gradle.api.tasks.TaskAction
 /**
  * Generates a text file with a KLib ABI dump for a single klib.
  */
-internal abstract class KotlinKlibAbiBuildTask : BuildTaskBase() {
-    @get:OutputFile
-    public abstract val outputApiFile: RegularFileProperty
+public abstract class KotlinKlibAbiBuildTask : BuildTaskBase() {
 
     /**
-     * Collection consisting of a single path to compiled klib (either file, or directory).
+     * Collection consisting of a single path to a compiled klib (either file, or directory).
      */
     @get:InputFiles
     public abstract val klibFile: ConfigurableFileCollection
@@ -41,10 +39,16 @@ internal abstract class KotlinKlibAbiBuildTask : BuildTaskBase() {
     @get:Input
     public abstract val target: Property<KlibTarget>
 
+    /**
+     * A path to the resulting dump file.
+     */
+    @get:OutputFile
+    public abstract val outputAbiFile: RegularFileProperty
+
     @OptIn(ExperimentalBCVApi::class)
     @TaskAction
     internal fun generate() {
-        val outputFile = outputApiFile.asFile.get()
+        val outputFile = outputAbiFile.asFile.get()
         outputFile.delete()
         outputFile.parentFile.mkdirs()
 

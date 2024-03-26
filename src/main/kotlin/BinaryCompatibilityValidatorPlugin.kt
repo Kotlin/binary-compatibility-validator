@@ -531,7 +531,7 @@ private class KlibValidationPipelineBuilder(
                 val buildTargetAbi = configureKlibCompilation(mainCompilation, extension, targetConfig,
                     target, apiBuildDir)
                 generatedDumps.add(GeneratedDump(target,
-                    objects.fileProperty().also { it.set(buildTargetAbi.flatMap { it.outputApiFile }) }))
+                    objects.fileProperty().also { it.set(buildTargetAbi.flatMap { it.outputAbiFile }) }))
                 return@configureEach
             }
             // If the target is unsupported, the regular merge task will only depend on a task complaining about
@@ -551,7 +551,7 @@ private class KlibValidationPipelineBuilder(
             proxy.configure { it.inputDumps.addAll(generatedDumps) }
             inferredDumps.add(GeneratedDump(currentTarget.toKlibTarget(),
                 objects.fileProperty().also {
-                    it.set(proxy.flatMap { it.outputApiFile })
+                    it.set(proxy.flatMap { it.outputAbiFile })
                 }))
         }
     }
@@ -612,7 +612,7 @@ private class KlibValidationPipelineBuilder(
             this.target.set(target)
             klibFile.from(project.provider { compilation.output.classesDirs })
             signatureVersion.set(extension.klib.signatureVersion)
-            outputApiFile.set(apiBuildDir.resolve(klibDumpFileName))
+            outputAbiFile.set(apiBuildDir.resolve(klibDumpFileName))
         }
         return buildTask
     }
@@ -647,7 +647,7 @@ private class KlibValidationPipelineBuilder(
             group = "other"
             target.set(unsupportedTarget)
             oldMergedKlibDump.set(klibApiDir.get().resolve(klibDumpFileName))
-            outputApiFile.set(apiBuildDir.resolve(klibDumpFileName))
+            outputAbiFile.set(apiBuildDir.resolve(klibDumpFileName))
         }
     }
 }

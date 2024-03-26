@@ -23,7 +23,7 @@ import org.gradle.api.tasks.*
  * from it and merged into the common ABI extracted previously.
  * The resulting dump is then used as an inferred dump for the unsupported target.
  */
-internal abstract class KotlinKlibInferAbiTask : DefaultTask() {
+public abstract class KotlinKlibInferAbiTask : DefaultTask() {
     /**
      * The name of a target to infer a dump for.
      */
@@ -46,7 +46,7 @@ internal abstract class KotlinKlibInferAbiTask : DefaultTask() {
      * A path to an inferred dump file.
      */
     @get:OutputFile
-    public abstract val outputApiFile: RegularFileProperty
+    public abstract val outputAbiFile: RegularFileProperty
 
     @OptIn(ExperimentalBCVApi::class)
     @TaskAction
@@ -80,7 +80,7 @@ internal abstract class KotlinKlibInferAbiTask : DefaultTask() {
             }
         }
 
-        inferAbi(target.get(), supportedTargetDumps, image).saveTo(outputApiFile.asFile.get())
+        inferAbi(target.get(), supportedTargetDumps, image).saveTo(outputAbiFile.asFile.get())
 
         logger.warn(
             "An ABI dump for target ${target.get()} was inferred from the ABI generated for the following targets " +

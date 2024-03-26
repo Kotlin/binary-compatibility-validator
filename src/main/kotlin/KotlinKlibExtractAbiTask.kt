@@ -20,19 +20,12 @@ import org.gradle.api.tasks.*
  * If some targets the dump stored in a project directory was generated for are not supported by the host compiler,
  * only supported tasks could be extracted for further validation.
  */
-internal abstract class KotlinKlibExtractAbiTask : DefaultTask() {
-
+public abstract class KotlinKlibExtractAbiTask : DefaultTask() {
     /**
      * Merged KLib dump that should be filtered by this task.
      */
     @get:InputFile
     public abstract val inputAbiFile: RegularFileProperty
-
-    /**
-     * A path to the resulting dump file.
-     */
-    @get:OutputFile
-    public abstract val outputAbiFile: RegularFileProperty
 
     /**
      * List of the targets that the resulting dump should contain.
@@ -45,6 +38,12 @@ internal abstract class KotlinKlibExtractAbiTask : DefaultTask() {
      */
     @get:Input
     public val strictValidation: Property<Boolean> = project.objects.property(Boolean::class.java).convention(false)
+
+    /**
+     * A path to the resulting dump file.
+     */
+    @get:OutputFile
+    public abstract val outputAbiFile: RegularFileProperty
 
     @OptIn(ExperimentalBCVApi::class)
     @TaskAction
