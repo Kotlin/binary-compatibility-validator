@@ -31,19 +31,16 @@ public final class kotlinx/validation/BinaryCompatibilityValidatorPlugin : org/g
 }
 
 public abstract class kotlinx/validation/BuildTaskBase : org/gradle/api/DefaultTask {
-	public field outputApiFile Ljava/io/File;
 	public fun <init> ()V
 	public final fun getIgnoredClasses ()Ljava/util/Set;
 	public final fun getIgnoredPackages ()Ljava/util/Set;
 	public final fun getNonPublicMarkers ()Ljava/util/Set;
-	public final fun getOutputApiFile ()Ljava/io/File;
 	public final fun getPublicClasses ()Ljava/util/Set;
 	public final fun getPublicMarkers ()Ljava/util/Set;
 	public final fun getPublicPackages ()Ljava/util/Set;
 	public final fun setIgnoredClasses (Ljava/util/Set;)V
 	public final fun setIgnoredPackages (Ljava/util/Set;)V
 	public final fun setNonPublicMarkers (Ljava/util/Set;)V
-	public final fun setOutputApiFile (Ljava/io/File;)V
 	public final fun setPublicClasses (Ljava/util/Set;)V
 	public final fun setPublicMarkers (Ljava/util/Set;)V
 	public final fun setPublicPackages (Ljava/util/Set;)V
@@ -53,6 +50,12 @@ public abstract interface annotation class kotlinx/validation/ExperimentalBCVApi
 }
 
 public abstract interface annotation class kotlinx/validation/ExternalApi : java/lang/annotation/Annotation {
+}
+
+public final class kotlinx/validation/GeneratedDump : java/io/Serializable {
+	public fun <init> (Lkotlinx/validation/api/klib/KlibTarget;Lorg/gradle/api/file/RegularFileProperty;)V
+	public final fun getDumpFile ()Lorg/gradle/api/file/RegularFileProperty;
+	public final fun getTarget ()Lkotlinx/validation/api/klib/KlibTarget;
 }
 
 public class kotlinx/validation/KlibValidationSettings {
@@ -67,12 +70,15 @@ public class kotlinx/validation/KlibValidationSettings {
 
 public class kotlinx/validation/KotlinApiBuildTask : kotlinx/validation/BuildTaskBase {
 	public field inputDependencies Lorg/gradle/api/file/FileCollection;
+	public field outputApiFile Ljava/io/File;
 	public fun <init> ()V
 	public final fun getInputClassesDirs ()Lorg/gradle/api/file/FileCollection;
 	public final fun getInputDependencies ()Lorg/gradle/api/file/FileCollection;
 	public final fun getInputJar ()Lorg/gradle/api/file/RegularFileProperty;
+	public final fun getOutputApiFile ()Ljava/io/File;
 	public final fun setInputClassesDirs (Lorg/gradle/api/file/FileCollection;)V
 	public final fun setInputDependencies (Lorg/gradle/api/file/FileCollection;)V
+	public final fun setOutputApiFile (Ljava/io/File;)V
 }
 
 public class kotlinx/validation/KotlinApiCompareTask : org/gradle/api/DefaultTask {

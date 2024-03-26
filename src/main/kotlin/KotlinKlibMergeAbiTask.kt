@@ -8,29 +8,28 @@ package kotlinx.validation
 import kotlinx.validation.api.klib.KlibDump
 import kotlinx.validation.api.klib.saveTo
 import org.gradle.api.DefaultTask
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.*
-import java.io.File
 
 /**
  * Merges multiple individual KLib ABI dumps into a single merged dump.
  */
 internal abstract class KotlinKlibMergeAbiTask : DefaultTask() {
+    /**
+     * Dumps to merge.
+     *
+     * If a file referred by [GeneratedDump.dumpFile] does not exist, it will be ignored and corresponding
+     * target will not be mentioned in the resulting merged dump.
+     */
     @get:Nested
-    val dumps: ListProperty<GeneratedDump> = project.objects.listProperty(GeneratedDump::class.java)
+    public abstract val dumps: ListProperty<GeneratedDump>
 
     /**
      * A path to a resulting merged dump.
      */
-    @OutputFile
-    lateinit var mergedFile: File
-
-    /**
-     * The name of a dump file.
-     */
-    @Input
-    lateinit var dumpFileName: String
-
+    @get:OutputFile
+    public abstract val mergedApiFile: RegularFileProperty
 
     @OptIn(ExperimentalBCVApi::class)
     @TaskAction
@@ -42,6 +41,6 @@ internal abstract class KotlinKlibMergeAbiTask : DefaultTask() {
                     merge(dumpFile, dump.target.configurableName)
                 }
             }
-        }.saveTo(mergedFile)
+        }.saveTo(mergedApiFile.asFile.get())
     }
 }
