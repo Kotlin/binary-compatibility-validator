@@ -162,7 +162,7 @@ public final class kotlinx/validation/api/klib/KlibDumpKt {
 	public static final fun saveTo (Lkotlinx/validation/api/klib/KlibDump;Ljava/io/File;)V
 }
 
-public final class kotlinx/validation/api/klib/KlibSignatureVersion {
+public final class kotlinx/validation/api/klib/KlibSignatureVersion : java/io/Serializable {
 	public static final field Companion Lkotlinx/validation/api/klib/KlibSignatureVersion$Companion;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I

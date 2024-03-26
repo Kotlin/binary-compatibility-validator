@@ -9,18 +9,10 @@ import kotlinx.validation.api.klib.KLibDumpFilters
 import kotlinx.validation.api.klib.KlibDump
 import kotlinx.validation.api.klib.KlibSignatureVersion
 import kotlinx.validation.api.klib.saveTo
-import org.gradle.api.file.FileCollection
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
-import java.io.Serializable
-
-internal class SerializableSignatureVersion(val version: Int) : Serializable {
-    constructor(version: KlibSignatureVersion) : this(version.version)
-
-    fun toKlibSignatureVersion(): KlibSignatureVersion = KlibSignatureVersion(version)
-}
 
 /**
  * Generates a text file with a KLib ABI dump for a single klib.
@@ -28,23 +20,16 @@ internal class SerializableSignatureVersion(val version: Int) : Serializable {
 internal abstract class KotlinKlibAbiBuildTask : BuildTaskBase() {
 
     /**
-     * Path to a klib to dump.
+     * Collection consisting of a single path to compiled klib (either file, or directory).
      */
-    @InputFiles
-    lateinit var klibFile: FileCollection
-
-    /**
-     * Bind this task with a klib compilation.
-     */
-    @InputFiles
-    lateinit var compilationDependencies: FileCollection
+    @get:InputFiles
+    val klibFile: ConfigurableFileCollection = project.objects.fileCollection()
 
     /**
      * Refer to [KlibValidationSettings.signatureVersion] for details.
      */
-    @Optional
     @get:Input
-    var signatureVersion: SerializableSignatureVersion = SerializableSignatureVersion(KlibSignatureVersion.LATEST)
+    var signatureVersion: KlibSignatureVersion = KlibSignatureVersion.LATEST
 
     /**
      * Name of a target [klibFile] was compiled for.
@@ -62,7 +47,7 @@ internal abstract class KotlinKlibAbiBuildTask : BuildTaskBase() {
             ignoredClasses.addAll(this@KotlinKlibAbiBuildTask.ignoredClasses)
             ignoredPackages.addAll(this@KotlinKlibAbiBuildTask.ignoredPackages)
             nonPublicMarkers.addAll(this@KotlinKlibAbiBuildTask.nonPublicMarkers)
-            signatureVersion = this@KotlinKlibAbiBuildTask.signatureVersion.toKlibSignatureVersion()
+            signatureVersion = this@KotlinKlibAbiBuildTask.signatureVersion
         })
 
         dump.saveTo(outputApiFile)
