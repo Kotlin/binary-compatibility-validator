@@ -8,7 +8,7 @@ package kotlinx.validation
 import kotlinx.validation.api.klib.*
 import kotlinx.validation.api.klib.TargetHierarchy
 import org.gradle.api.DefaultTask
-import org.gradle.api.provider.Provider
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.*
 import java.io.File
 
@@ -30,13 +30,7 @@ internal abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask
      * The name of a target to infer a dump for.
      */
     @Input
-    lateinit var unsupportedTargetName: String
-
-    /**
-     * The name of a target to infer a dump for.
-     */
-    @Input
-    lateinit var unsupportedTargetCanonicalName: String
+    lateinit var unsupportedTarget: KlibTarget
 
     /**
      * A root directory containing dumps successfully generated for each supported target.
@@ -48,8 +42,8 @@ internal abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask
     /**
      * Set of all supported targets.
      */
-    @Input
-    lateinit var supportedTargets: Provider<Set<String>>
+    @get:Input
+    val supportedTargets: ListProperty<KlibTarget> = project.objects.listProperty(KlibTarget::class.java)
 
     /**
      * Previously generated merged ABI dump file, the golden image every dump should be verified against.
@@ -72,8 +66,7 @@ internal abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask
     @OptIn(ExperimentalBCVApi::class)
     @TaskAction
     internal fun generate() {
-        val unsupportedTarget = KlibTarget(unsupportedTargetCanonicalName, unsupportedTargetName)
-        val supportedTargetNames = supportedTargets.get().map { KlibTarget.parse(it) }.toSet()
+        val supportedTargetNames = supportedTargets.get().toSet()
         // Find a set of supported targets that are closer to unsupported target in the hierarchy.
         // Note that dumps are stored using configurable name, but grouped by the canonical target name.
         val matchingTargets = findMatchingTargets(supportedTargetNames, unsupportedTarget)

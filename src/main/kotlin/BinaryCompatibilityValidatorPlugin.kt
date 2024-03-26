@@ -453,7 +453,7 @@ private class KlibValidationPipelineBuilder(
                 "the golden file stored in the project"
         group = "other"
         strictValidation = extension.klib.strictValidation
-        supportedTargets = supportedTargets()
+        supportedTargets.addAll(supportedTargets())
         inputAbiFile = klibApiDir.get().resolve(klibDumpFileName)
         outputAbiFile = klibOutputDir.resolve(klibDumpFileName)
         val hasCompilableTargets = project.hasCompilableTargetsPredicate()
@@ -542,7 +542,7 @@ private class KlibValidationPipelineBuilder(
             val proxy = unsupportedTargetDumpProxy(
                 mainCompilation,
                 klibApiDir, targetConfig,
-                extractUnderlyingTarget(currentTarget),
+                KlibTarget(extractUnderlyingTarget(currentTarget), currentTarget.targetName),
                 apiBuildDir, supportedTargetsProvider
             )
             mergeInferredTask.configure {
@@ -570,7 +570,7 @@ private class KlibValidationPipelineBuilder(
     }
 
     // Compilable targets supported by the host compiler
-    private fun Project.supportedTargets(): Provider<Set<String>> {
+    private fun Project.supportedTargets(): Provider<Set<KlibTarget>> {
         val banned = bannedTargets() // for testing only
         return project.provider {
             val hm = HostManager()
@@ -584,7 +584,7 @@ private class KlibValidationPipelineBuilder(
                         true
                     }
                 }
-                .map { KlibTarget(extractUnderlyingTarget(it), it.targetName).toString() }
+                .map { KlibTarget(extractUnderlyingTarget(it), it.targetName) }
                 .toSet()
         }
     }
@@ -638,9 +638,9 @@ private class KlibValidationPipelineBuilder(
         compilation: KotlinCompilation<KotlinCommonOptions>,
         klibApiDir: Provider<File>,
         targetConfig: TargetConfig,
-        underlyingTarget: String,
+        unsupportedTarget: KlibTarget,
         apiBuildDir: File,
-        supportedTargets: Provider<Set<String>>
+        supportedTargets: Provider<Set<KlibTarget>>
     ): TaskProvider<KotlinKlibInferAbiForUnsupportedTargetTask> {
         val targetName = targetConfig.targetName!!
         return project.task<KotlinKlibInferAbiForUnsupportedTargetTask>(targetConfig.apiTaskName("Infer")) {
@@ -650,12 +650,11 @@ private class KlibValidationPipelineBuilder(
             description = "Try to infer the dump for unsupported target $targetName using dumps " +
                     "generated for supported targets."
             group = "other"
-            this.supportedTargets = supportedTargets
+            this.supportedTargets.addAll(supportedTargets)
             inputImageFile = klibApiDir.get().resolve(klibDumpFileName)
             outputApiDir = apiBuildDir.toString()
             outputFile = apiBuildDir.resolve(klibDumpFileName)
-            unsupportedTargetName = targetConfig.targetName
-            unsupportedTargetCanonicalName = underlyingTarget
+            this.unsupportedTarget = unsupportedTarget
             dumpFileName = klibDumpFileName
             dependsOn(project.tasks.withType(KotlinKlibAbiBuildTask::class.java))
         }
