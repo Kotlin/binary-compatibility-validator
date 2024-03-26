@@ -6,11 +6,10 @@
 package kotlinx.validation
 
 import kotlinx.validation.api.klib.KlibDump
-import kotlinx.validation.api.klib.KlibAbiDumpMerger
 import kotlinx.validation.api.klib.KlibTarget
 import kotlinx.validation.api.klib.saveTo
 import org.gradle.api.DefaultTask
-import org.gradle.api.provider.Provider
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.*
 import java.io.File
 
@@ -37,7 +36,7 @@ internal abstract class KotlinKlibExtractSupportedTargetsAbiTask : DefaultTask()
      * Provider returning targets supported by the host compiler.
      */
     @get:Input
-    lateinit var supportedTargets: Provider<Set<String>>
+    val supportedTargets: ListProperty<KlibTarget> = project.objects.listProperty(KlibTarget::class.java)
 
     /**
      * Refer to [KlibValidationSettings.strictValidation] for details.
@@ -52,7 +51,7 @@ internal abstract class KotlinKlibExtractSupportedTargetsAbiTask : DefaultTask()
             error("Project ABI file $inputAbiFile is empty.")
         }
         val dump = KlibDump.from(inputAbiFile)
-        val enabledTargets = supportedTargets.get().map { KlibTarget.parse(it).targetName }
+        val enabledTargets = supportedTargets.get().map(KlibTarget::targetName).toSet()
         // Filter out only unsupported files.
         // That ensures that target renaming will be caught and reported as a change.
         val targetsToRemove = dump.targets.filter { it.targetName !in enabledTargets }
