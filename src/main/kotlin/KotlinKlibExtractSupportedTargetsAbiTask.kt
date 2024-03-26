@@ -17,8 +17,6 @@ import java.io.File
  * Extracts dump for targets supported by the host compiler from a merged API dump stored in a project.
  */
 internal abstract class KotlinKlibExtractSupportedTargetsAbiTask : DefaultTask() {
-    @get:Internal
-    internal val projectName = project.name
 
     /**
      * Merged KLib dump that should be filtered by this task.
