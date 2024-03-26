@@ -8,30 +8,29 @@ package kotlinx.validation
 import kotlinx.validation.api.klib.KlibDump
 import kotlinx.validation.api.klib.saveTo
 import org.gradle.api.DefaultTask
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.*
 import java.io.File
+import java.io.Serializable
+
+internal class GeneratedDump(
+    @get:Input
+    val targetName: String,
+
+    @get:InputFiles
+    val dumpFile: RegularFileProperty
+) : Serializable
 
 /**
  * Merges multiple individual KLib ABI dumps into a single merged dump.
  */
 internal abstract class KotlinKlibMergeAbiTask : DefaultTask() {
-    private val targetToFile = mutableMapOf<String, File>()
-
     @get:Internal
     internal val projectName = project.name
 
-    /**
-     * Set of targets whose dumps should be merged.
-     */
-    @get:Input
-    val targets: Set<String>
-        get() = targetToFile.keys
-
-    // Required to enforce task rerun on klibs update
-    @Suppress("UNUSED")
-    @get:InputFiles
-    internal val inputDumps: Collection<File>
-        get() = targetToFile.values
+    @get:Nested
+    val dumps: ListProperty<GeneratedDump> = project.objects.listProperty(GeneratedDump::class.java)
 
     /**
      * A path to a resulting merged dump.
@@ -45,18 +44,15 @@ internal abstract class KotlinKlibMergeAbiTask : DefaultTask() {
     @Input
     lateinit var dumpFileName: String
 
-    internal fun addInput(target: String, file: File) {
-        targetToFile[target] = file
-    }
 
     @OptIn(ExperimentalBCVApi::class)
     @TaskAction
     internal fun merge() {
         KlibDump().apply {
-            targetToFile.forEach { (targetName, dumpDir) ->
-                val dumpFile = dumpDir.resolve(dumpFileName)
+            dumps.get().forEach { dump ->
+                val dumpFile = dump.dumpFile.asFile.get()
                 if (dumpFile.exists()) {
-                    merge(dumpFile, targetName)
+                    merge(dumpFile, dump.targetName)
                 }
             }
         }.saveTo(mergedFile)
