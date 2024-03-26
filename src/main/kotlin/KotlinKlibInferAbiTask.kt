@@ -22,40 +22,40 @@ import java.io.File
  * from it and merged into the common ABI extracted previously.
  * The resulting dump is then used as an inferred dump for the unsupported target.
  */
-internal abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask() {
+internal abstract class KotlinKlibInferAbiTask : DefaultTask() {
     /**
      * The name of a target to infer a dump for.
      */
     @Input
-    lateinit var unsupportedTarget: KlibTarget
+    lateinit var target: KlibTarget
 
     /**
-     * Set of all supported targets.
+     * Newly created dumps that will be used for ABI inference.
      */
     @Nested
-    val dumps: ListProperty<GeneratedDump> = project.objects.listProperty(GeneratedDump::class.java)
+    val inputDumps: ListProperty<GeneratedDump> = project.objects.listProperty(GeneratedDump::class.java)
 
     /**
      * Previously generated merged ABI dump file, the golden image every dump should be verified against.
      */
     @InputFiles
-    lateinit var inputImageFile: File
+    lateinit var oldMergedKlibDump: File
 
     /**
      * A path to an inferred dump file.
      */
     @OutputFile
-    lateinit var outputFile: File
+    lateinit var outputApiFile: File
 
     @OptIn(ExperimentalBCVApi::class)
     @TaskAction
     internal fun generate() {
-        val availableDumps = dumps.get().map {
+        val availableDumps = inputDumps.get().map {
             it.target to it.dumpFile.asFile.get()
         }.filter { it.second.exists() }.toMap()
         // Find a set of supported targets that are closer to unsupported target in the hierarchy.
         // Note that dumps are stored using configurable name, but grouped by the canonical target name.
-        val matchingTargets = findMatchingTargets(availableDumps.keys, unsupportedTarget)
+        val matchingTargets = findMatchingTargets(availableDumps.keys, target)
         // Load dumps that are a good fit for inference
         val supportedTargetDumps = matchingTargets.map { target ->
             val dumpFile = availableDumps[target]!!
@@ -66,25 +66,25 @@ internal abstract class KotlinKlibInferAbiForUnsupportedTargetTask : DefaultTask
 
         // Load an old dump, if any
         var image: KlibDump? = null
-        if (inputImageFile.exists()) {
-            if (inputImageFile.length() > 0L) {
-                image = KlibDump.from(inputImageFile)
+        if (oldMergedKlibDump.exists()) {
+            if (oldMergedKlibDump.length() > 0L) {
+                image = KlibDump.from(oldMergedKlibDump)
             } else {
                 logger.warn(
-                    "Project's ABI file exists, but empty: $inputImageFile. " +
+                    "Project's ABI file exists, but empty: $oldMergedKlibDump. " +
                             "The file will be ignored during ABI dump inference for the unsupported target " +
-                            unsupportedTarget
+                            target
                 )
             }
         }
 
-        inferAbi(unsupportedTarget, supportedTargetDumps, image).saveTo(outputFile)
+        inferAbi(target, supportedTargetDumps, image).saveTo(outputApiFile)
 
         logger.warn(
-            "An ABI dump for target $unsupportedTarget was inferred from the ABI generated for the following targets " +
+            "An ABI dump for target $target was inferred from the ABI generated for the following targets " +
                     "as the former target is not supported by the host compiler: " +
                     "[${matchingTargets.joinToString(",")}]. " +
-                    "Inferred dump may not reflect an actual ABI for the target $unsupportedTarget. " +
+                    "Inferred dump may not reflect an actual ABI for the target $target. " +
                     "It is recommended to regenerate the dump on the host supporting all required compilation target."
         )
     }

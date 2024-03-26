@@ -15,8 +15,11 @@ import java.io.File
 
 /**
  * Extracts dump for targets supported by the host compiler from a merged API dump stored in a project.
+ *
+ * If some targets the dump stored in a project directory was generated for are not supported by the host compiler,
+ * only supported tasks could be extracted for further validation.
  */
-internal abstract class KotlinKlibExtractSupportedTargetsAbiTask : DefaultTask() {
+internal abstract class KotlinKlibExtractAbiTask : DefaultTask() {
 
     /**
      * Merged KLib dump that should be filtered by this task.
@@ -34,7 +37,7 @@ internal abstract class KotlinKlibExtractSupportedTargetsAbiTask : DefaultTask()
      * Provider returning targets supported by the host compiler.
      */
     @get:Input
-    val supportedTargets: ListProperty<KlibTarget> = project.objects.listProperty(KlibTarget::class.java)
+    val requiredTargets: ListProperty<KlibTarget> = project.objects.listProperty(KlibTarget::class.java)
 
     /**
      * Refer to [KlibValidationSettings.strictValidation] for details.
@@ -49,7 +52,7 @@ internal abstract class KotlinKlibExtractSupportedTargetsAbiTask : DefaultTask()
             error("Project ABI file $inputAbiFile is empty.")
         }
         val dump = KlibDump.from(inputAbiFile)
-        val enabledTargets = supportedTargets.get().map(KlibTarget::targetName).toSet()
+        val enabledTargets = requiredTargets.get().map(KlibTarget::targetName).toSet()
         // Filter out only unsupported files.
         // That ensures that target renaming will be caught and reported as a change.
         val targetsToRemove = dump.targets.filter { it.targetName !in enabledTargets }
