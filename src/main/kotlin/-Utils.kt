@@ -40,7 +40,7 @@ private fun extractUnderlyingTarget(target: KotlinTarget): String {
 /**
  * Information about a generated klib dump.
  */
-public class GeneratedDump(
+public class KlibDumpMetadata(
     /**
      * The target the dump was generated for.
      */

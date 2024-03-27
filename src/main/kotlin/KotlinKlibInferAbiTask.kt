@@ -34,7 +34,7 @@ public abstract class KotlinKlibInferAbiTask : DefaultTask() {
      * Newly created dumps that will be used for ABI inference.
      */
     @get:Nested
-    public abstract val inputDumps: ListProperty<GeneratedDump>
+    public abstract val inputDumps: ListProperty<KlibDumpMetadata>
 
     /**
      * Previously generated merged ABI dump file, the golden image every dump should be verified against.
