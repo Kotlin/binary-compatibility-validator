@@ -52,7 +52,7 @@ public abstract interface annotation class kotlinx/validation/ExperimentalBCVApi
 public abstract interface annotation class kotlinx/validation/ExternalApi : java/lang/annotation/Annotation {
 }
 
-public final class kotlinx/validation/GeneratedDump : java/io/Serializable {
+public final class kotlinx/validation/KlibDumpMetadata : java/io/Serializable {
 	public fun <init> (Lkotlinx/validation/api/klib/KlibTarget;Lorg/gradle/api/file/RegularFileProperty;)V
 	public final fun getDumpFile ()Lorg/gradle/api/file/RegularFileProperty;
 	public final fun getTarget ()Lkotlinx/validation/api/klib/KlibTarget;

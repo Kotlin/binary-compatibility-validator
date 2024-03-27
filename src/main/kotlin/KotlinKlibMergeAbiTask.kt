@@ -19,11 +19,11 @@ public abstract class KotlinKlibMergeAbiTask : DefaultTask() {
     /**
      * Dumps to merge.
      *
-     * If a file referred by [GeneratedDump.dumpFile] does not exist, it will be ignored and corresponding
+     * If a file referred by [KlibDumpMetadata.dumpFile] does not exist, it will be ignored and corresponding
      * target will not be mentioned in the resulting merged dump.
      */
     @get:Nested
-    public abstract val dumps: ListProperty<GeneratedDump>
+    public abstract val dumps: ListProperty<KlibDumpMetadata>
 
     /**
      * A path to a resulting merged dump file.
