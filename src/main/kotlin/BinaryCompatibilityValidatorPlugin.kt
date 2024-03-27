@@ -417,7 +417,7 @@ private class KlibValidationPipelineBuilder(
                 project.name
         projectApiFile = klibApiDir.get().resolve(klibDumpFileName)
         generatedApiFile = klibMergeDir.resolve(klibDumpFileName)
-        val hasCompilableTargets = project.compilableTargetsPredicate()
+        val hasCompilableTargets = project.hasCompilableTargetsPredicate()
         onlyIf("There are no klibs compiled for the project") { hasCompilableTargets.get() }
     }
 
@@ -431,7 +431,7 @@ private class KlibValidationPipelineBuilder(
         group = "other"
         from = klibMergeDir.resolve(klibDumpFileName)
         to = klibApiDir.get().resolve(klibDumpFileName)
-        val hasCompilableTargets = project.compilableTargetsPredicate()
+        val hasCompilableTargets = project.hasCompilableTargetsPredicate()
         onlyIf("There are no klibs compiled for the project") { hasCompilableTargets.get() }
     }
 
@@ -451,7 +451,7 @@ private class KlibValidationPipelineBuilder(
         supportedTargets = supportedTargets()
         inputAbiFile = klibApiDir.get().resolve(klibDumpFileName)
         outputAbiFile = klibOutputDir.resolve(klibDumpFileName)
-        val hasCompilableTargets = project.compilableTargetsPredicate()
+        val hasCompilableTargets = project.hasCompilableTargetsPredicate()
         onlyIf("There are no klibs compiled for the project") { hasCompilableTargets.get() }
     }
 
@@ -468,7 +468,7 @@ private class KlibValidationPipelineBuilder(
                 "into a single merged KLib ABI dump"
         dumpFileName = klibDumpFileName
         mergedFile = klibMergeDir.resolve(klibDumpFileName)
-        val hasCompilableTargets = project.compilableTargetsPredicate()
+        val hasCompilableTargets = project.hasCompilableTargetsPredicate()
         onlyIf("There are no dumps to merge") { hasCompilableTargets.get() }
     }
 
@@ -481,7 +481,7 @@ private class KlibValidationPipelineBuilder(
                 "different targets into a single merged KLib ABI dump"
         dumpFileName = klibDumpFileName
         mergedFile = klibMergeDir.resolve(klibDumpFileName)
-        val hasCompilableTargets = project.compilableTargetsPredicate()
+        val hasCompilableTargets = project.hasCompilableTargetsPredicate()
         onlyIf("There are no dumps to merge") { hasCompilableTargets.get() }
     }
 
@@ -585,7 +585,7 @@ private class KlibValidationPipelineBuilder(
     }
 
     // Returns a predicate that checks if there are any compilable targets
-    private fun Project.compilableTargetsPredicate(): Provider<Boolean> {
+    private fun Project.hasCompilableTargetsPredicate(): Provider<Boolean> {
         return project.provider {
             project.kotlinMultiplatform.targets.matching { it.emitsKlib }
                 .asSequence()
