@@ -6,7 +6,6 @@
 package kotlinx.validation
 
 import kotlinx.validation.api.klib.KlibTarget
-import kotlinx.validation.api.klib.konanTargetNameMapping
 import org.gradle.api.*
 import org.gradle.api.plugins.*
 import org.gradle.api.provider.*
@@ -14,8 +13,6 @@ import org.gradle.api.tasks.*
 import org.jetbrains.kotlin.gradle.dsl.*
 import org.jetbrains.kotlin.gradle.plugin.*
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
-import org.jetbrains.kotlin.gradle.targets.js.KotlinWasmTargetType
-import org.jetbrains.kotlin.gradle.targets.js.ir.KotlinJsIrTarget
 import org.jetbrains.kotlin.konan.target.HostManager
 import org.jetbrains.kotlin.library.abi.ExperimentalLibraryAbiReader
 import org.jetbrains.kotlin.library.abi.LibraryAbiReader
@@ -313,8 +310,8 @@ private fun Project.configureCheckTasks(
         isEnabled = apiCheckEnabled(projectName, extension) && apiBuild.map { it.enabled }.getOrElse(true)
         group = "other"
         description = "Syncs API from build dir to ${targetConfig.apiDir} dir for $projectName"
-        from = apiBuildDir.get().resolve(dumpFileName)
-        to = apiCheckDir.get().resolve(dumpFileName)
+        from.fileProvider(apiBuildDir.map { it.resolve(dumpFileName) })
+        to.fileProvider(apiCheckDir.map { it.resolve(dumpFileName) })
         dependsOn(apiBuild)
     }
 
@@ -356,8 +353,8 @@ private const val KLIB_INFERRED_DUMPS_DIRECTORY = "klib-all"
  * multiple `<targetName>ApiBuild` tasks ([KotlinKlibAbiBuildTask]); `klibApiMergeInferred` depends on the same tasks
  * as `klibApiMerge`, but also have additional dependencies responsible for inferring KLib ABI dumps for targets not
  * supported by the host compiler (`<targetName>ApiInfer` tasks
- * instantiating [KotlinKlibInferAbiForUnsupportedTargetTask]);
- * - `klibApiExtractForValidation` ([KotlinKlibExtractSupportedTargetsAbiTask]) is responsible for filtering out all
+ * instantiating [KotlinKlibInferAbiTask]);
+ * - `klibApiExtractForValidation` ([KotlinKlibExtractAbiTask]) is responsible for filtering out all
  * currently unsupported targets from the golden image, so that it could be compared with a merged dump;
  * - each `<targetName>ApiInfer` task depends on all regular `<targetName>ApiBuild` tasks; it searches for targets
  * that are suitable to ABI dump inference, merges them and then mixes in all declarations specific to the unsupported
@@ -390,19 +387,21 @@ private class KlibValidationPipelineBuilder(
 
         val klibMerge = project.mergeKlibsUmbrellaTask(klibDumpConfig, klibMergeDir)
         val klibMergeInferred = project.mergeInferredKlibsUmbrellaTask(klibDumpConfig, klibMergeInferredDir)
-        val klibDump = project.dumpKlibsTask(klibDumpConfig, klibApiDir, klibMergeInferredDir)
+        val klibDump = project.dumpKlibsTask(klibDumpConfig)
         val klibExtractAbiForSupportedTargets = project.extractAbi(klibDumpConfig, klibApiDir, klibExtractedFileDir)
         val klibCheck = project.checkKlibsTask(klibDumpConfig, project.provider { klibExtractedFileDir }, klibMergeDir)
-
+        klibDump.configure {
+            it.from.set(klibMergeInferred.flatMap { it.mergedApiFile })
+            val filename = project.klibDumpFileName
+            it.to.fileProvider(klibApiDir.map { it.resolve(filename) })
+        }
         commonApiDump.configure { it.dependsOn(klibDump) }
-        commonApiCheck.configure { it.dependsOn(klibCheck) }
 
-        klibDump.configure { it.dependsOn(klibMergeInferred) }
         klibCheck.configure {
             it.dependsOn(klibExtractAbiForSupportedTargets)
             it.dependsOn(klibMerge)
         }
-
+        commonApiCheck.configure { it.dependsOn(klibCheck) }
         project.configureTargets(klibApiDir, klibMerge, klibMergeInferred)
     }
 
@@ -421,16 +420,10 @@ private class KlibValidationPipelineBuilder(
         onlyIf("There are no klibs compiled for the project") { hasCompilableTargets.get() }
     }
 
-    private fun Project.dumpKlibsTask(
-        klibDumpConfig: TargetConfig,
-        klibApiDir: Provider<File>,
-        klibMergeDir: File
-    ) = project.task<CopyFile>(klibDumpConfig.apiTaskName("Dump")) {
+    private fun Project.dumpKlibsTask(klibDumpConfig: TargetConfig) = project.task<CopyFile>(klibDumpConfig.apiTaskName("Dump")) {
         isEnabled = klibAbiCheckEnabled(project.name, extension)
         description = "Syncs a KLib ABI dump from a build dir to the ${klibDumpConfig.apiDir} dir for ${project.name}"
         group = "other"
-        from = klibMergeDir.resolve(klibDumpFileName)
-        to = klibApiDir.get().resolve(klibDumpFileName)
         val hasCompilableTargets = project.hasCompilableTargetsPredicate()
         onlyIf("There are no klibs compiled for the project") { hasCompilableTargets.get() }
     }
@@ -439,7 +432,7 @@ private class KlibValidationPipelineBuilder(
         klibDumpConfig: TargetConfig,
         klibApiDir: Provider<File>,
         klibOutputDir: File
-    ) = project.task<KotlinKlibExtractSupportedTargetsAbiTask>(
+    ) = project.task<KotlinKlibExtractAbiTask>(
         klibDumpConfig.apiTaskName("ExtractForValidation")
     )
     {
@@ -447,10 +440,10 @@ private class KlibValidationPipelineBuilder(
         description = "Prepare a reference KLib ABI file by removing all unsupported targets from " +
                 "the golden file stored in the project"
         group = "other"
-        strictValidation = extension.klib.strictValidation
-        supportedTargets = supportedTargets()
-        inputAbiFile = klibApiDir.get().resolve(klibDumpFileName)
-        outputAbiFile = klibOutputDir.resolve(klibDumpFileName)
+        strictValidation.set(extension.klib.strictValidation)
+        requiredTargets.addAll(supportedTargets())
+        inputAbiFile.set(klibApiDir.get().resolve(klibDumpFileName))
+        outputAbiFile.set(klibOutputDir.resolve(klibDumpFileName))
         val hasCompilableTargets = project.hasCompilableTargetsPredicate()
         onlyIf("There are no klibs compiled for the project") { hasCompilableTargets.get() }
     }
@@ -466,8 +459,7 @@ private class KlibValidationPipelineBuilder(
         description = "Merges multiple KLib ABI dump files generated for " +
                 "different targets (including inferred dumps for unsupported targets) " +
                 "into a single merged KLib ABI dump"
-        dumpFileName = klibDumpFileName
-        mergedFile = klibMergeDir.resolve(klibDumpFileName)
+        mergedApiFile.set(klibMergeDir.resolve(klibDumpFileName))
         val hasCompilableTargets = project.hasCompilableTargetsPredicate()
         onlyIf("There are no dumps to merge") { hasCompilableTargets.get() }
     }
@@ -479,8 +471,7 @@ private class KlibValidationPipelineBuilder(
         isEnabled = klibAbiCheckEnabled(project.name, extension)
         description = "Merges multiple KLib ABI dump files generated for " +
                 "different targets into a single merged KLib ABI dump"
-        dumpFileName = klibDumpFileName
-        mergedFile = klibMergeDir.resolve(klibDumpFileName)
+        mergedApiFile.set(klibMergeDir.resolve(klibDumpFileName))
         val hasCompilableTargets = project.hasCompilableTargetsPredicate()
         onlyIf("There are no dumps to merge") { hasCompilableTargets.get() }
     }
@@ -506,24 +497,37 @@ private class KlibValidationPipelineBuilder(
         val kotlin = project.kotlinMultiplatform
 
         val supportedTargetsProvider = supportedTargets()
+        val generatedDumps = objects.listProperty(KlibDumpMetadata::class.java)
+        val inferredDumps = objects.listProperty(KlibDumpMetadata::class.java)
+        mergeTask.configure {
+            it.dumps.addAll(generatedDumps)
+            it.doFirst {
+                if (supportedTargetsProvider.get().isEmpty()) {
+                    throw IllegalStateException(
+                        "KLib ABI dump/validation requires at least one enabled klib target, but none were found."
+                    )
+                }
+            }
+        }
+        mergeInferredTask.configure {
+            it.dumps.addAll(generatedDumps)
+            it.dumps.addAll(inferredDumps)
+        }
+
         kotlin.targets.matching { it.emitsKlib }.configureEach { currentTarget ->
             val mainCompilation = currentTarget.mainCompilationOrNull ?: return@configureEach
 
+            val target = currentTarget.toKlibTarget()
             val targetName = currentTarget.targetName
             val targetConfig = TargetConfig(project, extension, targetName, intermediateFilesConfig)
             val apiBuildDir = targetConfig.apiDir.map { project.layout.buildDirectory.asFile.get().resolve(it) }.get()
             val targetSupported = targetIsSupported(currentTarget)
             // If a target is supported, the workflow is simple: create a dump, then merge it along with other dumps.
             if (targetSupported) {
-                val buildTargetAbi = configureKlibCompilation(mainCompilation, extension, targetConfig, apiBuildDir)
-                mergeTask.configure {
-                    it.addInput(targetName, apiBuildDir)
-                    it.dependsOn(buildTargetAbi)
-                }
-                mergeInferredTask.configure {
-                    it.addInput(targetName, apiBuildDir)
-                    it.dependsOn(buildTargetAbi)
-                }
+                val buildTargetAbi = configureKlibCompilation(mainCompilation, extension, targetConfig,
+                    target, apiBuildDir)
+                generatedDumps.add(KlibDumpMetadata(target,
+                    objects.fileProperty().also { it.set(buildTargetAbi.flatMap { it.outputAbiFile }) }))
                 return@configureEach
             }
             // If the target is unsupported, the regular merge task will only depend on a task complaining about
@@ -537,22 +541,14 @@ private class KlibValidationPipelineBuilder(
             val proxy = unsupportedTargetDumpProxy(
                 mainCompilation,
                 klibApiDir, targetConfig,
-                extractUnderlyingTarget(currentTarget),
-                apiBuildDir, supportedTargetsProvider
+                currentTarget.toKlibTarget(),
+                apiBuildDir
             )
-            mergeInferredTask.configure {
-                it.addInput(targetName, apiBuildDir)
-                it.dependsOn(proxy)
-            }
-        }
-        mergeTask.configure {
-            it.doFirst {
-                if (supportedTargetsProvider.get().isEmpty()) {
-                    throw IllegalStateException(
-                        "KLib ABI dump/validation requires at least one enabled klib target, but none were found."
-                    )
-                }
-            }
+            proxy.configure { it.inputDumps.addAll(generatedDumps) }
+            inferredDumps.add(KlibDumpMetadata(currentTarget.toKlibTarget(),
+                objects.fileProperty().also {
+                    it.set(proxy.flatMap { it.outputAbiFile })
+                }))
         }
     }
 
@@ -565,7 +561,7 @@ private class KlibValidationPipelineBuilder(
     }
 
     // Compilable targets supported by the host compiler
-    private fun Project.supportedTargets(): Provider<Set<String>> {
+    private fun Project.supportedTargets(): Provider<Set<KlibTarget>> {
         val banned = bannedTargets() // for testing only
         return project.provider {
             val hm = HostManager()
@@ -579,7 +575,7 @@ private class KlibValidationPipelineBuilder(
                         true
                     }
                 }
-                .map { KlibTarget(extractUnderlyingTarget(it), it.targetName).toString() }
+                .map { it.toKlibTarget() }
                 .toSet()
         }
     }
@@ -597,11 +593,11 @@ private class KlibValidationPipelineBuilder(
         compilation: KotlinCompilation<KotlinCommonOptions>,
         extension: ApiValidationExtension,
         targetConfig: TargetConfig,
+        target: KlibTarget,
         apiBuildDir: File
     ): TaskProvider<KotlinKlibAbiBuildTask> {
         val projectName = project.name
         val buildTask = project.task<KotlinKlibAbiBuildTask>(targetConfig.apiTaskName("Build")) {
-            target = targetConfig.targetName!!
             // Do not enable task for empty umbrella modules
             isEnabled = klibAbiCheckEnabled(projectName, extension)
             val hasSourcesPredicate = compilation.hasAnySourcesPredicate()
@@ -609,10 +605,10 @@ private class KlibValidationPipelineBuilder(
             // 'group' is not specified deliberately, so it will be hidden from ./gradlew tasks
             description = "Builds Kotlin KLib ABI dump for 'main' compilations of $projectName. " +
                     "Complementary task and shouldn't be called manually"
-            klibFile = project.files(project.provider { compilation.output.classesDirs })
-            compilationDependencies = project.files(project.provider { compilation.compileDependencyFiles })
-            signatureVersion = SerializableSignatureVersion(extension.klib.signatureVersion)
-            outputApiFile = apiBuildDir.resolve(klibDumpFileName)
+            this.target.set(target)
+            klibFile.from(project.provider { compilation.output.classesDirs })
+            signatureVersion.set(extension.klib.signatureVersion)
+            outputAbiFile.set(apiBuildDir.resolve(klibDumpFileName))
         }
         return buildTask
     }
@@ -634,26 +630,20 @@ private class KlibValidationPipelineBuilder(
         compilation: KotlinCompilation<KotlinCommonOptions>,
         klibApiDir: Provider<File>,
         targetConfig: TargetConfig,
-        underlyingTarget: String,
-        apiBuildDir: File,
-        supportedTargets: Provider<Set<String>>
-    ): TaskProvider<KotlinKlibInferAbiForUnsupportedTargetTask> {
+        unsupportedTarget: KlibTarget,
+        apiBuildDir: File
+    ): TaskProvider<KotlinKlibInferAbiTask> {
         val targetName = targetConfig.targetName!!
-        return project.task<KotlinKlibInferAbiForUnsupportedTargetTask>(targetConfig.apiTaskName("Infer")) {
+        return project.task<KotlinKlibInferAbiTask>(targetConfig.apiTaskName("Infer")) {
             isEnabled = klibAbiCheckEnabled(project.name, extension)
             val hasSourcesPredicate = compilation.hasAnySourcesPredicate()
             onlyIf { hasSourcesPredicate.get() }
             description = "Try to infer the dump for unsupported target $targetName using dumps " +
                     "generated for supported targets."
             group = "other"
-            this.supportedTargets = supportedTargets
-            inputImageFile = klibApiDir.get().resolve(klibDumpFileName)
-            outputApiDir = apiBuildDir.toString()
-            outputFile = apiBuildDir.resolve(klibDumpFileName)
-            unsupportedTargetName = targetConfig.targetName
-            unsupportedTargetCanonicalName = underlyingTarget
-            dumpFileName = klibDumpFileName
-            dependsOn(project.tasks.withType(KotlinKlibAbiBuildTask::class.java))
+            target.set(unsupportedTarget)
+            oldMergedKlibDump.set(klibApiDir.get().resolve(klibDumpFileName))
+            outputAbiFile.set(apiBuildDir.resolve(klibDumpFileName))
         }
     }
 }
@@ -671,21 +661,6 @@ private val KotlinTarget.jvmBased: Boolean
         val platformType = this.platformType
         return platformType == KotlinPlatformType.jvm || platformType == KotlinPlatformType.androidJvm
     }
-
-private fun extractUnderlyingTarget(target: KotlinTarget): String {
-    if (target is KotlinNativeTarget) {
-        return konanTargetNameMapping[target.konanTarget.name]!!
-    }
-    return when (target.platformType) {
-        KotlinPlatformType.js -> "js"
-        KotlinPlatformType.wasm -> when ((target as KotlinJsIrTarget).wasmTargetType) {
-            KotlinWasmTargetType.WASI -> "wasmWasi"
-            KotlinWasmTargetType.JS -> "wasmJs"
-            else -> throw IllegalStateException("Unreachable")
-        }
-        else -> throw IllegalArgumentException("Unsupported platform type: ${target.platformType}")
-    }
-}
 
 private val Project.kotlinMultiplatform
     get() = extensions.getByName("kotlin") as KotlinMultiplatformExtension
