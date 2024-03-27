@@ -503,8 +503,8 @@ private class KlibValidationPipelineBuilder(
         val kotlin = project.kotlinMultiplatform
 
         val supportedTargetsProvider = supportedTargets()
-        val generatedDumps = objects.listProperty(GeneratedDump::class.java)
-        val inferredDumps = objects.listProperty(GeneratedDump::class.java)
+        val generatedDumps = objects.listProperty(KlibDumpMetadata::class.java)
+        val inferredDumps = objects.listProperty(KlibDumpMetadata::class.java)
         mergeTask.configure {
             it.dumps.addAll(generatedDumps)
             it.doFirst {
@@ -532,7 +532,7 @@ private class KlibValidationPipelineBuilder(
             if (targetSupported) {
                 val buildTargetAbi = configureKlibCompilation(mainCompilation, extension, targetConfig,
                     target, apiBuildDir)
-                generatedDumps.add(GeneratedDump(target,
+                generatedDumps.add(KlibDumpMetadata(target,
                     objects.fileProperty().also { it.set(buildTargetAbi.flatMap { it.outputAbiFile }) }))
                 return@configureEach
             }
@@ -551,7 +551,7 @@ private class KlibValidationPipelineBuilder(
                 apiBuildDir
             )
             proxy.configure { it.inputDumps.addAll(generatedDumps) }
-            inferredDumps.add(GeneratedDump(currentTarget.toKlibTarget(),
+            inferredDumps.add(KlibDumpMetadata(currentTarget.toKlibTarget(),
                 objects.fileProperty().also {
                     it.set(proxy.flatMap { it.outputAbiFile })
                 }))
