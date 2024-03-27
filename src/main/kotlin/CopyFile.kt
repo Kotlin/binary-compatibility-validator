@@ -6,6 +6,8 @@
 package kotlinx.validation
 
 import org.gradle.api.DefaultTask
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
@@ -17,15 +19,15 @@ import java.nio.file.StandardCopyOption
 // and registers it as an output dependency. If there's another task reading from that particular
 // directory or writing into it, their input/output dependencies would clash and as long as
 // there will be no explicit ordering or dependencies between these tasks, Gradle would be unhappy.
-internal open class CopyFile : DefaultTask() {
-    @InputFiles
-    lateinit var from: File
+internal abstract class CopyFile : DefaultTask() {
+    @get:InputFile
+    abstract val from: RegularFileProperty
 
-    @OutputFile
-    lateinit var to: File
+    @get:OutputFile
+    abstract val to: RegularFileProperty
 
     @TaskAction
     fun copy() {
-        Files.copy(from.toPath(), to.toPath(), StandardCopyOption.REPLACE_EXISTING)
+        Files.copy(from.asFile.get().toPath(), to.asFile.get().toPath(), StandardCopyOption.REPLACE_EXISTING)
     }
 }
