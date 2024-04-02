@@ -10,7 +10,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import java.io.File
 
-internal class MultiPlatformSingleJvmKlibTargetTest : BaseKotlinGradleTest() {
+internal class MultiPlatformSingleJvmTargetTest : BaseKotlinGradleTest() {
     private fun BaseKotlinScope.createProjectHierarchyWithPluginOnRoot() {
         settingsGradleKts {
             resolve("/examples/gradle/settings/settings-name-testproject.gradle.kts")
@@ -113,6 +113,52 @@ internal class MultiPlatformSingleJvmKlibTargetTest : BaseKotlinGradleTest() {
 
             val mainExpectedApi = commonExpectedApi + "\n" + readFileList("/examples/classes/Subsub2Class.dump")
             assertThat(jvmApiDump.readText()).isEqualToIgnoringNewLines(mainExpectedApi)
+        }
+    }
+
+    @Test
+    fun `apiDump for a project with generated sources only`() {
+        val runner = test {
+            settingsGradleKts {
+                resolve("/examples/gradle/settings/settings-name-testproject.gradle.kts")
+            }
+            buildGradleKts {
+                resolve("/examples/gradle/base/multiplatformWithSingleJvmTarget.gradle.kts")
+                resolve("/examples/gradle/configuration/generatedSources/generatedSources.gradle.kts")
+            }
+            // TODO: enable configuration cache back when we start skipping tasks correctly
+            runner(withConfigurationCache = false) {
+                arguments.add(":apiDump")
+            }
+        }
+        runner.build().apply {
+            assertTaskSuccess(":apiDump")
+
+            val expectedApi = readFileList("/examples/classes/GeneratedSources.dump")
+            assertThat(jvmApiDump.readText()).isEqualToIgnoringNewLines(expectedApi)
+        }
+    }
+
+    @Test
+    fun `apiCheck for a project with generated sources only`() {
+        val runner = test {
+            settingsGradleKts {
+                resolve("/examples/gradle/settings/settings-name-testproject.gradle.kts")
+            }
+            buildGradleKts {
+                resolve("/examples/gradle/base/multiplatformWithSingleJvmTarget.gradle.kts")
+                resolve("/examples/gradle/configuration/generatedSources/generatedSources.gradle.kts")
+            }
+            apiFile(projectName = "testproject") {
+                resolve("/examples/classes/GeneratedSources.dump")
+            }
+            // TODO: enable configuration cache back when we start skipping tasks correctly
+            runner(withConfigurationCache = false) {
+                arguments.add(":apiCheck")
+            }
+        }
+        runner.build().apply {
+            assertTaskSuccess(":apiCheck")
         }
     }
 
