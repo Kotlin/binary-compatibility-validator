@@ -11,7 +11,7 @@ import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Test
 import java.io.File
 
-internal class MultiPlatformSingleJvmKlibTargetTest : BaseKotlinGradleTest() {
+internal class MultiPlatformSingleJvmTargetTest : BaseKotlinGradleTest() {
     private fun BaseKotlinScope.createProjectHierarchyWithPluginOnRoot() {
         settingsGradleKts {
             resolve("/examples/gradle/settings/settings-name-testproject.gradle.kts")
