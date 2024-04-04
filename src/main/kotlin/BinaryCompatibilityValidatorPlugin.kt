@@ -219,9 +219,7 @@ private fun Project.configureKotlinCompilation(
 
     val apiBuild = task<KotlinApiBuildTask>(targetConfig.apiTaskName("Build")) {
         // Do not enable task for empty umbrella modules
-        isEnabled = apiCheckEnabled(projectName, extension)
-        val hasSourcesPredicate = compilation.hasAnySourcesPredicate()
-        onlyIf { hasSourcesPredicate.get() }
+        isEnabled = apiCheckEnabled(projectName, extension) && compilation.hasAnySources()
         // 'group' is not specified deliberately, so it will be hidden from ./gradlew tasks
         description =
             "Builds Kotlin API for 'main' compilations of $projectName. Complementary task and shouldn't be called manually"
@@ -398,9 +396,16 @@ private class KlibValidationPipelineBuilder(
         commonApiCheck.configure { it.dependsOn(klibCheck) }
 
         klibDump.configure { it.dependsOn(klibMergeInferred) }
+        // Extraction task depends on supportedTargets() provider which returns a set of targets supported
+        // by the host compiler and having some sources. A set of sources for a target may change until the actual
+        // klib compilation will take place, so we may observe incorrect value if check source sets earlier.
+        // Merge task already depends on compilations, so instead of adding each compilation task to the extraction's
+        // dependency set, we can depend on the merge task itself.
+        klibExtractAbiForSupportedTargets.configure {
+            it.dependsOn(klibMerge)
+        }
         klibCheck.configure {
             it.dependsOn(klibExtractAbiForSupportedTargets)
-            it.dependsOn(klibMerge)
         }
 
         project.configureTargets(klibApiDir, klibMerge, klibMergeInferred)
