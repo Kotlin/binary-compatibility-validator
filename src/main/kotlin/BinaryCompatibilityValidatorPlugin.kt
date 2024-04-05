@@ -556,15 +556,6 @@ private class KlibValidationPipelineBuilder(
         }
     }
 
-    // Returns a predicate that checks if there are any compilable targets
-    private fun Project.hasCompilableTargetsPredicate(): Provider<Boolean> {
-        return project.provider {
-            project.kotlinMultiplatform.targets.matching { it.emitsKlib }
-                .asSequence()
-                .any { it.mainCompilationOrNull?.hasAnySources() == true }
-        }
-    }
-
     private fun Project.configureKlibCompilation(
         compilation: KotlinCompilation<KotlinCommonOptions>,
         extension: ApiValidationExtension,
@@ -601,7 +592,7 @@ private class KlibValidationPipelineBuilder(
     }
 
     private fun Project.unsupportedTargetDumpProxy(
-        compilation: KotlinCompilation<KotlinCommonOptions>,
+        @Suppress("UNUSED_PARAMETER") compilation: KotlinCompilation<KotlinCommonOptions>,
         klibApiDir: Provider<File>,
         targetConfig: TargetConfig,
         unsupportedTarget: KlibTarget,
@@ -610,8 +601,6 @@ private class KlibValidationPipelineBuilder(
         val targetName = targetConfig.targetName!!
         return project.task<KotlinKlibInferAbiTask>(targetConfig.apiTaskName("Infer")) {
             isEnabled = klibAbiCheckEnabled(project.name, extension)
-            val hasSourcesPredicate = compilation.hasAnySourcesPredicate()
-            onlyIf { hasSourcesPredicate.get() }
             description = "Try to infer the dump for unsupported target $targetName using dumps " +
                     "generated for supported targets."
             group = "other"
@@ -649,8 +638,4 @@ private val Project.klibDumpFileName: String
 
 private fun KotlinCompilation<KotlinCommonOptions>.hasAnySources(): Boolean = allKotlinSourceSets.any {
     it.kotlin.srcDirs.any(File::exists)
-}
-
-private fun KotlinCompilation<KotlinCommonOptions>.hasAnySourcesPredicate(): Provider<Boolean> = project.provider {
-    this.hasAnySources()
 }
