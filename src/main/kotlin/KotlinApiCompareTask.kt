@@ -10,16 +10,20 @@ import com.github.difflib.UnifiedDiffUtils
 import java.io.*
 import javax.inject.Inject
 import org.gradle.api.*
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.*
 
-public open class KotlinApiCompareTask @Inject constructor(): DefaultTask() {
+public open class KotlinApiCompareTask @Inject constructor(private val objects: ObjectFactory): DefaultTask() {
 
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
-    public lateinit var projectApiFile: File
+    @get:InputFiles
+    @get:SkipWhenEmpty
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    public val projectApiFile: RegularFileProperty = objects.fileProperty()
 
-    @InputFiles
-    public lateinit var generatedApiFile: File
+    @get:InputFiles
+    @get:SkipWhenEmpty
+    public val generatedApiFile: RegularFileProperty = objects.fileProperty()
 
     private val projectName = project.name
 
@@ -27,28 +31,28 @@ public open class KotlinApiCompareTask @Inject constructor(): DefaultTask() {
 
     @TaskAction
     internal fun verify() {
-        val projectApiDir = projectApiFile.parentFile
+        val projectApiDir = projectApiFile.get().asFile.parentFile
         if (!projectApiDir.exists()) {
             error("Expected folder with API declarations '$projectApiDir' does not exist.\n" +
                     "Please ensure that ':apiDump' was executed in order to get API dump to compare the build against")
         }
-        val buildApiDir = generatedApiFile.parentFile
+        val buildApiDir = generatedApiFile.get().asFile.parentFile
         if (!buildApiDir.exists()) {
             error("Expected folder with generate API declarations '$buildApiDir' does not exist.")
         }
         val subject = projectName
 
-        if (!projectApiFile.exists()) {
-            error("File ${projectApiFile.name} is missing from ${projectApiDir.relativeDirPath()}, please run " +
+        if (!projectApiFile.get().asFile.exists()) {
+            error("File ${projectApiFile.get().asFile.name} is missing from ${projectApiDir.relativeDirPath()}, please run " +
                     ":$subject:apiDump task to generate one")
         }
-        if (!generatedApiFile.exists()) {
-            error("File ${generatedApiFile.name} is missing from dump results.")
+        if (!generatedApiFile.get().asFile.exists()) {
+            error("File ${generatedApiFile.get().asFile.name} is missing from dump results.")
         }
 
         // Normalize case-sensitivity
         val diffSet = mutableSetOf<String>()
-        val diff = compareFiles(projectApiFile, generatedApiFile)
+        val diff = compareFiles(projectApiFile.get().asFile, generatedApiFile.get().asFile)
         if (diff != null) diffSet.add(diff)
         if (diffSet.isNotEmpty()) {
             val diffText = diffSet.joinToString("\n\n")
@@ -80,13 +84,12 @@ public open class KotlinApiCompareTask @Inject constructor(): DefaultTask() {
 internal abstract class KotlinApiCompareLazyTask @Inject constructor(private val objects: ObjectFactory): DefaultTask() {
 
     @get:SkipWhenEmpty
-    @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    abstract val projectApiFile: RegularFileProperty
+    public val projectApiFile: RegularFileProperty = objects.fileProperty()
 
-    @get:SkipWhenEmpty
     @get:InputFiles
-    abstract val generatedApiFile: RegularFileProperty
+    @get:SkipWhenEmpty
+    public val generatedApiFile: RegularFileProperty = objects.fileProperty()
 
     private val projectName = project.name
 
@@ -94,12 +97,14 @@ internal abstract class KotlinApiCompareLazyTask @Inject constructor(private val
 
     @TaskAction
     internal fun verify() {
-        val projectApiDir = projectApiFile.get().asFile.parentFile
+        val projectApiFile_ = projectApiFile.get().asFile
+        val projectApiDir = projectApiFile_.parentFile
         if (!projectApiDir.exists()) {
             error("Expected folder with API declarations '$projectApiDir' does not exist.\n" +
                     "Please ensure that ':apiDump' was executed in order to get API dump to compare the build against")
         }
-        val buildApiDir = generatedApiFile.get().asFile.parentFile
+        val generatedApiFile_ = generatedApiFile.get().asFile
+        val buildApiDir = generatedApiFile_.parentFile
         if (!buildApiDir.exists()) {
             error("Expected folder with generate API declarations '$buildApiDir' does not exist.")
         }
@@ -127,17 +132,17 @@ internal abstract class KotlinApiCompareLazyTask @Inject constructor(private val
             expectedApiFiles[file.name] = file.relativePath
         }
 
-        if (!expectedApiFiles.containsKey(projectApiFile.get().asFile.name)) {
-            error("File ${projectApiFile.get().asFile.name} is missing from ${projectApiDir.relativeDirPath()}, please run " +
+        if (!expectedApiFiles.containsKey(projectApiFile_.name)) {
+            error("File ${projectApiFile_.name} is missing from ${projectApiDir.relativeDirPath()}, please run " +
                     ":$subject:apiDump task to generate one")
         }
-        if (!apiBuildDirFiles.containsKey(generatedApiFile.get().asFile.name)) {
-            error("File ${generatedApiFile.get().asFile.name} is missing from dump results.")
+        if (!apiBuildDirFiles.containsKey(generatedApiFile_.name)) {
+            error("File ${generatedApiFile_.name} is missing from dump results.")
         }
 
         // Normalize case-sensitivity
-        val expectedApiDeclaration = expectedApiFiles.getValue(projectApiFile.get().asFile.name)
-        val actualApiDeclaration = apiBuildDirFiles.getValue(generatedApiFile.get().asFile.name)
+        val expectedApiDeclaration = expectedApiFiles.getValue(projectApiFile_.name)
+        val actualApiDeclaration = apiBuildDirFiles.getValue(generatedApiFile_.name)
         val diffSet = mutableSetOf<String>()
         val expectedFile = expectedApiDeclaration.getFile(projectApiDir)
         val actualFile = actualApiDeclaration.getFile(buildApiDir)

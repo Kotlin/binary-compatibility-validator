@@ -298,8 +298,8 @@ private fun Project.configureCheckTasks(
         isEnabled = apiCheckEnabled(projectName, extension) && apiBuild.map { it.enabled }.getOrElse(true)
         group = "verification"
         description = "Checks signatures of public API against the golden value in API folder for $projectName"
-        projectApiFile = apiCheckDir.get().resolve(jvmDumpFileName)
-        generatedApiFile = apiBuildDir.get().resolve(jvmDumpFileName)
+        projectApiFile.set(apiCheckDir.get().resolve(jvmDumpFileName))
+        generatedApiFile.set(apiBuildDir.get().resolve(jvmDumpFileName))
         dependsOn(apiBuild)
     }
 
@@ -403,7 +403,7 @@ private class KlibValidationPipelineBuilder(
     }
 
     private fun Project.checkKlibsTask(klibDumpConfig: TargetConfig)
-    = project.task<KotlinApiCompareLazyTask>(klibDumpConfig.apiTaskName("Check")) {
+    = project.task<KotlinApiCompareTask>(klibDumpConfig.apiTaskName("Check")) {
         isEnabled = klibAbiCheckEnabled(project.name, extension)
         group = "verification"
         description = "Checks signatures of a public KLib ABI against the golden value in ABI folder for ${project.name}"
