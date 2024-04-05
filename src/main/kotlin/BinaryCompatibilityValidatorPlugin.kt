@@ -502,18 +502,10 @@ private class KlibValidationPipelineBuilder(
     ) {
         val kotlin = project.kotlinMultiplatform
 
-        val supportedTargetsProvider = supportedTargets()
         val generatedDumps = objects.listProperty(KlibDumpMetadata::class.java)
         val inferredDumps = objects.listProperty(KlibDumpMetadata::class.java)
         mergeTask.configure {
             it.dumps.addAll(generatedDumps)
-            it.doFirst {
-                if (supportedTargetsProvider.get().isEmpty()) {
-                    throw IllegalStateException(
-                        "KLib ABI dump/validation requires at least one enabled klib target, but none were found."
-                    )
-                }
-            }
         }
         mergeInferredTask.configure {
             it.dumps.addAll(generatedDumps)
@@ -573,7 +565,6 @@ private class KlibValidationPipelineBuilder(
             val hm = HostManager()
             project.kotlinMultiplatform.targets.matching { it.emitsKlib }
                 .asSequence()
-                .filter { it.mainCompilationOrNull?.hasAnySources() == true }
                 .filter {
                     if (it is KotlinNativeTarget) {
                         hm.isEnabled(it.konanTarget) && it.targetName !in banned
