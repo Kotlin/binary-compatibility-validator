@@ -82,13 +82,9 @@ public class kotlinx/validation/KotlinApiBuildTask : kotlinx/validation/BuildTas
 }
 
 public class kotlinx/validation/KotlinApiCompareTask : org/gradle/api/DefaultTask {
-	public field generatedApiFile Ljava/io/File;
-	public field projectApiFile Ljava/io/File;
 	public fun <init> (Lorg/gradle/api/model/ObjectFactory;)V
-	public final fun getGeneratedApiFile ()Ljava/io/File;
-	public final fun getProjectApiFile ()Ljava/io/File;
-	public final fun setGeneratedApiFile (Ljava/io/File;)V
-	public final fun setProjectApiFile (Ljava/io/File;)V
+	public final fun getGeneratedApiFile ()Lorg/gradle/api/file/RegularFileProperty;
+	public final fun getProjectApiFile ()Lorg/gradle/api/file/RegularFileProperty;
 }
 
 public abstract class kotlinx/validation/KotlinKlibAbiBuildTask : kotlinx/validation/BuildTaskBase {
