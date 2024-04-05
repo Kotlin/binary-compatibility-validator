@@ -688,10 +688,27 @@ internal class KlibVerificationTests : BaseKotlinGradleTest() {
             runApiDump()
         }
 
-        runner.build().apply {
+        runner.withDebug(true).build().apply {
             assertTaskSkipped(":klibApiDump")
         }
         assertFalse(runner.projectDir.resolve("api").exists())
+    }
+
+    @Test
+    fun `apiDump should remove dump file if the project does not contain sources anymore`() {
+        val runner = test {
+            baseProjectSetting()
+            addToSrcSet("/examples/classes/AnotherBuildConfig.kt", sourceSet = "commonTest")
+            abiFile(projectName = "testproject") {
+                resolve("/examples/classes/AnotherBuildConfig.klib.dump")
+            }
+            runApiDump()
+        }
+
+        runner.build().apply {
+            assertTaskSuccess(":klibApiDump")
+        }
+        assertFalse(runner.projectDir.resolve("api").resolve("testproject.klib.api").exists())
     }
 
     @Test
@@ -720,8 +737,7 @@ internal class KlibVerificationTests : BaseKotlinGradleTest() {
         val runner = test {
             baseProjectSetting()
             additionalBuildConfig("/examples/gradle/configuration/generatedSources/generatedSources.gradle.kts")
-            // TODO: enable configuration cache back when we start skipping tasks correctly
-            runner(withConfigurationCache = false) {
+            runner {
                 arguments.add(":apiDump")
             }
         }
@@ -736,8 +752,7 @@ internal class KlibVerificationTests : BaseKotlinGradleTest() {
             abiFile(projectName = "testproject") {
                 resolve("/examples/classes/GeneratedSources.klib.dump")
             }
-            // TODO: enable configuration cache back when we start skipping tasks correctly
-            runner(withConfigurationCache = false) {
+            runner {
                 arguments.add(":apiCheck")
             }
         }

@@ -10,6 +10,7 @@ import kotlinx.validation.api.klib.konanTargetNameMapping
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.SkipWhenEmpty
 import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import org.jetbrains.kotlin.gradle.plugin.KotlinTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
@@ -51,5 +52,6 @@ public class KlibDumpMetadata(
      * Path to a resulting dump file.
      */
     @get:InputFiles
+    @get:SkipWhenEmpty
     public val dumpFile: RegularFileProperty
 ) : Serializable
