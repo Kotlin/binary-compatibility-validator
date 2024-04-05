@@ -12,6 +12,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.TaskAction
 
 /**
@@ -23,6 +24,7 @@ public abstract class KotlinKlibAbiBuildTask : BuildTaskBase() {
      * Collection consisting of a single path to a compiled klib (either file, or directory).
      */
     @get:InputFiles
+    @get:SkipWhenEmpty
     public abstract val klibFile: ConfigurableFileCollection
 
     /**

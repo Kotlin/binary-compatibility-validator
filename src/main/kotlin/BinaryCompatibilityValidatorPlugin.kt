@@ -304,7 +304,7 @@ private fun Project.configureCheckTasks(
     }
 
     val dumpFileName = project.jvmDumpFileName
-    val apiDump = task<CopyFile>(targetConfig.apiTaskName("Dump")) {
+    val apiDump = task<SyncFile>(targetConfig.apiTaskName("Dump")) {
         isEnabled = apiCheckEnabled(projectName, extension) && apiBuild.map { it.enabled }.getOrElse(true)
         group = "other"
         description = "Syncs API from build dir to ${targetConfig.apiDir} dir for $projectName"
@@ -343,7 +343,7 @@ private const val KLIB_INFERRED_DUMPS_DIRECTORY = "klib-all"
  * Here's how different tasks depend on each other:
  * - `klibApiCheck` ([KotlinApiCompareTask]) depends on `klibApiMerge` and `klibApiExtractForValidation` tasks;
  * this task itself does not perform anything except comparing the result of a merge, with a preprocessed golden value;
- * - `klibApiDump` ([CopyFile]) depends on `klibApiMergeInferred` and simply moves the merged ABI dump into a configured
+ * - `klibApiDump` ([SyncFile]) depends on `klibApiMergeInferred` and simply moves the merged ABI dump into a configured
  * api directory within a project;
  * - `klibApiMerge` and `klibApiMergeInferred` are both [KotlinKlibMergeAbiTask] instances merging multiple individual
  * KLib ABI dumps into a single merged dump file; these tasks differs only by their dependencies and input dump files
@@ -387,51 +387,36 @@ private class KlibValidationPipelineBuilder(
         val klibMergeInferred = project.mergeInferredKlibsUmbrellaTask(klibDumpConfig, klibMergeInferredDir)
         val klibDump = project.dumpKlibsTask(klibDumpConfig)
         val klibExtractAbiForSupportedTargets = project.extractAbi(klibDumpConfig, klibApiDir, klibExtractedFileDir)
-        val klibCheck = project.checkKlibsTask(klibDumpConfig, project.provider { klibExtractedFileDir }, klibMergeDir)
+        val klibCheck = project.checkKlibsTask(klibDumpConfig)
         klibDump.configure {
             it.from.set(klibMergeInferred.flatMap { it.mergedApiFile })
             val filename = project.klibDumpFileName
             it.to.fileProvider(klibApiDir.map { it.resolve(filename) })
         }
-        commonApiDump.configure { it.dependsOn(klibDump) }
-
-        klibDump.configure { it.dependsOn(klibMergeInferred) }
-        // Extraction task depends on supportedTargets() provider which returns a set of targets supported
-        // by the host compiler and having some sources. A set of sources for a target may change until the actual
-        // klib compilation will take place, so we may observe incorrect value if check source sets earlier.
-        // Merge task already depends on compilations, so instead of adding each compilation task to the extraction's
-        // dependency set, we can depend on the merge task itself.
-        klibExtractAbiForSupportedTargets.configure {
-            it.dependsOn(klibMerge)
-        }
         klibCheck.configure {
-            it.dependsOn(klibExtractAbiForSupportedTargets)
+            it.projectApiFile.set(klibExtractAbiForSupportedTargets.flatMap { it.outputAbiFile })
+            it.generatedApiFile.set(klibMerge.flatMap { it.mergedApiFile })
         }
+        commonApiDump.configure { it.dependsOn(klibDump) }
         commonApiCheck.configure { it.dependsOn(klibCheck) }
         project.configureTargets(klibApiDir, klibMerge, klibMergeInferred)
     }
 
-    private fun Project.checkKlibsTask(
-        klibDumpConfig: TargetConfig,
-        klibApiDir: Provider<File>,
-        klibMergeDir: File
-    ) = project.task<KotlinApiCompareTask>(klibDumpConfig.apiTaskName("Check")) {
+    private fun Project.checkKlibsTask(klibDumpConfig: TargetConfig)
+    = project.task<KotlinApiCompareLazyTask>(klibDumpConfig.apiTaskName("Check")) {
         isEnabled = klibAbiCheckEnabled(project.name, extension)
         group = "verification"
-        description = "Checks signatures of a public KLib ABI against the golden value in ABI folder for " +
-                project.name
-        projectApiFile = klibApiDir.get().resolve(klibDumpFileName)
-        generatedApiFile = klibMergeDir.resolve(klibDumpFileName)
-        val hasCompilableTargets = project.hasCompilableTargetsPredicate()
-        onlyIf("There are no klibs compiled for the project") { hasCompilableTargets.get() }
+        description = "Checks signatures of a public KLib ABI against the golden value in ABI folder for ${project.name}"
     }
 
-    private fun Project.dumpKlibsTask(klibDumpConfig: TargetConfig) = project.task<CopyFile>(klibDumpConfig.apiTaskName("Dump")) {
+    private fun Project.dumpKlibsTask(klibDumpConfig: TargetConfig) = project.task<SyncFile>(klibDumpConfig.apiTaskName("Dump")) {
         isEnabled = klibAbiCheckEnabled(project.name, extension)
         description = "Syncs a KLib ABI dump from a build dir to the ${klibDumpConfig.apiDir} dir for ${project.name}"
         group = "other"
-        val hasCompilableTargets = project.hasCompilableTargetsPredicate()
-        onlyIf("There are no klibs compiled for the project") { hasCompilableTargets.get() }
+        onlyIf {
+            it as SyncFile
+            it.to.get().asFile.exists() || it.from.get().asFile.exists()
+        }
     }
 
     private fun Project.extractAbi(
@@ -450,8 +435,6 @@ private class KlibValidationPipelineBuilder(
         requiredTargets.addAll(supportedTargets())
         inputAbiFile.set(klibApiDir.get().resolve(klibDumpFileName))
         outputAbiFile.set(klibOutputDir.resolve(klibDumpFileName))
-        val hasCompilableTargets = project.hasCompilableTargetsPredicate()
-        onlyIf("There are no klibs compiled for the project") { hasCompilableTargets.get() }
     }
 
     private fun Project.mergeInferredKlibsUmbrellaTask(
@@ -466,8 +449,6 @@ private class KlibValidationPipelineBuilder(
                 "different targets (including inferred dumps for unsupported targets) " +
                 "into a single merged KLib ABI dump"
         mergedApiFile.set(klibMergeDir.resolve(klibDumpFileName))
-        val hasCompilableTargets = project.hasCompilableTargetsPredicate()
-        onlyIf("There are no dumps to merge") { hasCompilableTargets.get() }
     }
 
     private fun Project.mergeKlibsUmbrellaTask(
@@ -478,8 +459,6 @@ private class KlibValidationPipelineBuilder(
         description = "Merges multiple KLib ABI dump files generated for " +
                 "different targets into a single merged KLib ABI dump"
         mergedApiFile.set(klibMergeDir.resolve(klibDumpFileName))
-        val hasCompilableTargets = project.hasCompilableTargetsPredicate()
-        onlyIf("There are no dumps to merge") { hasCompilableTargets.get() }
     }
 
     fun Project.bannedTargets(): Set<String> {
@@ -597,8 +576,6 @@ private class KlibValidationPipelineBuilder(
         val buildTask = project.task<KotlinKlibAbiBuildTask>(targetConfig.apiTaskName("Build")) {
             // Do not enable task for empty umbrella modules
             isEnabled = klibAbiCheckEnabled(projectName, extension)
-            val hasSourcesPredicate = compilation.hasAnySourcesPredicate()
-            onlyIf { hasSourcesPredicate.get() }
             // 'group' is not specified deliberately, so it will be hidden from ./gradlew tasks
             description = "Builds Kotlin KLib ABI dump for 'main' compilations of $projectName. " +
                     "Complementary task and shouldn't be called manually"

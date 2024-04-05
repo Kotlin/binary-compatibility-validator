@@ -24,7 +24,7 @@ public abstract class KotlinKlibExtractAbiTask : DefaultTask() {
     /**
      * Merged KLib dump that should be filtered by this task.
      */
-    @get:InputFile
+    @get:InputFiles
     public abstract val inputAbiFile: RegularFileProperty
 
     /**
@@ -49,6 +49,7 @@ public abstract class KotlinKlibExtractAbiTask : DefaultTask() {
     @TaskAction
     internal fun generate() {
         val inputFile = inputAbiFile.asFile.get()
+        if (!inputFile.exists()) return
         if (inputFile.length() == 0L) {
             error("Project ABI file $inputAbiFile is empty.")
         }
