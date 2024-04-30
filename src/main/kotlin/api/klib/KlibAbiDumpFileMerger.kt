@@ -560,7 +560,9 @@ internal class DeclarationContainer(val text: String, val parent: DeclarationCon
         targets.addAll(other.targets)
         other.children.forEach { otherChild ->
             when (val child = children[otherChild.key]) {
-                null -> children[otherChild.key] = otherChild.value
+                null -> {
+                    children[otherChild.key] = otherChild.value.deepCopy(this)
+                }
                 else -> child.mergeTargetSpecific(otherChild.value)
             }
         }
