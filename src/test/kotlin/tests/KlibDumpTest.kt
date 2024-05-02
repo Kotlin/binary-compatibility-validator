@@ -48,10 +48,13 @@ private val mergedLinuxDump = """
     // Library unique name: <org.example:bcv-klib-test>
     final class org.example/ShardedClass { // org.example/ShardedClass|null[0]
         constructor <init>(kotlin/Int) // org.example/ShardedClass.<init>|<init>(kotlin.Int){}[0]
+
         final val value // org.example/ShardedClass.value|{}value[0]
             final fun <get-value>(): kotlin/Int // org.example/ShardedClass.value.<get-value>|<get-value>(){}[0]
+
         final fun add(kotlin/Int): kotlin/Int // org.example/ShardedClass.add|add(kotlin.Int){}[0]
     }
+
     final fun org.example/ShardedClass(kotlin/Int, kotlin/Float, kotlin/Long): org.example/ShardedClass // org.example/ShardedClass|ShardedClass(kotlin.Int;kotlin.Float;kotlin.Long){}[0]
 
 """.trimIndent()
@@ -68,15 +71,20 @@ private val mergedLinuxDumpWithTargetSpecificDeclaration = """
     // Library unique name: <org.example:bcv-klib-test>
     final class org.example/ShardedClass { // org.example/ShardedClass|null[0]
         constructor <init>(kotlin/Int) // org.example/ShardedClass.<init>|<init>(kotlin.Int){}[0]
+
         final val value // org.example/ShardedClass.value|{}value[0]
             final fun <get-value>(): kotlin/Int // org.example/ShardedClass.value.<get-value>|<get-value>(){}[0]
+
         // Targets: [linuxArm64]
         final fun add2(kotlin/Int): kotlin/Int // org.example/ShardedClass.add|add(kotlin.Int){}[0]
+
         // Targets: [linuxX64]
         final fun add(kotlin/Int): kotlin/Int // org.example/ShardedClass.add|add(kotlin.Int){}[0]
     }
+
     // Targets: [linuxArm64]
     final fun org.example/ShardedClass2(kotlin/Int, kotlin/Float, kotlin/Long): org.example/ShardedClass // org.example/ShardedClass|ShardedClass(kotlin.Int;kotlin.Float;kotlin.Long){}[0]
+
     // Targets: [linuxX64]
     final fun org.example/ShardedClass(kotlin/Int, kotlin/Float, kotlin/Long): org.example/ShardedClass // org.example/ShardedClass|ShardedClass(kotlin.Int;kotlin.Float;kotlin.Long){}[0]
 
@@ -93,10 +101,13 @@ private val mergedLinuxArm64Dump = """
     // Library unique name: <org.example:bcv-klib-test>
     final class org.example/ShardedClass { // org.example/ShardedClass|null[0]
         constructor <init>(kotlin/Int) // org.example/ShardedClass.<init>|<init>(kotlin.Int){}[0]
+
         final val value // org.example/ShardedClass.value|{}value[0]
             final fun <get-value>(): kotlin/Int // org.example/ShardedClass.value.<get-value>|<get-value>(){}[0]
+
         final fun add2(kotlin/Int): kotlin/Int // org.example/ShardedClass.add|add(kotlin.Int){}[0]
     }
+
     final fun org.example/ShardedClass2(kotlin/Int, kotlin/Float, kotlin/Long): org.example/ShardedClass // org.example/ShardedClass|ShardedClass(kotlin.Int;kotlin.Float;kotlin.Long){}[0]
 
 """.trimIndent()
@@ -112,10 +123,13 @@ private val mergedLinuxDumpWithCustomName = """
     // Library unique name: <org.example:bcv-klib-test>
     final class org.example/ShardedClass { // org.example/ShardedClass|null[0]
         constructor <init>(kotlin/Int) // org.example/ShardedClass.<init>|<init>(kotlin.Int){}[0]
+
         final val value // org.example/ShardedClass.value|{}value[0]
             final fun <get-value>(): kotlin/Int // org.example/ShardedClass.value.<get-value>|<get-value>(){}[0]
+
         final fun add(kotlin/Int): kotlin/Int // org.example/ShardedClass.add|add(kotlin.Int){}[0]
     }
+
     final fun org.example/ShardedClass(kotlin/Int, kotlin/Float, kotlin/Long): org.example/ShardedClass // org.example/ShardedClass|ShardedClass(kotlin.Int;kotlin.Float;kotlin.Long){}[0]
 
 """.trimIndent()
@@ -590,14 +604,19 @@ class KlibDumpTest {
             // Library unique name: <testproject>
             final class org.different.pack/BuildConfig { // org.different.pack/BuildConfig|null[0]
                 constructor <init>() // org.different.pack/BuildConfig.<init>|<init>(){}[0]
+
                 final val p1 // org.different.pack/BuildConfig.p1|{}p1[0]
                     final fun <get-p1>(): kotlin/Int // org.different.pack/BuildConfig.p1.<get-p1>|<get-p1>(){}[0]
+
                 final fun f1(): kotlin/Int // org.different.pack/BuildConfig.f1|f1(){}[0]
             }
+
             // Targets: [androidNative, linux]
             final fun (org.different.pack/BuildConfig).org.different.pack/linuxArm64Specific3(): kotlin/Int // org.different.pack/linuxArm64Specific3|linuxArm64Specific@org.different.pack.BuildConfig(){}[0]
+
             // Targets: [linux]
             final fun (org.different.pack/BuildConfig).org.different.pack/linuxArm64Specific2(): kotlin/Int // org.different.pack/linuxArm64Specific2|linuxArm64Specific@org.different.pack.BuildConfig(){}[0]
+
             // Targets: [androidNativeArm64]
             final fun (org.different.pack/BuildConfig).org.different.pack/linuxArm64Specific(): kotlin/Int // org.different.pack/linuxArm64Specific|linuxArm64Specific@org.different.pack.BuildConfig(){}[0]
 
@@ -638,6 +657,7 @@ class KlibDumpTest {
             
             // Library unique name: <testproject>
             final fun org.example/common(): kotlin/Int // com.example/common|common(){}[0]
+
             // Targets: [ios]
             final fun org.example/native(): kotlin/Int // com.example/native|native(){}[0]
             

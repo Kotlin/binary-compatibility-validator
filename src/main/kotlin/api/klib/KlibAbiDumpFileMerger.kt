@@ -513,11 +513,34 @@ internal class DeclarationContainer(val text: String, val parent: DeclarationCon
         if (text.isNotEmpty()) {
             appendable.append('\n')
         }
-        children.values.sortedWith(DeclarationsComparator).forEach {
-            it.dump(appendable, this.targets, formatter)
+        var previousDeclaration: DeclarationContainer? = null
+        children.values.sortedWith(DeclarationsComparator).forEach { currentDeclaration ->
+            if (previousDeclaration != null) {
+                val pd = previousDeclaration!!
+                // Precede a group of declarations sharing the same kind (properties, classes, functions),
+                // and declarations that'll have a "// Targets" header with a newline to improve readability.
+                if (pd.type != currentDeclaration.type || currentDeclaration.targets != this.targets
+                    || currentDeclaration.isTypeDeclaration()
+                ) {
+                    appendable.append('\n')
+                }
+            }
+            currentDeclaration.dump(appendable, this.targets, formatter)
+            previousDeclaration = currentDeclaration
         }
         if (delimiter != null) {
             appendable.append(delimiter).append('\n')
+        }
+    }
+
+    private fun isTypeDeclaration(): Boolean {
+        return when (type) {
+            DeclarationType.Object -> true
+            DeclarationType.Class -> true
+            DeclarationType.Interface -> true
+            DeclarationType.AnnotationClass -> true
+            DeclarationType.EnumClass -> true
+            else -> false
         }
     }
 
