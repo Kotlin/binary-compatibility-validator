@@ -36,7 +36,7 @@ private fun KlibVerificationTests.checkKlibDump(
 
     val expected = readFileList(expectedDumpFileName)
 
-    Assertions.assertThat(generatedDump.readText()).isEqualToIgnoringNewLines(expected)
+    Assertions.assertThat(generatedDump.readText()).isEqualTo(expected)
 }
 
 internal class KlibVerificationTests : BaseKotlinGradleTest() {
@@ -155,7 +155,7 @@ internal class KlibVerificationTests : BaseKotlinGradleTest() {
             assertTrue(jvmApiDump.exists(), "No API dump for JVM")
 
             val jvmExpected = readFileList("/examples/classes/AnotherBuildConfig.dump")
-            Assertions.assertThat(jvmApiDump.readText()).isEqualToIgnoringNewLines(jvmExpected)
+            Assertions.assertThat(jvmApiDump.readText()).isEqualTo(jvmExpected)
         }
     }
 
