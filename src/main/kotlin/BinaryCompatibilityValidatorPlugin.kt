@@ -162,13 +162,15 @@ private class TargetConfig constructor(
     private val apiDirProvider = project.provider {
         val dir = extension.apiDumpDirectory
 
-        val root = project.layout.projectDirectory.asFile.toPath().toAbsolutePath().normalize()
+        
+        val root = project.rootProject.layout.projectDirectory.asFile.toPath().toAbsolutePath().normalize()
         val resolvedDir = root.resolve(dir).normalize()
         if (!resolvedDir.startsWith(root)) {
+            val rootName = if (project.rootProject == project) "project" else "rootProject"
             throw IllegalArgumentException(
-                "apiDumpDirectory (\"$dir\") should be inside the project directory, " +
-                        "but it resolves to a path outside the project root.\n" +
-                        "Project's root path: $root\nResolved apiDumpDirectory: $resolvedDir"
+                "apiDumpDirectory (\"$dir\") should be inside the $rootName directory, " +
+                        "but it resolves to a path outside the $rootName root.\n" +
+                        "Root path: $root\nResolved apiDumpDirectory: $resolvedDir"
             )
         }
 
