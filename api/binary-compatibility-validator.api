@@ -105,7 +105,7 @@ public abstract class kotlinx/validation/KotlinKlibExtractAbiTask : org/gradle/a
 
 public abstract class kotlinx/validation/KotlinKlibInferAbiTask : org/gradle/api/DefaultTask {
 	public fun <init> ()V
-	public abstract fun getInputDumps ()Lorg/gradle/api/provider/ListProperty;
+	public abstract fun getInputDumps ()Lorg/gradle/api/provider/SetProperty;
 	public abstract fun getOldMergedKlibDump ()Lorg/gradle/api/file/RegularFileProperty;
 	public abstract fun getOutputAbiFile ()Lorg/gradle/api/file/RegularFileProperty;
 	public abstract fun getTarget ()Lorg/gradle/api/provider/Property;
@@ -113,7 +113,7 @@ public abstract class kotlinx/validation/KotlinKlibInferAbiTask : org/gradle/api
 
 public abstract class kotlinx/validation/KotlinKlibMergeAbiTask : org/gradle/api/DefaultTask {
 	public fun <init> ()V
-	public abstract fun getDumps ()Lorg/gradle/api/provider/ListProperty;
+	public abstract fun getDumps ()Lorg/gradle/api/provider/SetProperty;
 	public abstract fun getMergedApiFile ()Lorg/gradle/api/file/RegularFileProperty;
 }
 
