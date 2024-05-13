@@ -11,6 +11,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.*
 
 /**
@@ -23,6 +24,7 @@ import org.gradle.api.tasks.*
  * from it and merged into the common ABI extracted previously.
  * The resulting dump is then used as an inferred dump for the unsupported target.
  */
+@CacheableTask
 public abstract class KotlinKlibInferAbiTask : DefaultTask() {
     /**
      * The name of a target to infer a dump for.
@@ -34,12 +36,13 @@ public abstract class KotlinKlibInferAbiTask : DefaultTask() {
      * Newly created dumps that will be used for ABI inference.
      */
     @get:Nested
-    public abstract val inputDumps: ListProperty<KlibDumpMetadata>
+    public abstract val inputDumps: SetProperty<KlibDumpMetadata>
 
     /**
      * Previously generated merged ABI dump file, the golden image every dump should be verified against.
      */
     @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     public abstract val oldMergedKlibDump: RegularFileProperty
 
     /**

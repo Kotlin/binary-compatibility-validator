@@ -9,15 +9,12 @@ import kotlinx.validation.api.klib.*
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.SkipWhenEmpty
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*
 
 /**
  * Generates a text file with a KLib ABI dump for a single klib.
  */
+@CacheableTask
 public abstract class KotlinKlibAbiBuildTask : BuildTaskBase() {
 
     /**
@@ -25,6 +22,7 @@ public abstract class KotlinKlibAbiBuildTask : BuildTaskBase() {
      */
     @get:InputFiles
     @get:SkipWhenEmpty
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     public abstract val klibFile: ConfigurableFileCollection
 
     /**

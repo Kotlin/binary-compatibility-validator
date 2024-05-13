@@ -10,11 +10,13 @@ import kotlinx.validation.api.klib.saveTo
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.*
 
 /**
  * Merges multiple individual KLib ABI dumps into a single merged dump.
  */
+@CacheableTask
 public abstract class KotlinKlibMergeAbiTask : DefaultTask() {
     /**
      * Dumps to merge.
@@ -23,7 +25,7 @@ public abstract class KotlinKlibMergeAbiTask : DefaultTask() {
      * target will not be mentioned in the resulting merged dump.
      */
     @get:Nested
-    public abstract val dumps: ListProperty<KlibDumpMetadata>
+    public abstract val dumps: SetProperty<KlibDumpMetadata>
 
     /**
      * A path to a resulting merged dump file.

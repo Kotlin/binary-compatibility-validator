@@ -20,11 +20,13 @@ import org.gradle.api.tasks.*
  * If some targets the dump stored in a project directory was generated for are not supported by the host compiler,
  * only supported tasks could be extracted for further validation.
  */
+@CacheableTask
 public abstract class KotlinKlibExtractAbiTask : DefaultTask() {
     /**
      * Merged KLib dump that should be filtered by this task.
      */
     @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     public abstract val inputAbiFile: RegularFileProperty
 
     /**

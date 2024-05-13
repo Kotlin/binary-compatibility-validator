@@ -8,9 +8,7 @@ package kotlinx.validation
 import kotlinx.validation.api.klib.KlibTarget
 import kotlinx.validation.api.klib.konanTargetNameMapping
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.SkipWhenEmpty
+import org.gradle.api.tasks.*
 import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import org.jetbrains.kotlin.gradle.plugin.KotlinTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
@@ -50,8 +48,15 @@ public class KlibDumpMetadata(
 
     /**
      * Path to a resulting dump file.
+     *
+     * If a dump file was not generated for a particular [target] (which may
+     * happen for an empty project, a project having only test targets,
+     * or a project that has no sources for a particular target),
+     * [KlibDumpMetadata] will not force an error.
+     * Instead, a dependent task will be skipped.
      */
     @get:InputFiles
     @get:SkipWhenEmpty
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     public val dumpFile: RegularFileProperty
 ) : Serializable

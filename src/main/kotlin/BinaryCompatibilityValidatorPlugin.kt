@@ -433,7 +433,7 @@ private class KlibValidationPipelineBuilder(
         group = "other"
         strictValidation.set(extension.klib.strictValidation)
         requiredTargets.addAll(supportedTargets())
-        inputAbiFile.set(klibApiDir.get().resolve(klibDumpFileName))
+        inputAbiFile.fileProvider(klibApiDir.map { it.resolve(klibDumpFileName) })
         outputAbiFile.set(klibOutputDir.resolve(klibDumpFileName))
     }
 
@@ -516,7 +516,6 @@ private class KlibValidationPipelineBuilder(
             // The actual merge will happen here, where we'll try to infer a dump for the unsupported target and merge
             // it with other supported target dumps.
             val proxy = unsupportedTargetDumpProxy(
-                mainCompilation,
                 klibApiDir, targetConfig,
                 currentTarget.toKlibTarget(),
                 apiBuildDir
@@ -571,7 +570,7 @@ private class KlibValidationPipelineBuilder(
             description = "Builds Kotlin KLib ABI dump for 'main' compilations of $projectName. " +
                     "Complementary task and shouldn't be called manually"
             this.target.set(target)
-            klibFile.from(project.provider { compilation.output.classesDirs })
+            klibFile.from(compilation.output.classesDirs)
             signatureVersion.set(extension.klib.signatureVersion)
             outputAbiFile.set(apiBuildDir.resolve(klibDumpFileName))
         }
@@ -592,7 +591,6 @@ private class KlibValidationPipelineBuilder(
     }
 
     private fun Project.unsupportedTargetDumpProxy(
-        @Suppress("UNUSED_PARAMETER") compilation: KotlinCompilation<KotlinCommonOptions>,
         klibApiDir: Provider<File>,
         targetConfig: TargetConfig,
         unsupportedTarget: KlibTarget,
@@ -605,7 +603,7 @@ private class KlibValidationPipelineBuilder(
                     "generated for supported targets."
             group = "other"
             target.set(unsupportedTarget)
-            oldMergedKlibDump.set(klibApiDir.get().resolve(klibDumpFileName))
+            oldMergedKlibDump.fileProvider(klibApiDir.map { it.resolve(klibDumpFileName) })
             outputAbiFile.set(apiBuildDir.resolve(klibDumpFileName))
         }
     }

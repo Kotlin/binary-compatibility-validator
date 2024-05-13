@@ -7,10 +7,7 @@ package kotlinx.validation
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.OutputFiles
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
@@ -18,8 +15,10 @@ import java.nio.file.StandardCopyOption
 // and registers it as an output dependency. If there's another task reading from that particular
 // directory or writing into it, their input/output dependencies would clash and as long as
 // there will be no explicit ordering or dependencies between these tasks, Gradle would be unhappy.
+@CacheableTask
 internal abstract class SyncFile : DefaultTask() {
     @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val from: RegularFileProperty
 
     @get:OutputFile
@@ -30,8 +29,7 @@ internal abstract class SyncFile : DefaultTask() {
         val fromFile = from.asFile.get()
         val toFile = to.asFile.get()
         if (fromFile.exists()) {
-            toFile.parentFile.mkdirs()
-            Files.copy(fromFile.toPath(), toFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
+            fromFile.copyTo(toFile, overwrite = true)
         } else {
             Files.deleteIfExists(toFile.toPath())
         }

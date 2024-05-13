@@ -14,6 +14,7 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.*
 
+@CacheableTask
 public open class KotlinApiCompareTask @Inject constructor(private val objects: ObjectFactory): DefaultTask() {
 
     @get:InputFiles
@@ -23,11 +24,12 @@ public open class KotlinApiCompareTask @Inject constructor(private val objects: 
 
     @get:InputFiles
     @get:SkipWhenEmpty
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     public val generatedApiFile: RegularFileProperty = objects.fileProperty()
 
     private val projectName = project.name
 
-    private val rootDir = project.rootProject.rootDir
+    private val rootDir = project.rootDir
 
     @TaskAction
     internal fun verify() {
