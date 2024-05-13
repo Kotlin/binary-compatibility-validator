@@ -481,8 +481,8 @@ private class KlibValidationPipelineBuilder(
     ) {
         val kotlin = project.kotlinMultiplatform
 
-        val generatedDumps = objects.listProperty(KlibDumpMetadata::class.java)
-        val inferredDumps = objects.listProperty(KlibDumpMetadata::class.java)
+        val generatedDumps = objects.setProperty(KlibDumpMetadata::class.java)
+        val inferredDumps = objects.setProperty(KlibDumpMetadata::class.java)
         mergeTask.configure {
             it.dumps.addAll(generatedDumps)
         }

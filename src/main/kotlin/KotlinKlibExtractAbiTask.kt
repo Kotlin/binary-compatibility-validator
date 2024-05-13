@@ -10,8 +10,8 @@ import kotlinx.validation.api.klib.KlibTarget
 import kotlinx.validation.api.klib.saveTo
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.*
 
 /**
@@ -33,7 +33,7 @@ public abstract class KotlinKlibExtractAbiTask : DefaultTask() {
      * List of the targets that the resulting dump should contain.
      */
     @get:Input
-    public abstract val requiredTargets: ListProperty<KlibTarget>
+    public abstract val requiredTargets: SetProperty<KlibTarget>
 
     /**
      * Refer to [KlibValidationSettings.strictValidation] for details.
