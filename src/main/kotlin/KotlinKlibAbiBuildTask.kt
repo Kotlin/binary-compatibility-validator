@@ -19,6 +19,12 @@ public abstract class KotlinKlibAbiBuildTask : BuildTaskBase() {
 
     /**
      * Collection consisting of a single path to a compiled klib (either file, or directory).
+     *
+     * By the end of the compilation process, there might be no klib file emitted,
+     * for example, when there are no sources in a project in general,
+     * or for a target in particular.
+     * The lack of a compiled klib file is not considered as an error, and
+     * instead causes the ask being skipped.
      */
     @get:InputFiles
     @get:SkipWhenEmpty
