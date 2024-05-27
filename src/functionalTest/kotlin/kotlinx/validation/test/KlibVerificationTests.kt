@@ -358,6 +358,28 @@ internal class KlibVerificationTests : BaseKotlinGradleTest() {
     }
 
     @Test
+    fun `check sorting for target-specific declarations`() {
+        val runner = test {
+            baseProjectSetting()
+            addToSrcSet("/examples/classes/TopLevelDeclarations.kt")
+            addToSrcSet("/examples/classes/TopLevelDeclarationsExp.kt")
+            addToSrcSet("/examples/classes/TopLevelDeclarationsLinuxOnly.kt", "linuxMain")
+            addToSrcSet("/examples/classes/TopLevelDeclarationsMingwOnly.kt", "mingwMain")
+            addToSrcSet("/examples/classes/TopLevelDeclarationsAndroidOnly.kt", "androidNativeMain")
+
+
+            runner {
+                arguments.add(":klibApiDump")
+            }
+        }
+
+        checkKlibDump(
+            runner.build(), "/examples/classes/TopLevelDeclarations.klib.diverging.dump",
+            dumpTask = ":klibApiDump"
+        )
+    }
+
+    @Test
     fun `infer a dump for a target with custom name`() {
         val runner = test {
             settingsGradleKts {
