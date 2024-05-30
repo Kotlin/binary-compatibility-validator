@@ -701,13 +701,15 @@ internal class KlibVerificationTests : BaseKotlinGradleTest() {
     }
 
     @Test
-    fun `apiCheck should not fail for empty project`() {
+    fun `apiCheck should fail for empty project if there's no api dir`() {
         val runner = test {
             baseProjectSetting()
             addToSrcSet("/examples/classes/AnotherBuildConfig.kt", sourceSet = "commonTest")
             runApiCheck()
         }
-        runner.build()
+        runner.buildAndFail().apply {
+            assertTaskFailure(":klibApiCheck")
+        }
     }
 
     @Test
