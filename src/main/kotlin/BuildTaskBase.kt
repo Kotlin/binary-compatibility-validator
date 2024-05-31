@@ -10,6 +10,7 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
 import java.io.File
+ import java.util.regex.Pattern
 
 public abstract class BuildTaskBase : DefaultTask() {
     private val extension = project.apiValidationExtensionOrNull
@@ -34,6 +35,12 @@ public abstract class BuildTaskBase : DefaultTask() {
     public var ignoredClasses : Set<String>
         get() = _ignoredClasses ?: extension?.ignoredClasses ?: emptySet()
         set(value) { _ignoredClasses = value }
+
+    private var _ignored: Set<Pattern>? = null
+    @get:Input
+    public var ignored : Set<Pattern>
+        get() = _ignored ?: extension?.ignored?.map { Pattern.compile(it) }?.toSet() ?: emptySet()
+        set(value) { _ignored = value }
 
     private var _publicPackages: Set<String>? = null
     @get:Input
