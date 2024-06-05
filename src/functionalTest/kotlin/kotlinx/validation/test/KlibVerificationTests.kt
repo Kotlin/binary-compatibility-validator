@@ -811,6 +811,10 @@ internal class KlibVerificationTests : BaseKotlinGradleTest() {
         }
         runner.buildAndFail().apply {
             assertTaskFailure(":klibApiCheck")
+            Assertions.assertThat(output)
+                .contains("-// Targets: [androidNativeArm32, androidNativeArm64, androidNativeX64, " +
+                        "androidNativeX86, linuxArm64, linuxX64, mingwX64]")
+                .contains("+// Targets: [linuxArm64]")
         }
     }
 }
