@@ -234,7 +234,7 @@ private fun Project.configureKotlinCompilation(
         }
         outputApiFile = apiBuildDir.get().resolve(dumpFileName)
     }
-    configureCheckTasks(apiBuildDir, apiBuild, extension, targetConfig, commonApiDump, commonApiCheck)
+    configureCheckTasks(apiBuild, extension, targetConfig, commonApiDump, commonApiCheck)
 }
 
 internal val Project.sourceSets: SourceSetContainer
@@ -277,12 +277,11 @@ private fun Project.configureApiTasks(
         outputApiFile = apiBuildDir.get().resolve(dumpFileName)
     }
 
-    configureCheckTasks(apiBuildDir, apiBuild, extension, targetConfig)
+    configureCheckTasks(apiBuild, extension, targetConfig)
 }
 
 private fun Project.configureCheckTasks(
-    apiBuildDir: Provider<File>,
-    apiBuild: TaskProvider<*>,
+    apiBuild: TaskProvider<KotlinApiBuildTask>,
     extension: ApiValidationExtension,
     targetConfig: TargetConfig,
     commonApiDump: TaskProvider<Task>? = null,
@@ -299,8 +298,7 @@ private fun Project.configureCheckTasks(
         group = "verification"
         description = "Checks signatures of public API against the golden value in API folder for $projectName"
         projectApiFile.set(apiCheckDir.get().resolve(jvmDumpFileName))
-        generatedApiFile.set(apiBuildDir.get().resolve(jvmDumpFileName))
-        dependsOn(apiBuild)
+        generatedApiFile.fileProvider(apiBuild.map { it.outputApiFile })
     }
 
     val dumpFileName = project.jvmDumpFileName
@@ -308,9 +306,8 @@ private fun Project.configureCheckTasks(
         isEnabled = apiCheckEnabled(projectName, extension) && apiBuild.map { it.enabled }.getOrElse(true)
         group = "other"
         description = "Syncs the API file for $projectName"
-        from.fileProvider(apiBuildDir.map { it.resolve(dumpFileName) })
+        from.fileProvider(apiBuild.map { it.outputApiFile })
         to.fileProvider(apiCheckDir.map { it.resolve(dumpFileName) })
-        dependsOn(apiBuild)
     }
 
     commonApiDump?.configure { it.dependsOn(apiDump) }
