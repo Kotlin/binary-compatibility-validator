@@ -25,7 +25,7 @@ public abstract class KotlinKlibExtractAbiTask : DefaultTask() {
     /**
      * Merged KLib dump that should be filtered by this task.
      */
-    @get:InputFiles
+    @get:InputFiles // don't fail the task if file does not exist, instead print custom error message from generate()
     @get:PathSensitive(PathSensitivity.RELATIVE)
     public abstract val inputAbiFile: RegularFileProperty
 
@@ -47,13 +47,18 @@ public abstract class KotlinKlibExtractAbiTask : DefaultTask() {
     @get:OutputFile
     public abstract val outputAbiFile: RegularFileProperty
 
+    private val rootDir = project.rootDir
+
     @OptIn(ExperimentalBCVApi::class)
     @TaskAction
     internal fun generate() {
         val inputFile = inputAbiFile.asFile.get()
-        if (!inputFile.exists()) return
+        if (!inputFile.exists()) {
+            error("File with project's API declarations '${inputFile.relativeTo(rootDir)}' does not exist.\n" +
+                    "Please ensure that ':apiDump' was executed in order to get API dump to compare the build against")
+        }
         if (inputFile.length() == 0L) {
-            error("Project ABI file $inputAbiFile is empty.")
+            error("Project ABI file ${inputFile.relativeTo(rootDir)} is empty.")
         }
         val dump = KlibDump.from(inputFile)
         val enabledTargets = requiredTargets.get().map(KlibTarget::targetName).toSet()

@@ -14,6 +14,7 @@ import org.gradle.testkit.runner.BuildResult
 import org.jetbrains.kotlin.konan.target.HostManager
 import org.jetbrains.kotlin.konan.target.KonanTarget
 import org.jetbrains.kotlin.utils.addToStdlib.butIf
+import org.junit.Assert
 import org.junit.Assume
 import org.junit.Test
 import java.io.File
@@ -49,27 +50,32 @@ internal class KlibVerificationTests : BaseKotlinGradleTest() {
             resolve("/examples/gradle/base/withNativePlugin.gradle.kts")
         }
     }
+
     private fun BaseKotlinScope.additionalBuildConfig(config: String) {
         buildGradleKts {
             resolve(config)
         }
     }
+
     private fun BaseKotlinScope.addToSrcSet(pathTestFile: String, sourceSet: String = "commonMain") {
         val fileName = Paths.get(pathTestFile).fileName.toString()
         kotlin(fileName, sourceSet) {
             resolve(pathTestFile)
         }
     }
+
     private fun BaseKotlinScope.runApiCheck() {
         runner {
             arguments.add(":apiCheck")
         }
     }
+
     private fun BaseKotlinScope.runApiDump() {
         runner {
             arguments.add(":apiDump")
         }
     }
+
     private fun assertApiCheckPassed(buildResult: BuildResult) {
         buildResult.assertTaskSuccess(":apiCheck")
     }
@@ -603,8 +609,10 @@ internal class KlibVerificationTests : BaseKotlinGradleTest() {
         checkKlibDump(runner.build(), "/examples/classes/AnotherBuildConfig.klib.dump")
 
         // Update the source file by adding a declaration
-        val updatedSourceFile = File(this::class.java.getResource(
-            "/examples/classes/AnotherBuildConfigModified.kt")!!.toURI()
+        val updatedSourceFile = File(
+            this::class.java.getResource(
+                "/examples/classes/AnotherBuildConfigModified.kt"
+            )!!.toURI()
         )
         val existingSource = runner.projectDir.resolve(
             "src/commonMain/kotlin/AnotherBuildConfig.kt"
@@ -624,8 +632,10 @@ internal class KlibVerificationTests : BaseKotlinGradleTest() {
         checkKlibDump(runner.build(), "/examples/classes/AnotherBuildConfig.klib.dump")
 
         // Update the source file by adding a declaration
-        val updatedSourceFile = File(this::class.java.getResource(
-            "/examples/classes/AnotherBuildConfigLinuxArm64.kt")!!.toURI()
+        val updatedSourceFile = File(
+            this::class.java.getResource(
+                "/examples/classes/AnotherBuildConfigLinuxArm64.kt"
+            )!!.toURI()
         )
         val existingSource = runner.projectDir.resolve(
             "src/linuxArm64Main/kotlin/AnotherBuildConfigLinuxArm64.kt"
@@ -649,8 +659,10 @@ internal class KlibVerificationTests : BaseKotlinGradleTest() {
         assertApiCheckPassed(runner.build())
 
         // Update the source file by adding a declaration
-        val updatedSourceFile = File(this::class.java.getResource(
-            "/examples/classes/AnotherBuildConfigModified.kt")!!.toURI()
+        val updatedSourceFile = File(
+            this::class.java.getResource(
+                "/examples/classes/AnotherBuildConfigModified.kt"
+            )!!.toURI()
         )
         val existingSource = runner.projectDir.resolve(
             "src/commonMain/kotlin/AnotherBuildConfig.kt"
@@ -723,13 +735,18 @@ internal class KlibVerificationTests : BaseKotlinGradleTest() {
     }
 
     @Test
-    fun `apiCheck should not fail for empty project`() {
+    fun `apiCheck should fail for empty project`() {
         val runner = test {
             baseProjectSetting()
             addToSrcSet("/examples/classes/AnotherBuildConfig.kt", sourceSet = "commonTest")
             runApiCheck()
         }
-        runner.build()
+        runner.buildAndFail().apply {
+            assertTaskFailure(":klibApiExtractForValidation")
+            Assertions.assertThat(output).contains(
+                "File with project's API declarations 'api/testproject.klib.api' does not exist."
+            )
+        }
     }
 
     @Test
