@@ -38,10 +38,6 @@ public abstract class kotlinx/validation/BuildTaskBase : org/gradle/api/DefaultT
 	public final fun getPublicClasses ()Lorg/gradle/api/provider/SetProperty;
 	public final fun getPublicMarkers ()Lorg/gradle/api/provider/SetProperty;
 	public final fun getPublicPackages ()Lorg/gradle/api/provider/SetProperty;
-	public final fun setIgnoredClasses (Lorg/gradle/api/provider/SetProperty;)V
-	public final fun setPublicClasses (Lorg/gradle/api/provider/SetProperty;)V
-	public final fun setPublicMarkers (Lorg/gradle/api/provider/SetProperty;)V
-	public final fun setPublicPackages (Lorg/gradle/api/provider/SetProperty;)V
 }
 
 public abstract interface annotation class kotlinx/validation/ExperimentalBCVApi : java/lang/annotation/Annotation {

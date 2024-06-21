@@ -10,7 +10,6 @@ import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 
-
 public abstract class BuildTaskBase : DefaultTask() {
     private val extension = project.apiValidationExtensionOrNull
 
@@ -33,16 +32,16 @@ public abstract class BuildTaskBase : DefaultTask() {
     public val nonPublicMarkers: SetProperty<String> = stringSetProperty { nonPublicMarkers }
 
     @get:Input
-    public var ignoredClasses: SetProperty<String> = stringSetProperty { ignoredClasses }
+    public val ignoredClasses: SetProperty<String> = stringSetProperty { ignoredClasses }
 
     @get:Input
-    public var publicPackages: SetProperty<String> = stringSetProperty { publicPackages }
+    public val publicPackages: SetProperty<String> = stringSetProperty { publicPackages }
 
     @get:Input
-    public var publicMarkers: SetProperty<String> = stringSetProperty { publicMarkers }
+    public val publicMarkers: SetProperty<String> = stringSetProperty { publicMarkers }
 
     @get:Input
-    public var publicClasses: SetProperty<String> = stringSetProperty { publicClasses }
+    public val publicClasses: SetProperty<String> = stringSetProperty { publicClasses }
 
     @get:Internal
     internal val projectName = project.name
