@@ -10,6 +10,7 @@ The tool allows dumping binary API of a JVM part of a Kotlin library that is pub
 
 ## Contents
 
+* [Requirements](#requirements)
 * [Setup](#setup)
   * [Tasks](#tasks)
   * [Optional parameters](#optional-parameters)
@@ -22,6 +23,10 @@ The tool allows dumping binary API of a JVM part of a Kotlin library that is pub
   * [Class changes](#class-changes)
   * [Class member changes](#class-member-changes)
 * [Building locally](#building-the-project-locally)
+
+## Requirements
+
+Binary compatibility validator plugin requires Gradle `6.0` or newer. 
 
 ## Setup
 
@@ -303,3 +308,7 @@ In order to build and run tests in the project in IDE, two prerequisites are req
 
 * Java 11 or above in order to use the latest ASM
 * All build actions in the IDE should be delegated to Gradle
+
+## Contributing
+
+Read the [Contributing Guidelines](CONTRIBUTING.md).
