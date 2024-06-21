@@ -50,7 +50,6 @@ public class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
         }
     }
 
-    @OptIn(ExperimentalBCVApi::class)
     private fun configureProject(project: Project, extension: ApiValidationExtension) {
         configureKotlinPlugin(project, extension)
         configureAndroidPlugin(project, extension)
@@ -222,17 +221,12 @@ private fun Project.configureKotlinCompilation(
             "Builds Kotlin API for 'main' compilations of $projectName. Complementary task and shouldn't be called manually"
         if (useOutput) {
             // Workaround for #4
-            inputClassesDirs =
-                files(provider<Any> { if (isEnabled) compilation.output.classesDirs else emptyList<Any>() })
-            inputDependencies =
-                files(provider<Any> { if (isEnabled) compilation.output.classesDirs else emptyList<Any>() })
+            inputClassesDirs.from(compilation.output.classesDirs)
         } else {
-            inputClassesDirs =
-                files(provider<Any> { if (isEnabled) compilation.output.classesDirs else emptyList<Any>() })
-            inputDependencies =
-                files(provider<Any> { if (isEnabled) compilation.compileDependencyFiles else emptyList<Any>() })
+            inputClassesDirs.from(compilation.output.classesDirs)
+            inputDependencies.from(compilation.compileDependencyFiles)
         }
-        outputApiFile = apiBuildDir.get().resolve(dumpFileName)
+        outputApiFile.fileProvider(apiBuildDir.map { it.resolve(dumpFileName) })
     }
     configureCheckTasks(apiBuild, extension, targetConfig, commonApiDump, commonApiCheck)
 }
@@ -271,10 +265,8 @@ private fun Project.configureApiTasks(
         // 'group' is not specified deliberately, so it will be hidden from ./gradlew tasks
         description =
             "Builds Kotlin API for 'main' compilations of $projectName. Complementary task and shouldn't be called manually"
-        inputClassesDirs = files(provider<Any> { if (isEnabled) sourceSetsOutputsProvider.get() else emptyList<Any>() })
-        inputDependencies =
-            files(provider<Any> { if (isEnabled) sourceSetsOutputsProvider.get() else emptyList<Any>() })
-        outputApiFile = apiBuildDir.get().resolve(dumpFileName)
+        inputClassesDirs.from(sourceSetsOutputsProvider)
+        outputApiFile.fileProvider(apiBuildDir.map { it.resolve(dumpFileName) })
     }
 
     configureCheckTasks(apiBuild, extension, targetConfig)
@@ -298,7 +290,7 @@ private fun Project.configureCheckTasks(
         group = "verification"
         description = "Checks signatures of public API against the golden value in API folder for $projectName"
         projectApiFile.fileProvider(apiCheckDir.map { it.resolve(jvmDumpFileName) })
-        generatedApiFile.fileProvider(apiBuild.map { it.outputApiFile })
+        generatedApiFile.set(apiBuild.flatMap { it.outputApiFile })
     }
 
     val dumpFileName = project.jvmDumpFileName
@@ -306,7 +298,7 @@ private fun Project.configureCheckTasks(
         isEnabled = apiCheckEnabled(projectName, extension) && apiBuild.map { it.enabled }.getOrElse(true)
         group = "other"
         description = "Syncs the API file for $projectName"
-        from.fileProvider(apiBuild.map { it.outputApiFile })
+        from.set(apiBuild.flatMap { it.outputApiFile })
         to.fileProvider(apiCheckDir.map { it.resolve(dumpFileName) })
     }
 
