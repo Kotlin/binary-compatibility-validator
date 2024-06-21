@@ -14,7 +14,7 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.*
 
 @CacheableTask
-public open class KotlinApiCompareTask @Inject constructor() : DefaultTask() {
+public open class KotlinApiCompareTask : DefaultTask() {
 
     @get:InputFiles // don't fail the task if file does not exist, instead print custom error message from verify()
     @get:PathSensitive(PathSensitivity.RELATIVE)
