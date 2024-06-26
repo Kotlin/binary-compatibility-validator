@@ -214,7 +214,6 @@ private fun Project.configureKotlinCompilation(
     val apiBuildDir = apiDirProvider.flatMap { f -> layout.buildDirectory.asFile.map { it.resolve(f) } }
 
     val apiBuild = task<KotlinApiBuildTask>(targetConfig.apiTaskName("Build")) {
-        // Do not enable task for empty umbrella modules
         isEnabled = apiCheckEnabled(projectName, extension)
         // 'group' is not specified deliberately, so it will be hidden from ./gradlew tasks
         description =
@@ -562,7 +561,6 @@ private class KlibValidationPipelineBuilder(
     ): TaskProvider<KotlinKlibAbiBuildTask> {
         val projectName = project.name
         val buildTask = project.task<KotlinKlibAbiBuildTask>(targetConfig.apiTaskName("Build")) {
-            // Do not enable task for empty umbrella modules
             isEnabled = klibAbiCheckEnabled(projectName, extension)
             // 'group' is not specified deliberately, so it will be hidden from ./gradlew tasks
             description = "Builds Kotlin KLib ABI dump for 'main' compilations of $projectName. " +
