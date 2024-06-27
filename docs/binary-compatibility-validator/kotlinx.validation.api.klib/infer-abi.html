@@ -45,7 +45,7 @@
                     </a>
             </div>
             <div class="library-version">
-0.15.0-Beta.2            </div>
+0.15.0-Beta.3            </div>
         </div>
         <div class="filter-section" id="filter-section">
                 <button class="platform-tag platform-selector jvm-like" data-active="" data-filter=":dokkaHtml/main">jvm</button>
@@ -91,6 +91,7 @@ val oldMergedDump = createDumpWithContent(&quot;&quot;&quot;
 
     // Library unique name: &lt;testproject&gt;
     abstract class examples.classes/Klass // examples.classes/Klass|null[0]
+
     // Targets: [iosArm64]
     abstract interface examples.classes/Iface // examples.classes/Iface|null[0]
 
@@ -128,8 +129,9 @@ assertEquals(&quot;&quot;&quot;
     // - Show declarations: true
 
     // Library unique name: &lt;testproject&gt;
-    abstract class examples.classes/NewKlass // examples.classes/NewKlass|null[0]
     abstract interface examples.classes/Iface // examples.classes/Iface|null[0]
+
+    abstract class examples.classes/NewKlass // examples.classes/NewKlass|null[0]
 
 &quot;&quot;&quot;.trimIndent(),
     inferredDumpContent) 

@@ -45,7 +45,7 @@
                     </a>
             </div>
             <div class="library-version">
-0.15.0-Beta.2            </div>
+0.15.0-Beta.3            </div>
         </div>
         <div class="filter-section" id="filter-section">
                 <button class="platform-tag platform-selector jvm-like" data-active="" data-filter=":dokkaHtml/main">jvm</button>
@@ -133,10 +133,13 @@ assertEquals(&quot;&quot;&quot;
     // Library unique name: &lt;org.example:bcv-klib-test&gt;
     final class org.example/ShardedClass { // org.example/ShardedClass|null[0]
         constructor &lt;init&gt;(kotlin/Int) // org.example/ShardedClass.&lt;init&gt;|&lt;init&gt;(kotlin.Int){}[0]
-        final fun add(kotlin/Int): kotlin/Int // org.example/ShardedClass.add|add(kotlin.Int){}[0]
+
         final val value // org.example/ShardedClass.value|{}value[0]
             final fun &lt;get-value&gt;(): kotlin/Int // org.example/ShardedClass.value.&lt;get-value&gt;|&lt;get-value&gt;(){}[0]
+
+        final fun add(kotlin/Int): kotlin/Int // org.example/ShardedClass.add|add(kotlin.Int){}[0]
     }
+
     // Targets: [linuxX64.linuxX86_64]
     final fun org.example/ShardedClass(kotlin/Int, kotlin/Float, kotlin/Long): org.example/ShardedClass // org.example/ShardedClass|ShardedClass(kotlin.Int;kotlin.Float;kotlin.Long){}[0]
     
@@ -155,9 +158,11 @@ assertEquals(&quot;&quot;&quot;
     // Library unique name: &lt;org.example:bcv-klib-test&gt;
     final class org.example/ShardedClass { // org.example/ShardedClass|null[0]
         constructor &lt;init&gt;(kotlin/Int) // org.example/ShardedClass.&lt;init&gt;|&lt;init&gt;(kotlin.Int){}[0]
-        final fun add(kotlin/Int): kotlin/Int // org.example/ShardedClass.add|add(kotlin.Int){}[0]
+
         final val value // org.example/ShardedClass.value|{}value[0]
             final fun &lt;get-value&gt;(): kotlin/Int // org.example/ShardedClass.value.&lt;get-value&gt;|&lt;get-value&gt;(){}[0]
+
+        final fun add(kotlin/Int): kotlin/Int // org.example/ShardedClass.add|add(kotlin.Int){}[0]
     }
     
     &quot;&quot;&quot;.trimIndent(), filteredDumpContent) 
