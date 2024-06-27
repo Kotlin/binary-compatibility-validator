@@ -10,6 +10,7 @@ The tool allows dumping binary API of a JVM part of a Kotlin library that is pub
 
 ## Contents
 
+* [Requirements](#requirements)
 * [Setup](#setup)
   * [Tasks](#tasks)
   * [Optional parameters](#optional-parameters)
@@ -23,6 +24,10 @@ The tool allows dumping binary API of a JVM part of a Kotlin library that is pub
   * [Class member changes](#class-member-changes)
 * [Building locally](#building-the-project-locally)
 
+## Requirements
+
+Binary compatibility validator plugin requires Gradle `6.0` or newer. 
+
 ## Setup
 
 Binary compatibility validator is a Gradle plugin that can be added to your build in the following way:
@@ -30,7 +35,7 @@ Binary compatibility validator is a Gradle plugin that can be added to your buil
 - in `build.gradle.kts`
 ```kotlin
 plugins {
-    id("org.jetbrains.kotlinx.binary-compatibility-validator") version "0.15.0-Beta.2"
+    id("org.jetbrains.kotlinx.binary-compatibility-validator") version "0.15.0-Beta.3"
 }
 ```
 
@@ -38,7 +43,7 @@ plugins {
 
 ```groovy
 plugins {
-    id 'org.jetbrains.kotlinx.binary-compatibility-validator' version '0.15.0-Beta.2'
+    id 'org.jetbrains.kotlinx.binary-compatibility-validator' version '0.15.0-Beta.3'
 }
 ```
 
@@ -303,3 +308,7 @@ In order to build and run tests in the project in IDE, two prerequisites are req
 
 * Java 11 or above in order to use the latest ASM
 * All build actions in the IDE should be delegated to Gradle
+
+## Contributing
+
+Read the [Contributing Guidelines](CONTRIBUTING.md).

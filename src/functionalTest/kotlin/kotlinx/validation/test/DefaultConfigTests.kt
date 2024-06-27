@@ -7,7 +7,10 @@ package kotlinx.validation.test
 
 import kotlinx.validation.api.*
 import org.assertj.core.api.*
+import org.junit.Assume
 import org.junit.Test
+import java.io.File
+import java.nio.file.Files
 import kotlin.test.*
 
 internal class DefaultConfigTests : BaseKotlinGradleTest() {
@@ -23,8 +26,13 @@ internal class DefaultConfigTests : BaseKotlinGradleTest() {
             }
         }
 
+        val projectName = rootProjectDir.name
         runner.buildAndFail().apply {
-            assertTrue { output.contains("Please ensure that ':apiDump' was executed") }
+            Assertions.assertThat(output).contains(
+                "Expected file with API declarations 'api${File.separator}$projectName.api' does not exist."
+            ).contains(
+                "Please ensure that ':apiDump' was executed in order to get an API dump to compare the build against"
+            )
             assertTaskFailure(":apiCheck")
         }
     }
@@ -90,7 +98,9 @@ internal class DefaultConfigTests : BaseKotlinGradleTest() {
     }
 
     @Test
-    fun `apiCheck should succeed when public classes match api file ignoring case`() {
+    fun `apiCheck should fail when public classes match api file ignoring case`() {
+        Assume.assumeTrue(underlyingFsIsCaseSensitive())
+
         val runner = test {
             buildGradleKts {
                 resolve("/examples/gradle/base/withPlugin.gradle.kts")
@@ -107,8 +117,8 @@ internal class DefaultConfigTests : BaseKotlinGradleTest() {
             }
         }
 
-        runner.build().apply {
-            assertTaskSuccess(":apiCheck")
+        runner.buildAndFail().apply {
+            assertTaskFailure(":apiCheck")
         }
     }
 
@@ -235,6 +245,18 @@ internal class DefaultConfigTests : BaseKotlinGradleTest() {
         runner.build().apply {
             assertTaskSuccess(":check")
             assertTaskSuccess(":apiCheck")
+        }
+    }
+
+
+    private fun underlyingFsIsCaseSensitive(): Boolean {
+        val f = Files.createTempFile("UPPER", "UPPER").toFile()
+        f.deleteOnExit()
+        try {
+            val lower = File(f.absolutePath.lowercase())
+            return !lower.exists()
+        } finally {
+            f.delete()
         }
     }
 }

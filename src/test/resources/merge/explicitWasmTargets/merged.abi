@@ -1,5 +1,5 @@
 // Klib ABI Dump
-// Targets: [androidNativeArm64, tvOsX64]
+// Targets: [wasmJs, wasmWasi]
 // Rendering settings:
 // - Signature version: 2
 // - Show manifest properties: false
@@ -14,3 +14,5 @@ final class org.example/ShardedClass { // org.example/ShardedClass|null[0]
 
     final fun add(kotlin/Int): kotlin/Int // org.example/ShardedClass.add|add(kotlin.Int){}[0]
 }
+
+final fun org.example/ShardedClass(kotlin/Int, kotlin/Float, kotlin/Long): org.example/ShardedClass // org.example/ShardedClass|ShardedClass(kotlin.Int;kotlin.Float;kotlin.Long){}[0]
