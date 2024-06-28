@@ -126,7 +126,7 @@ private fun FieldNode.buildFieldSignature(
         companionClass = classes[companionName]
         foundAnnotations.addAll(companionClass?.visibleAnnotations.orEmpty())
         foundAnnotations.addAll(companionClass?.invisibleAnnotations.orEmpty())
-    } else if (access.and(Opcodes.ACC_STATIC) != 0 && access.and(Opcodes.ACC_FINAL) != 0) {
+    } else if (isStatic(access) && isFinal(access)) {
         companionClass = ownerClass.companionName(ownerClass.kotlinMetadata)?.let {
             classes[it]
         }
@@ -137,7 +137,7 @@ private fun FieldNode.buildFieldSignature(
             /*
              * The property was moved from the companion object. Take all the annotations from there
              * to be able to filter out the non-public markers.
-             * 
+             *
              * See https://github.com/Kotlin/binary-compatibility-validator/issues/90
              */
             foundAnnotations.addAll(companionClass!!.methods.annotationsFor(property.syntheticMethodForAnnotations))
