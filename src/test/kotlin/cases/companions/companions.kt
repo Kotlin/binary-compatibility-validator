@@ -168,6 +168,8 @@ class FilteredCompanionProperties private constructor() {
         val F5: Int = 5
         @PrivateApi
         const val F6: Int = 6
+        @PrivateApi
+        const val F7: Int = 7
     }
 }
 
