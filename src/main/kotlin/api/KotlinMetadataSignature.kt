@@ -5,7 +5,7 @@
 
 package kotlinx.validation.api
 
-import kotlinx.metadata.jvm.*
+import kotlin.metadata.jvm.*
 import kotlinx.validation.*
 import org.objectweb.asm.*
 import org.objectweb.asm.tree.*
@@ -30,7 +30,7 @@ public data class ClassBinarySignature internal constructor(
 internal interface MemberBinarySignature {
     val jvmMember: JvmMemberSignature
     val name: String get() = jvmMember.name
-    val desc: String get() = jvmMember.desc
+    val desc: String get() = jvmMember.descriptor
     val access: AccessFlags
     val isPublishedApi: Boolean
     val annotations: List<AnnotationNode>
@@ -172,10 +172,10 @@ internal fun FieldNode.isCompanionField(outerClassMetadata: KotlinClassMetadata?
     val metadata = outerClassMetadata ?: return false
     // Non-classes are not affected by the problem
     if (metadata !is KotlinClassMetadata.Class) return false
-    return metadata.toKmClass().companionObject == name
+    return metadata.kmClass.companionObject == name
 }
 
 internal fun ClassNode.companionName(outerClassMetadata: KotlinClassMetadata?): String {
-    val outerKClass = (outerClassMetadata as KotlinClassMetadata.Class).toKmClass()
+    val outerKClass = (outerClassMetadata as KotlinClassMetadata.Class).kmClass
     return name + "$" + outerKClass.companionObject
 }
