@@ -56,7 +56,6 @@ public class KlibDumpMetadata(
      * Instead, a dependent task will be skipped.
      */
     @get:InputFiles
-    @get:SkipWhenEmpty
     @get:PathSensitive(PathSensitivity.RELATIVE)
     public val dumpFile: RegularFileProperty
 ) : Serializable
