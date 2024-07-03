@@ -5,12 +5,12 @@
 
 package kotlinx.validation
 
-import org.gradle.api.DefaultTask
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
+import org.gradle.workers.WorkParameters
 
-public abstract class BuildTaskBase : DefaultTask() {
+public abstract class BuildTaskBase : WorkerAwareTaskBase() {
     private val extension = project.apiValidationExtensionOrNull
 
     private fun stringSetProperty(provider: ApiValidationExtension.() -> Set<String>): SetProperty<String> {
@@ -45,4 +45,13 @@ public abstract class BuildTaskBase : DefaultTask() {
 
     @get:Internal
     internal val projectName = project.name
+}
+
+internal interface BuildParametersBase : WorkParameters {
+    val ignoredPackages: SetProperty<String>
+    val nonPublicMarkers: SetProperty<String>
+    val ignoredClasses: SetProperty<String>
+    val publicPackages: SetProperty<String>
+    val publicMarkers: SetProperty<String>
+    val publicClasses: SetProperty<String>
 }

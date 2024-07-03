@@ -7,6 +7,7 @@ package kotlinx.validation
 
 import kotlinx.validation.api.klib.KlibTarget
 import org.gradle.api.*
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.plugins.*
 import org.gradle.api.provider.*
 import org.gradle.api.tasks.*
@@ -51,9 +52,10 @@ public class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
     }
 
     private fun configureProject(project: Project, extension: ApiValidationExtension) {
-        configureKotlinPlugin(project, extension)
-        configureAndroidPlugin(project, extension)
-        configureMultiplatformPlugin(project, extension)
+        val jvmRuntimeClasspath = project.prepareJvmValidationClasspath()
+        configureKotlinPlugin(project, extension, jvmRuntimeClasspath)
+        configureAndroidPlugin(project, extension, jvmRuntimeClasspath)
+        configureMultiplatformPlugin(project, extension, jvmRuntimeClasspath)
     }
 
     private fun configurePlugin(
@@ -68,7 +70,8 @@ public class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
 
     private fun configureMultiplatformPlugin(
         project: Project,
-        extension: ApiValidationExtension
+        extension: ApiValidationExtension,
+        jvmRuntimeClasspath: NamedDomainObjectProvider<Configuration>
     ) = configurePlugin("kotlin-multiplatform", project, extension) {
         if (project.name in extension.ignoredProjects) return@configurePlugin
         val kotlin = project.kotlinMultiplatform
@@ -102,13 +105,16 @@ public class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
             val targetConfig = TargetConfig(project, extension, target.name, jvmDirConfig)
             if (target.platformType == KotlinPlatformType.jvm) {
                 target.mainCompilationOrNull?.also {
-                    project.configureKotlinCompilation(it, extension, targetConfig, commonApiDump, commonApiCheck)
+                    project.configureKotlinCompilation(
+                        it, extension, jvmRuntimeClasspath, targetConfig, commonApiDump, commonApiCheck
+                    )
                 }
             } else if (target.platformType == KotlinPlatformType.androidJvm) {
                 target.compilations.matching { it.name == "release" }.all {
                     project.configureKotlinCompilation(
                         it,
                         extension,
+                        jvmRuntimeClasspath,
                         targetConfig,
                         commonApiDump,
                         commonApiCheck,
@@ -122,30 +128,32 @@ public class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
 
     private fun configureAndroidPlugin(
         project: Project,
-        extension: ApiValidationExtension
+        extension: ApiValidationExtension,
+        jvmRuntimeClasspath: NamedDomainObjectProvider<Configuration>
     ) {
-        configureAndroidPluginForKotlinLibrary(project, extension)
-
+        configureAndroidPluginForKotlinLibrary(project, extension, jvmRuntimeClasspath)
     }
 
     private fun configureAndroidPluginForKotlinLibrary(
         project: Project,
-        extension: ApiValidationExtension
+        extension: ApiValidationExtension,
+        jvmRuntimeClasspath: NamedDomainObjectProvider<Configuration>
     ) = configurePlugin("kotlin-android", project, extension) {
         val androidExtension = project.extensions
             .getByName("kotlin") as KotlinAndroidProjectExtension
         androidExtension.target.compilations.matching {
             it.compilationName == "release"
         }.all {
-            project.configureKotlinCompilation(it, extension, useOutput = true)
+            project.configureKotlinCompilation(it, extension, jvmRuntimeClasspath, useOutput = true)
         }
     }
 
     private fun configureKotlinPlugin(
         project: Project,
-        extension: ApiValidationExtension
+        extension: ApiValidationExtension,
+        jvmRuntimeClasspath: NamedDomainObjectProvider<Configuration>
     ) = configurePlugin("kotlin", project, extension) {
-        project.configureApiTasks(extension, TargetConfig(project, extension))
+        project.configureApiTasks(extension, TargetConfig(project, extension), jvmRuntimeClasspath)
     }
 }
 
@@ -203,6 +211,7 @@ private enum class DirConfig {
 private fun Project.configureKotlinCompilation(
     compilation: KotlinCompilation<KotlinCommonOptions>,
     extension: ApiValidationExtension,
+    jvmRuntimeClasspath: NamedDomainObjectProvider<Configuration>,
     targetConfig: TargetConfig = TargetConfig(this, extension),
     commonApiDump: TaskProvider<Task>? = null,
     commonApiCheck: TaskProvider<Task>? = null,
@@ -226,6 +235,7 @@ private fun Project.configureKotlinCompilation(
             inputDependencies.from(compilation.compileDependencyFiles)
         }
         outputApiFile.fileProvider(apiBuildDir.map { it.resolve(dumpFileName) })
+        runtimeClasspath.from(jvmRuntimeClasspath)
     }
     configureCheckTasks(apiBuild, extension, targetConfig, commonApiDump, commonApiCheck)
 }
@@ -249,6 +259,7 @@ private fun klibAbiCheckEnabled(projectName: String, extension: ApiValidationExt
 private fun Project.configureApiTasks(
     extension: ApiValidationExtension,
     targetConfig: TargetConfig = TargetConfig(this, extension),
+    jvmRuntimeClasspath: NamedDomainObjectProvider<Configuration>,
 ) {
     val projectName = project.name
     val dumpFileName = project.jvmDumpFileName
@@ -266,6 +277,7 @@ private fun Project.configureApiTasks(
             "Builds Kotlin API for 'main' compilations of $projectName. Complementary task and shouldn't be called manually"
         inputClassesDirs.from(sourceSetsOutputsProvider)
         outputApiFile.fileProvider(apiBuildDir.map { it.resolve(dumpFileName) })
+        runtimeClasspath.from(jvmRuntimeClasspath)
     }
 
     configureCheckTasks(apiBuild, extension, targetConfig)
@@ -371,10 +383,21 @@ private class KlibValidationPipelineBuilder(
         val klibMergeInferredDir = projectBuildDir.flatMap { pd -> klibInferDumpConfig.apiDir.map { pd.resolve(it) } }
         val klibExtractedFileDir = klibMergeInferredDir.map { it.resolve("extracted") }
 
+        val runtimeClasspath = project.prepareKlibValidationClasspath()
+
         val klibMerge = project.mergeKlibsUmbrellaTask(klibDumpConfig, klibMergeDir)
+        klibMerge.configure {
+            it.runtimeClasspath.from(runtimeClasspath)
+        }
         val klibMergeInferred = project.mergeInferredKlibsUmbrellaTask(klibDumpConfig, klibMergeInferredDir)
+        klibMergeInferred.configure {
+            it.runtimeClasspath.from(runtimeClasspath)
+        }
         val klibDump = project.dumpKlibsTask(klibDumpConfig)
         val klibExtractAbiForSupportedTargets = project.extractAbi(klibDumpConfig, klibApiDir, klibExtractedFileDir)
+        klibExtractAbiForSupportedTargets.configure {
+            it.runtimeClasspath.from(runtimeClasspath)
+        }
         val klibCheck = project.checkKlibsTask(klibDumpConfig)
         klibDump.configure {
             it.from.set(klibMergeInferred.flatMap { it.mergedApiFile })
@@ -387,7 +410,7 @@ private class KlibValidationPipelineBuilder(
         }
         commonApiDump.configure { it.dependsOn(klibDump) }
         commonApiCheck.configure { it.dependsOn(klibCheck) }
-        project.configureTargets(klibApiDir, klibMerge, klibMergeInferred)
+        project.configureTargets(klibApiDir, klibMerge, klibMergeInferred, runtimeClasspath)
     }
 
     private fun Project.checkKlibsTask(klibDumpConfig: TargetConfig) =
@@ -467,7 +490,8 @@ private class KlibValidationPipelineBuilder(
     fun Project.configureTargets(
         klibApiDir: Provider<File>,
         mergeTask: TaskProvider<KotlinKlibMergeAbiTask>,
-        mergeInferredTask: TaskProvider<KotlinKlibMergeAbiTask>
+        mergeInferredTask: TaskProvider<KotlinKlibMergeAbiTask>,
+        runtimeClasspath: NamedDomainObjectProvider<Configuration>
     ) {
         val kotlin = project.kotlinMultiplatform
 
@@ -496,6 +520,9 @@ private class KlibValidationPipelineBuilder(
                     mainCompilation, extension, targetConfig,
                     target, apiBuildDir
                 )
+                buildTargetAbi.configure {
+                    it.runtimeClasspath.from(runtimeClasspath)
+                }
                 generatedDumps.add(
                     KlibDumpMetadata(target,
                         objects.fileProperty().also { it.set(buildTargetAbi.flatMap { it.outputAbiFile }) })
@@ -507,6 +534,7 @@ private class KlibValidationPipelineBuilder(
             val unsupportedTargetStub = mergeDependencyForUnsupportedTarget(targetConfig)
             mergeTask.configure {
                 it.dependsOn(unsupportedTargetStub)
+                it.runtimeClasspath.from(runtimeClasspath)
             }
             // The actual merge will happen here, where we'll try to infer a dump for the unsupported target and merge
             // it with other supported target dumps.
@@ -629,3 +657,49 @@ private val Project.jvmDumpFileName: String
     get() = "$name.api"
 private val Project.klibDumpFileName: String
     get() = "$name.klib.api"
+
+private fun Project.prepareKlibValidationClasspath(): NamedDomainObjectProvider<Configuration> {
+    val cp =
+        project.configurations.register("bcv-rt-klib-cp") {
+            it.description = "Runtime classpath for running binary-compatibility-validator."
+            it.isCanBeResolved = false
+            it.isCanBeConsumed = false
+            it.isCanBeDeclared = true
+            it.isVisible = false
+            it.defaultDependencies {
+                it.add(project.dependencies.create("org.jetbrains.kotlin:kotlin-compiler-embeddable:1.9.22"))
+            }
+        }
+    return project.configurations.register("bcv-rt-klib-cp-resolver") {
+        it.description = "Resolve the runtime classpath for running binary-compatibility-validator."
+        it.isCanBeResolved = true
+        it.isCanBeConsumed = false
+        it.isCanBeDeclared = false
+        it.isVisible = false
+        it.extendsFrom(cp.get())
+    }
+}
+
+private fun Project.prepareJvmValidationClasspath(): NamedDomainObjectProvider<Configuration> {
+    val cp =
+        project.configurations.register("bcv-rt-jvm-cp") {
+            it.description = "Runtime classpath for running binary-compatibility-validator."
+            it.isCanBeResolved = false
+            it.isCanBeConsumed = false
+            it.isCanBeDeclared = true
+            it.isVisible = false
+            it.defaultDependencies {
+                it.add(project.dependencies.create("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.6.2"))
+                it.add(project.dependencies.create("org.ow2.asm:asm:9.6"))
+                it.add(project.dependencies.create("org.ow2.asm:asm-tree:9.6"))
+            }
+        }
+    return project.configurations.register("bcv-rt-jvm-cp-resolver") {
+        it.description = "Resolve the runtime classpath for running binary-compatibility-validator."
+        it.isCanBeResolved = true
+        it.isCanBeConsumed = false
+        it.isCanBeDeclared = false
+        it.isVisible = false
+        it.extendsFrom(cp.get())
+    }
+}

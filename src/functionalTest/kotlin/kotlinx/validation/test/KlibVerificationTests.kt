@@ -11,10 +11,8 @@ import kotlinx.validation.api.resolve
 import kotlinx.validation.api.test
 import org.assertj.core.api.Assertions
 import org.gradle.testkit.runner.BuildResult
-import org.jetbrains.kotlin.konan.target.HostManager
-import org.jetbrains.kotlin.konan.target.KonanTarget
-import org.jetbrains.kotlin.utils.addToStdlib.butIf
-import org.junit.Assert
+//import org.jetbrains.kotlin.konan.target.HostManager
+//import org.jetbrains.kotlin.konan.target.KonanTarget
 import org.junit.Assume
 import org.junit.Test
 import java.io.File
@@ -263,7 +261,8 @@ internal class KlibVerificationTests : BaseKotlinGradleTest() {
 
     @Test
     fun `apiDump should work for Apple-targets`() {
-        Assume.assumeTrue(HostManager().isEnabled(KonanTarget.MACOS_ARM64))
+        // Assume.assumeTrue(HostManager().isEnabled(KonanTarget.MACOS_ARM64))
+        // TODO
         val runner = test {
             baseProjectSetting()
             additionalBuildConfig("/examples/gradle/configuration/appleTargets/targets.gradle.kts")
@@ -276,7 +275,8 @@ internal class KlibVerificationTests : BaseKotlinGradleTest() {
 
     @Test
     fun `apiCheck should work for Apple-targets`() {
-        Assume.assumeTrue(HostManager().isEnabled(KonanTarget.MACOS_ARM64))
+        // Assume.assumeTrue(HostManager().isEnabled(KonanTarget.MACOS_ARM64))
+        // TODO
         val runner = test {
             baseProjectSetting()
             additionalBuildConfig("/examples/gradle/configuration/appleTargets/targets.gradle.kts")
