@@ -140,14 +140,11 @@ private fun FieldNode.buildFieldSignature(
              *
              * See https://github.com/Kotlin/binary-compatibility-validator/issues/90
              */
-            foundAnnotations.addAll(companionClassCandidate.methods.annotationsFor(property.syntheticMethodForAnnotations))
-            /*
-             * In certain cases (like with enum entries), the fact a field is both static and final does not
-             * imply it belongs to a companion object.
-             * We don't update field's `companionClass` until we're 100% sure the field was
-             * actually moved from the companion.
-             */
-            companionClass = companionClassCandidate
+            foundAnnotations.addAll(
+                companionClassCandidate.methods.annotationsFor(
+                    property.syntheticMethodForAnnotations
+                )
+            )
         }
     }
 
