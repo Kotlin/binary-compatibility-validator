@@ -144,7 +144,7 @@ private fun FieldNode.buildFieldSignature(
             /*
              * In certain cases (like with enum entries), the fact a field is both static and final does not
              * imply it belongs to a companion object.
-             * We don't update field's the `companionClass` until we're 100% sure the field was
+             * We don't update field's `companionClass` until we're 100% sure the field was
              * actually moved from the companion.
              */
             companionClass = companionClassCandidate
