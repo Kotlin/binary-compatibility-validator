@@ -127,11 +127,11 @@ private fun FieldNode.buildFieldSignature(
         foundAnnotations.addAll(companionClass?.visibleAnnotations.orEmpty())
         foundAnnotations.addAll(companionClass?.invisibleAnnotations.orEmpty())
     } else if (isStatic(access) && isFinal(access)) {
-        companionClass = ownerClass.companionName(ownerClass.kotlinMetadata)?.let {
+        val companionClassCandidate = ownerClass.companionName(ownerClass.kotlinMetadata)?.let {
             classes[it]
         }
 
-        val property = companionClass?.kmProperty(name)
+        val property = companionClassCandidate?.kmProperty(name)
 
         if (property != null && JvmFlag.Property.IS_MOVED_FROM_INTERFACE_COMPANION(property.flags)) {
             /*
@@ -140,7 +140,14 @@ private fun FieldNode.buildFieldSignature(
              *
              * See https://github.com/Kotlin/binary-compatibility-validator/issues/90
              */
-            foundAnnotations.addAll(companionClass!!.methods.annotationsFor(property.syntheticMethodForAnnotations))
+            foundAnnotations.addAll(companionClassCandidate.methods.annotationsFor(property.syntheticMethodForAnnotations))
+            /*
+             * In certain cases (like with enum entries), the fact a field is both static and final does not
+             * imply it belongs to a companion object.
+             * We don't update field's the `companionClass` until we're 100% sure the field was
+             * actually moved from the companion.
+             */
+            companionClass = companionClassCandidate
         }
     }
 
