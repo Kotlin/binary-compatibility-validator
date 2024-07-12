@@ -67,7 +67,7 @@ internal val ClassNode.kotlinMetadata: KotlinClassMetadata?
                 extraInt = get("xi") as Int?
             )
         }
-        return KotlinClassMetadata.readStrict(header)
+        return KotlinClassMetadata.readLenient(header)
     }
 
 
