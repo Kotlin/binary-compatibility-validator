@@ -131,10 +131,9 @@ private fun FieldNode.buildFieldSignature(
         }
 
         val property = companionClassCandidate?.kmProperty(name)
-
-        if (property != null && property.isMovedFromInterfaceCompanion) {
+        if (property != null) {
             /*
-             * The property was moved from the companion object. Take all the annotations from there
+             * The property was declared in the companion object. Take all the annotations from there
              * to be able to filter out the non-public markers.
              *
              * See https://github.com/Kotlin/binary-compatibility-validator/issues/90
