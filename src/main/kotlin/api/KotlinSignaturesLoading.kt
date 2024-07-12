@@ -12,6 +12,8 @@ import org.objectweb.asm.tree.*
 import java.io.*
 import java.util.*
 import java.util.jar.*
+import kotlin.metadata.KmProperty
+import kotlin.metadata.visibility
 
 @ExternalApi
 @Suppress("unused")
@@ -130,7 +132,7 @@ private fun FieldNode.buildFieldSignature(
 
         val property = companionClassCandidate?.kmProperty(name)
 
-        if (property != null && JvmFlag.Property.IS_MOVED_FROM_INTERFACE_COMPANION(property.flags)) {
+        if (property != null && property.isMovedFromInterfaceCompanion) {
             /*
              * The property was moved from the companion object. Take all the annotations from there
              * to be able to filter out the non-public markers.
@@ -160,7 +162,7 @@ private fun ClassNode.kmProperty(name: String?): KmProperty? {
         return null
     }
 
-    return metadata.toKmClass().properties.firstOrNull {
+    return metadata.kmClass.properties.firstOrNull {
         it.name == name
     }
 }
