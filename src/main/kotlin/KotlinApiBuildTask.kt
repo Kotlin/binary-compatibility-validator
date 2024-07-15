@@ -51,16 +51,11 @@ public abstract class KotlinApiBuildTask @Inject constructor(
 
     @TaskAction
     internal fun generate() {
-        val q = executor.classLoaderIsolation {
+        val workQueue = executor.classLoaderIsolation {
             it.classpath.from(runtimeClasspath)
         }
-        q.submit(AbiBuildWorker::class.java) { params ->
-            params.ignoredClasses.set(ignoredClasses)
-            params.ignoredPackages.set(ignoredPackages)
-            params.nonPublicMarkers.set(nonPublicMarkers)
-            params.publicClasses.set(publicClasses)
-            params.publicPackages.set(publicPackages)
-            params.publicMarkers.set(publicMarkers)
+        workQueue.submit(AbiBuildWorker::class.java) { params ->
+            fillParams(params)
 
             params.inputJar.set(inputJar)
             params.inputClassesDirs.from(inputClassesDirs)

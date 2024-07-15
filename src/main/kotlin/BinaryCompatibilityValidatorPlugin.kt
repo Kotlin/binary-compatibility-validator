@@ -14,10 +14,12 @@ import org.gradle.api.tasks.*
 import org.jetbrains.kotlin.gradle.dsl.*
 import org.jetbrains.kotlin.gradle.plugin.*
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.util.libsDirectory
 import org.jetbrains.kotlin.konan.target.HostManager
 import org.jetbrains.kotlin.library.abi.ExperimentalLibraryAbiReader
 import org.jetbrains.kotlin.library.abi.LibraryAbiReader
 import java.io.*
+import kotlin.KotlinVersion
 
 @OptIn(ExperimentalBCVApi::class, ExperimentalLibraryAbiReader::class)
 public class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
@@ -666,8 +668,19 @@ private fun Project.prepareKlibValidationClasspath(): NamedDomainObjectProvider<
             it.isCanBeConsumed = false
             it.isCanBeDeclared = true
             it.isVisible = false
-            it.defaultDependencies {
-                it.add(project.dependencies.create("org.jetbrains.kotlin:kotlin-compiler-embeddable:1.9.22"))
+
+            it.defaultDependencies { dependencySet ->
+                dependencySet.add(project.dependencies.create("org.ow2.asm:asm:9.6"))
+                dependencySet.add(project.dependencies.create("org.ow2.asm:asm-tree:9.6"))
+
+                if (KotlinVersion.CURRENT.major > 2) {
+                    dependencySet.add(project.dependencies.create("org.jetbrains.kotlin:kotlin-metadata-jvm:${KotlinVersion.CURRENT}"))
+                } else {
+                    // use older 0.6.2 kotlinx metadata version for Kotlin < 2.0
+                    dependencySet.add(project.dependencies.create("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.6.2"))
+                }
+
+                dependencySet.add(project.dependencies.create("org.jetbrains.kotlin:kotlin-compiler-embeddable:${KotlinVersion.CURRENT}"))
             }
         }
     return project.configurations.register("bcv-rt-klib-cp-resolver") {

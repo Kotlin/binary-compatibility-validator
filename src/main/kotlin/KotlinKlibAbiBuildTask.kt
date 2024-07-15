@@ -59,16 +59,11 @@ public abstract class KotlinKlibAbiBuildTask : BuildTaskBase() {
 
     @TaskAction
     internal fun generate() {
-        val q = executor.classLoaderIsolation {
+        val workQueue = executor.classLoaderIsolation {
             it.classpath.from(runtimeClasspath)
         }
-        q.submit(KlibAbiBuildWorker::class.java) { params ->
-            params.ignoredClasses.set(ignoredClasses)
-            params.ignoredPackages.set(ignoredPackages)
-            params.nonPublicMarkers.set(nonPublicMarkers)
-            params.publicClasses.set(publicClasses)
-            params.publicPackages.set(publicPackages)
-            params.publicMarkers.set(publicMarkers)
+        workQueue.submit(KlibAbiBuildWorker::class.java) { params ->
+            fillParams(params)
 
             params.klibFile.from(klibFile)
             params.target.set(target)
@@ -93,7 +88,7 @@ internal abstract class KlibAbiBuildWorker : WorkAction<KlibAbiBuildParameters> 
         outputFile.parentFile.mkdirs()
 
         val dump = KlibDump.fromKlib(parameters.klibFile.singleFile, parameters.target.get().configurableName,
-            KLibDumpFilters {
+            KlibDumpFilters {
                 ignoredClasses.addAll(parameters.ignoredClasses.get())
                 ignoredPackages.addAll(parameters.ignoredPackages.get())
                 nonPublicMarkers.addAll(parameters.nonPublicMarkers.get())

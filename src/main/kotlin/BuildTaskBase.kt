@@ -45,6 +45,15 @@ public abstract class BuildTaskBase : WorkerAwareTaskBase() {
 
     @get:Internal
     internal val projectName = project.name
+
+    internal fun fillParams(params: BuildParametersBase) {
+        params.ignoredPackages.set(ignoredPackages)
+        params.nonPublicMarkers.set(nonPublicMarkers)
+        params.ignoredClasses.set(ignoredClasses)
+        params.publicPackages.set(publicPackages)
+        params.publicMarkers.set(publicMarkers)
+        params.publicClasses.set(publicClasses)
+    }
 }
 
 internal interface BuildParametersBase : WorkParameters {

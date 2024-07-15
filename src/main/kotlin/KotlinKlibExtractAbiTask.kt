@@ -92,7 +92,7 @@ internal abstract class KlibExtractAbiWorker : WorkAction<KlibExtractAbiParamete
                     "Please ensure that ':apiDump' was executed in order to get API dump to compare the build against")
         }
         if (inputFile.length() == 0L) {
-            Files.copy(inputFile.toPath(), outputAbiFile.asFile.get().toPath(), StandardCopyOption.REPLACE_EXISTING)
+            Files.copy(inputFile.toPath(), parameters.outputAbiFile.asFile.get().toPath(), StandardCopyOption.REPLACE_EXISTING)
             return
         }
         val dump = KlibDump.from(inputFile)
