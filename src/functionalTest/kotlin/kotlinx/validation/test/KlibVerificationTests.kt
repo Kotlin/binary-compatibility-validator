@@ -90,6 +90,22 @@ internal class KlibVerificationTests : BaseKotlinGradleTest() {
     }
 
     @Test
+    fun `apiDump for native targets in K2`() {
+        val runner = test {
+            settingsGradleKts {
+                resolve("/examples/gradle/settings/settings-name-testproject.gradle.kts")
+            }
+            buildGradleKts {
+                resolve("/examples/gradle/base/withNativePluginK2.gradle.kts")
+            }
+            addToSrcSet("/examples/classes/TopLevelDeclarations.kt")
+            runApiDump()
+        }
+
+        checkKlibDump(runner.build(), "/examples/classes/TopLevelDeclarations.klib.with.linux.dump")
+    }
+
+    @Test
     fun `apiCheck for native targets`() {
         val runner = test {
             baseProjectSetting()
