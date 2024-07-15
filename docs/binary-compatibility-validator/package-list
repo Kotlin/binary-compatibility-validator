@@ -2,20 +2,24 @@ $dokka.format:html-v1
 $dokka.linkExtension:html
 $dokka.location:kotlinx.validation.api.klib////PointingToDeclaration/binary-compatibility-validator/kotlinx.validation.api.klib/index.html
 $dokka.location:kotlinx.validation.api.klib//KLibDumpFilters/#kotlin.Function1[kotlinx.validation.api.klib.KlibDumpFilters.Builder,kotlin.Unit]/PointingToDeclaration/binary-compatibility-validator/kotlinx.validation.api.klib/-k-lib-dump-filters.html
+$dokka.location:kotlinx.validation.api.klib//KlibDumpFilters/#kotlin.Function1[kotlinx.validation.api.klib.KlibDumpFilters.Builder,kotlin.Unit]/PointingToDeclaration/binary-compatibility-validator/kotlinx.validation.api.klib/-klib-dump-filters.html
 $dokka.location:kotlinx.validation.api.klib//inferAbi/#kotlinx.validation.api.klib.KlibTarget#kotlin.collections.Iterable[kotlinx.validation.api.klib.KlibDump]#kotlinx.validation.api.klib.KlibDump?/PointingToDeclaration/binary-compatibility-validator/kotlinx.validation.api.klib/infer-abi.html
 $dokka.location:kotlinx.validation.api.klib//mergeFromKlib/kotlinx.validation.api.klib.KlibDump#java.io.File#kotlin.String?#kotlinx.validation.api.klib.KlibDumpFilters/PointingToDeclaration/binary-compatibility-validator/kotlinx.validation.api.klib/merge-from-klib.html
 $dokka.location:kotlinx.validation.api.klib//saveTo/kotlinx.validation.api.klib.KlibDump#java.io.File/PointingToDeclaration/binary-compatibility-validator/kotlinx.validation.api.klib/save-to.html
 $dokka.location:kotlinx.validation.api.klib/KlibDump.Companion///PointingToDeclaration/binary-compatibility-validator/kotlinx.validation.api.klib/-klib-dump/-companion/index.html
 $dokka.location:kotlinx.validation.api.klib/KlibDump.Companion/from/#java.io.File#kotlin.String?/PointingToDeclaration/binary-compatibility-validator/kotlinx.validation.api.klib/-klib-dump/-companion/from.html
+$dokka.location:kotlinx.validation.api.klib/KlibDump.Companion/from/#kotlin.CharSequence#kotlin.String?/PointingToDeclaration/binary-compatibility-validator/kotlinx.validation.api.klib/-klib-dump/-companion/from.html
 $dokka.location:kotlinx.validation.api.klib/KlibDump.Companion/fromKlib/#java.io.File#kotlin.String?#kotlinx.validation.api.klib.KlibDumpFilters/PointingToDeclaration/binary-compatibility-validator/kotlinx.validation.api.klib/-klib-dump/-companion/from-klib.html
 $dokka.location:kotlinx.validation.api.klib/KlibDump///PointingToDeclaration/binary-compatibility-validator/kotlinx.validation.api.klib/-klib-dump/index.html
 $dokka.location:kotlinx.validation.api.klib/KlibDump/KlibDump/#/PointingToDeclaration/binary-compatibility-validator/kotlinx.validation.api.klib/-klib-dump/-klib-dump.html
 $dokka.location:kotlinx.validation.api.klib/KlibDump/copy/#/PointingToDeclaration/binary-compatibility-validator/kotlinx.validation.api.klib/-klib-dump/copy.html
 $dokka.location:kotlinx.validation.api.klib/KlibDump/merge/#java.io.File#kotlin.String?/PointingToDeclaration/binary-compatibility-validator/kotlinx.validation.api.klib/-klib-dump/merge.html
+$dokka.location:kotlinx.validation.api.klib/KlibDump/merge/#kotlin.CharSequence#kotlin.String?/PointingToDeclaration/binary-compatibility-validator/kotlinx.validation.api.klib/-klib-dump/merge.html
 $dokka.location:kotlinx.validation.api.klib/KlibDump/merge/#kotlinx.validation.api.klib.KlibDump/PointingToDeclaration/binary-compatibility-validator/kotlinx.validation.api.klib/-klib-dump/merge.html
 $dokka.location:kotlinx.validation.api.klib/KlibDump/remove/#kotlin.collections.Iterable[kotlinx.validation.api.klib.KlibTarget]/PointingToDeclaration/binary-compatibility-validator/kotlinx.validation.api.klib/-klib-dump/remove.html
+$dokka.location:kotlinx.validation.api.klib/KlibDump/replace/#kotlinx.validation.api.klib.KlibDump/PointingToDeclaration/binary-compatibility-validator/kotlinx.validation.api.klib/-klib-dump/replace.html
 $dokka.location:kotlinx.validation.api.klib/KlibDump/retain/#kotlin.collections.Iterable[kotlinx.validation.api.klib.KlibTarget]/PointingToDeclaration/binary-compatibility-validator/kotlinx.validation.api.klib/-klib-dump/retain.html
-$dokka.location:kotlinx.validation.api.klib/KlibDump/saveTo/#java.lang.Appendable/PointingToDeclaration/binary-compatibility-validator/kotlinx.validation.api.klib/-klib-dump/save-to.html
+$dokka.location:kotlinx.validation.api.klib/KlibDump/saveTo/#TypeParam(bounds=[java.lang.Appendable])/PointingToDeclaration/binary-compatibility-validator/kotlinx.validation.api.klib/-klib-dump/save-to.html
 $dokka.location:kotlinx.validation.api.klib/KlibDump/targets/#/PointingToDeclaration/binary-compatibility-validator/kotlinx.validation.api.klib/-klib-dump/targets.html
 $dokka.location:kotlinx.validation.api.klib/KlibDumpFilters.Builder///PointingToDeclaration/binary-compatibility-validator/kotlinx.validation.api.klib/-klib-dump-filters/-builder/index.html
 $dokka.location:kotlinx.validation.api.klib/KlibDumpFilters.Builder/ignoredClasses/#/PointingToDeclaration/binary-compatibility-validator/kotlinx.validation.api.klib/-klib-dump-filters/-builder/ignored-classes.html

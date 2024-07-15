@@ -45,7 +45,7 @@
                     </a>
             </div>
             <div class="library-version">
-0.15.1            </div>
+0.16.0            </div>
         </div>
         <div class="filter-section" id="filter-section">
                 <button class="platform-tag platform-selector jvm-like" data-active="" data-filter=":dokkaHtml/main">jvm</button>
@@ -66,7 +66,7 @@
   <div class="cover ">
     <h1 class="cover"><span><span>merge</span></span></h1>
   </div>
-  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="merge.html"><span class="token function">merge</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">dumpFile<span class="token operator">: </span><a href="https://docs.oracle.com/javase/8/docs/api/java/io/File.html">File</a><span class="token punctuation">, </span></span><span class="parameter ">configurableTargetName<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span><span class="clearfix"><span class="floating-right">(<a href="https://github.com/Kotlin/binary-compatibility-validator/tree/master/src/main/kotlin/api/klib/KlibDump.kt#L79">source</a>)</span></span></div><p class="paragraph">Loads a textual KLib dump and merges it into this dump.</p><p class="paragraph">If a dump contains only a single target, it's possible to specify a custom configurable target name. Please refer to <a href="../-klib-target/configurable-name.html">KlibTarget.configurableName</a> for more details on the meaning of that name.</p><p class="paragraph">By default, <a href="merge.html">configurableTargetName</a> is null and information about a target will be taken directly from the loaded dump.</p><p class="paragraph">It's an error to specify non-null <a href="merge.html">configurableTargetName</a> for a dump containing multiple targets. It's also an error to merge dumps having some targets in common.</p><h4 class="">Throws</h4><div class="table"><div class="table-row" data-filterable-current=":dokkaHtml/main" data-filterable-set=":dokkaHtml/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-illegal-argument-exception/index.html"><span>Illegal</span><wbr></wbr><span>Argument</span><wbr></wbr><span><span>Exception</span></span></a></div></span></div><div><div class="title"><p class="paragraph">if <a href="merge.html">dumpFile</a> is not a file.</p></div></div></div></div><div class="table-row" data-filterable-current=":dokkaHtml/main" data-filterable-set=":dokkaHtml/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="https://docs.oracle.com/javase/8/docs/api/java/io/FileNotFoundException.html"><span>File</span><wbr></wbr><span>Not</span><wbr></wbr><span>Found</span><wbr></wbr><span><span>Exception</span></span></a></div></span></div><div><div class="title"><p class="paragraph">if <a href="merge.html">dumpFile</a> does not exist.</p></div></div></div></div></div><h4 class="">Samples</h4><div class="sample-container"><pre><code class="runnablesample monospace block lang-kotlin" theme="idea">import kotlinx.validation.ExperimentalBCVApi
+  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="merge.html"><span class="token function">merge</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">dumpFile<span class="token operator">: </span><a href="https://docs.oracle.com/javase/8/docs/api/java/io/File.html">File</a><span class="token punctuation">, </span></span><span class="parameter ">configurableTargetName<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span><span class="clearfix"><span class="floating-right">(<a href="https://github.com/Kotlin/binary-compatibility-validator/tree/master/src/main/kotlin/api/klib/KlibDump.kt#L78">source</a>)</span></span></div><p class="paragraph">Loads a textual KLib dump and merges it into this dump.</p><p class="paragraph">If a dump contains only a single target, it's possible to specify a custom configurable target name. Please refer to <a href="../-klib-target/configurable-name.html">KlibTarget.configurableName</a> for more details on the meaning of that name.</p><p class="paragraph">By default, <a href="merge.html">configurableTargetName</a> is null and information about a target will be taken directly from the loaded dump.</p><p class="paragraph">It's an error to specify non-null <a href="merge.html">configurableTargetName</a> for a dump containing multiple targets. It's also an error to merge dumps having some targets in common.</p><h4 class="">Throws</h4><div class="table"><div class="table-row" data-filterable-current=":dokkaHtml/main" data-filterable-set=":dokkaHtml/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-illegal-argument-exception/index.html"><span>Illegal</span><wbr></wbr><span>Argument</span><wbr></wbr><span><span>Exception</span></span></a></div></span></div><div><div class="title"><p class="paragraph">if <a href="merge.html">dumpFile</a> is empty.</p></div></div></div></div><div class="table-row" data-filterable-current=":dokkaHtml/main" data-filterable-set=":dokkaHtml/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="https://docs.oracle.com/javase/8/docs/api/java/io/FileNotFoundException.html"><span>File</span><wbr></wbr><span>Not</span><wbr></wbr><span>Found</span><wbr></wbr><span><span>Exception</span></span></a></div></span></div><div><div class="title"><p class="paragraph">if <a href="merge.html">dumpFile</a> does not exist.</p></div></div></div></div></div><h4 class="">Samples</h4><div class="sample-container"><pre><code class="runnablesample monospace block lang-kotlin" theme="idea">import kotlinx.validation.ExperimentalBCVApi
 import kotlinx.validation.api.klib.KlibDump
 import kotlinx.validation.api.klib.KlibTarget
 import kotlinx.validation.api.klib.inferAbi
@@ -78,7 +78,7 @@ import kotlin.test.assertEquals
 
 fun main() { 
    //sampleStart 
-   val linuxX64Dump = createDumpWithContent(&quot;&quot;&quot;
+   val linuxX64Dump = createDumpFileWithContent(&quot;&quot;&quot;
     // Rendering settings:
     // - Signature version: 2
     // - Show manifest properties: false
@@ -98,7 +98,7 @@ fun main() {
     final fun org.example/ShardedClass(kotlin/Int, kotlin/Float, kotlin/Long): org.example/ShardedClass // org.example/ShardedClass|ShardedClass(kotlin.Int;kotlin.Float;kotlin.Long){}[0]
 &quot;&quot;&quot;.trimIndent())
 
-val linuxArm64Dump = createDumpWithContent(&quot;&quot;&quot;
+val linuxArm64Dump = createDumpFileWithContent(&quot;&quot;&quot;
     // Rendering settings:
     // - Signature version: 2
     // - Show manifest properties: false
@@ -146,7 +146,7 @@ assertEquals(&quot;&quot;&quot;
     
     &quot;&quot;&quot;.trimIndent(), mergedDumpContent) 
    //sampleEnd
-}</code></pre></div><hr><div class="symbol monospace"><span class="token keyword">fun </span><a href="merge.html"><span class="token function">merge</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">other<span class="token operator">: </span><a href="index.html">KlibDump</a></span></span><span class="token punctuation">)</span><span class="clearfix"><span class="floating-right">(<a href="https://github.com/Kotlin/binary-compatibility-validator/tree/master/src/main/kotlin/api/klib/KlibDump.kt#L96">source</a>)</span></span></div><p class="paragraph">Merges <a href="merge.html">other</a> dump with this one.</p><p class="paragraph">It's also an error to merge dumps having some targets in common.</p><p class="paragraph">The operation does not modify <a href="merge.html">other</a>.</p><h4 class="">Throws</h4><div class="table"><div class="table-row" data-filterable-current=":dokkaHtml/main" data-filterable-set=":dokkaHtml/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-illegal-argument-exception/index.html"><span>Illegal</span><wbr></wbr><span>Argument</span><wbr></wbr><span><span>Exception</span></span></a></div></span></div><div><div class="title"><p class="paragraph">if this dump and <a href="merge.html">other</a> shares same targets.</p></div></div></div></div></div><h4 class="">Samples</h4><div class="sample-container"><pre><code class="runnablesample monospace block lang-kotlin" theme="idea">import kotlinx.validation.ExperimentalBCVApi
+}</code></pre></div><hr><div class="symbol monospace"><span class="token keyword">fun </span><a href="merge.html"><span class="token function">merge</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">dump<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-char-sequence/index.html">CharSequence</a><span class="token punctuation">, </span></span><span class="parameter ">configurableTargetName<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span><span class="clearfix"><span class="floating-right">(<a href="https://github.com/Kotlin/binary-compatibility-validator/tree/master/src/main/kotlin/api/klib/KlibDump.kt#L103">source</a>)</span></span></div><p class="paragraph">Reads a textual KLib dump from the <a href="merge.html">dump</a> char sequence and merges it into this dump.</p><p class="paragraph">If a dump contains only a single target, it's possible to specify a custom configurable target name. Please refer to <a href="../-klib-target/configurable-name.html">KlibTarget.configurableName</a> for more details on the meaning of that name.</p><p class="paragraph">By default, <a href="merge.html">configurableTargetName</a> is null and information about a target will be taken directly from the loaded dump.</p><p class="paragraph">It's an error to specify non-null <a href="merge.html">configurableTargetName</a> for a dump containing multiple targets. It's also an error to merge dumps having some targets in common.</p><h4 class="">Throws</h4><div class="table"><div class="table-row" data-filterable-current=":dokkaHtml/main" data-filterable-set=":dokkaHtml/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-illegal-argument-exception/index.html"><span>Illegal</span><wbr></wbr><span>Argument</span><wbr></wbr><span><span>Exception</span></span></a></div></span></div><div><div class="title"><p class="paragraph">if the provided <a href="merge.html">dump</a> is empty.</p></div></div></div></div></div><h4 class="">Samples</h4><div class="sample-container"><pre><code class="runnablesample monospace block lang-kotlin" theme="idea">import kotlinx.validation.ExperimentalBCVApi
 import kotlinx.validation.api.klib.KlibDump
 import kotlinx.validation.api.klib.KlibTarget
 import kotlinx.validation.api.klib.inferAbi
@@ -158,7 +158,112 @@ import kotlin.test.assertEquals
 
 fun main() { 
    //sampleStart 
-   val linuxX64Dump = createDumpWithContent(&quot;&quot;&quot;
+   val linuxX64Dump = &quot;&quot;&quot;
+    // Rendering settings:
+    // - Signature version: 2
+    // - Show manifest properties: false
+    // - Show declarations: true
+
+    // Library unique name: &lt;org.example:bcv-klib-test&gt;
+    // Platform: NATIVE
+    // Native targets: linux_x64
+    // Compiler version: 1.9.22
+    // ABI version: 1.8.0
+    final class org.example/ShardedClass { // org.example/ShardedClass|null[0]
+        final val value // org.example/ShardedClass.value|{}value[0]
+            final fun &lt;get-value&gt;(): kotlin/Int // org.example/ShardedClass.value.&lt;get-value&gt;|&lt;get-value&gt;(){}[0]
+        constructor &lt;init&gt;(kotlin/Int) // org.example/ShardedClass.&lt;init&gt;|&lt;init&gt;(kotlin.Int){}[0]
+        final fun add(kotlin/Int): kotlin/Int // org.example/ShardedClass.add|add(kotlin.Int){}[0]
+    }
+    final fun org.example/ShardedClass(kotlin/Int, kotlin/Float, kotlin/Long): org.example/ShardedClass // org.example/ShardedClass|ShardedClass(kotlin.Int;kotlin.Float;kotlin.Long){}[0]
+&quot;&quot;&quot;.trimIndent()
+
+val linuxArm64Dump = &quot;&quot;&quot;
+    // Rendering settings:
+    // - Signature version: 2
+    // - Show manifest properties: false
+    // - Show declarations: true
+
+    // Library unique name: &lt;org.example:bcv-klib-test&gt;
+    // Platform: NATIVE
+    // Native targets: linux_arm64
+    // Compiler version: 1.9.22
+    // ABI version: 1.8.0
+    final class org.example/ShardedClass { // org.example/ShardedClass|null[0]
+        final val value // org.example/ShardedClass.value|{}value[0]
+            final fun &lt;get-value&gt;(): kotlin/Int // org.example/ShardedClass.value.&lt;get-value&gt;|&lt;get-value&gt;(){}[0]
+        constructor &lt;init&gt;(kotlin/Int) // org.example/ShardedClass.&lt;init&gt;|&lt;init&gt;(kotlin.Int){}[0]
+        final fun add(kotlin/Int): kotlin/Int // org.example/ShardedClass.add|add(kotlin.Int){}[0]
+    }
+&quot;&quot;&quot;.trimIndent()
+
+val mergedDump = KlibDump()
+mergedDump.merge(KlibDump.from(linuxArm64Dump))
+mergedDump.merge(KlibDump.from(linuxX64Dump, configurableTargetName = &quot;linuxX86_64&quot;))
+
+val newLinuxX64Dump = &quot;&quot;&quot;
+    // Rendering settings:
+    // - Signature version: 2
+    // - Show manifest properties: false
+    // - Show declarations: true
+
+    // Library unique name: &lt;org.example:bcv-klib-test&gt;
+    // Platform: NATIVE
+    // Native targets: linux_x64
+    // Compiler version: 1.9.22
+    // ABI version: 1.8.0
+    final class org.example/ShardedClass { // org.example/ShardedClass|null[0]
+        final val value // org.example/ShardedClass.value|{}value[0]
+            final fun &lt;get-value&gt;(): kotlin/Int // org.example/ShardedClass.value.&lt;get-value&gt;|&lt;get-value&gt;(){}[0]
+        constructor &lt;init&gt;(kotlin/Int) // org.example/ShardedClass.&lt;init&gt;|&lt;init&gt;(kotlin.Int){}[0]
+        final fun store(kotlin/Int): kotlin/Int // org.example/ShardedClass.store|store(kotlin.Long){}[0]
+    }
+    final fun org.example/ShardedClass(kotlin/Int, kotlin/Float, kotlin/Long): org.example/ShardedClass // org.example/ShardedClass|ShardedClass(kotlin.Int;kotlin.Float;kotlin.Long){}[0]
+&quot;&quot;&quot;.trimIndent()
+
+mergedDump.replace(KlibDump.from(newLinuxX64Dump, configurableTargetName = &quot;linuxX86_64&quot;))
+
+val mergedDumpContent = mergedDump.saveTo(StringBuilder()).toString()
+assertEquals(&quot;&quot;&quot;
+    // Klib ABI Dump
+    // Targets: [linuxArm64, linuxX64.linuxX86_64]
+    // Rendering settings:
+    // - Signature version: 2
+    // - Show manifest properties: false
+    // - Show declarations: true
+
+    // Library unique name: &lt;org.example:bcv-klib-test&gt;
+    final class org.example/ShardedClass { // org.example/ShardedClass|null[0]
+        constructor &lt;init&gt;(kotlin/Int) // org.example/ShardedClass.&lt;init&gt;|&lt;init&gt;(kotlin.Int){}[0]
+
+        final val value // org.example/ShardedClass.value|{}value[0]
+            final fun &lt;get-value&gt;(): kotlin/Int // org.example/ShardedClass.value.&lt;get-value&gt;|&lt;get-value&gt;(){}[0]
+
+        // Targets: [linuxArm64]
+        final fun add(kotlin/Int): kotlin/Int // org.example/ShardedClass.add|add(kotlin.Int){}[0]
+    
+        // Targets: [linuxX64.linuxX86_64]
+        final fun store(kotlin/Int): kotlin/Int // org.example/ShardedClass.store|store(kotlin.Long){}[0]
+    }
+
+    // Targets: [linuxX64.linuxX86_64]
+    final fun org.example/ShardedClass(kotlin/Int, kotlin/Float, kotlin/Long): org.example/ShardedClass // org.example/ShardedClass|ShardedClass(kotlin.Int;kotlin.Float;kotlin.Long){}[0]
+    
+    &quot;&quot;&quot;.trimIndent(), mergedDumpContent) 
+   //sampleEnd
+}</code></pre></div><hr><div class="symbol monospace"><span class="token keyword">fun </span><a href="merge.html"><span class="token function">merge</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">other<span class="token operator">: </span><a href="index.html">KlibDump</a></span></span><span class="token punctuation">)</span><span class="clearfix"><span class="floating-right">(<a href="https://github.com/Kotlin/binary-compatibility-validator/tree/master/src/main/kotlin/api/klib/KlibDump.kt#L118">source</a>)</span></span></div><p class="paragraph">Merges <a href="merge.html">other</a> dump with this one.</p><p class="paragraph">It's also an error to merge dumps having some targets in common.</p><p class="paragraph">The operation does not modify <a href="merge.html">other</a>.</p><h4 class="">Throws</h4><div class="table"><div class="table-row" data-filterable-current=":dokkaHtml/main" data-filterable-set=":dokkaHtml/main"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-illegal-argument-exception/index.html"><span>Illegal</span><wbr></wbr><span>Argument</span><wbr></wbr><span><span>Exception</span></span></a></div></span></div><div><div class="title"><p class="paragraph">if this dump and <a href="merge.html">other</a> shares same targets.</p></div></div></div></div></div><h4 class="">Samples</h4><div class="sample-container"><pre><code class="runnablesample monospace block lang-kotlin" theme="idea">import kotlinx.validation.ExperimentalBCVApi
+import kotlinx.validation.api.klib.KlibDump
+import kotlinx.validation.api.klib.KlibTarget
+import kotlinx.validation.api.klib.inferAbi
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.TemporaryFolder
+import java.io.File
+import kotlin.test.assertEquals
+
+fun main() { 
+   //sampleStart 
+   val linuxX64Dump = createDumpFileWithContent(&quot;&quot;&quot;
     // Rendering settings:
     // - Signature version: 2
     // - Show manifest properties: false
@@ -178,7 +283,7 @@ fun main() {
     final fun org.example/ShardedClass(kotlin/Int, kotlin/Float, kotlin/Long): org.example/ShardedClass // org.example/ShardedClass|ShardedClass(kotlin.Int;kotlin.Float;kotlin.Long){}[0]
 &quot;&quot;&quot;.trimIndent())
 
-val linuxArm64Dump = createDumpWithContent(&quot;&quot;&quot;
+val linuxArm64Dump = createDumpFileWithContent(&quot;&quot;&quot;
     // Rendering settings:
     // - Signature version: 2
     // - Show manifest properties: false
