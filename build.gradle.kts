@@ -188,6 +188,8 @@ testing {
             dependencies {
                 implementation(files(createClasspathManifest))
 
+                implementation(libs.kotlinx.metadata)
+                implementation(libs.kotlin.compiler.embeddable)
                 implementation(gradleApi())
                 implementation(gradleTestKit())
             }

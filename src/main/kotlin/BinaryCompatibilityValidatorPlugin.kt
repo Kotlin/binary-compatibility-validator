@@ -14,7 +14,6 @@ import org.gradle.api.tasks.*
 import org.jetbrains.kotlin.gradle.dsl.*
 import org.jetbrains.kotlin.gradle.plugin.*
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
-import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.util.libsDirectory
 import org.jetbrains.kotlin.konan.target.HostManager
 import org.jetbrains.kotlin.library.abi.ExperimentalLibraryAbiReader
 import org.jetbrains.kotlin.library.abi.LibraryAbiReader
@@ -661,8 +660,8 @@ private val Project.klibDumpFileName: String
     get() = "$name.klib.api"
 
 private fun Project.prepareKlibValidationClasspath(): NamedDomainObjectProvider<Configuration> {
-    val cp =
-        project.configurations.register("bcv-rt-klib-cp") {
+    val dependencyConfiguration =
+        project.configurations.create("bcv-rt-klib-cp") {
             it.description = "Runtime classpath for running binary-compatibility-validator."
             it.isCanBeResolved = false
             it.isCanBeConsumed = false
@@ -670,16 +669,6 @@ private fun Project.prepareKlibValidationClasspath(): NamedDomainObjectProvider<
             it.isVisible = false
 
             it.defaultDependencies { dependencySet ->
-                dependencySet.add(project.dependencies.create("org.ow2.asm:asm:9.6"))
-                dependencySet.add(project.dependencies.create("org.ow2.asm:asm-tree:9.6"))
-
-                if (KotlinVersion.CURRENT.major > 2) {
-                    dependencySet.add(project.dependencies.create("org.jetbrains.kotlin:kotlin-metadata-jvm:${KotlinVersion.CURRENT}"))
-                } else {
-                    // use older 0.6.2 kotlinx metadata version for Kotlin < 2.0
-                    dependencySet.add(project.dependencies.create("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.6.2"))
-                }
-
                 dependencySet.add(project.dependencies.create("org.jetbrains.kotlin:kotlin-compiler-embeddable:${KotlinVersion.CURRENT}"))
             }
         }
@@ -689,22 +678,28 @@ private fun Project.prepareKlibValidationClasspath(): NamedDomainObjectProvider<
         it.isCanBeConsumed = false
         it.isCanBeDeclared = false
         it.isVisible = false
-        it.extendsFrom(cp.get())
+        it.extendsFrom(dependencyConfiguration)
     }
 }
 
 private fun Project.prepareJvmValidationClasspath(): NamedDomainObjectProvider<Configuration> {
-    val cp =
-        project.configurations.register("bcv-rt-jvm-cp") {
+    val dependencyConfiguration =
+        project.configurations.create("bcv-rt-jvm-cp") {
             it.description = "Runtime classpath for running binary-compatibility-validator."
             it.isCanBeResolved = false
             it.isCanBeConsumed = false
             it.isCanBeDeclared = true
             it.isVisible = false
-            it.defaultDependencies {
-                it.add(project.dependencies.create("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.6.2"))
-                it.add(project.dependencies.create("org.ow2.asm:asm:9.6"))
-                it.add(project.dependencies.create("org.ow2.asm:asm-tree:9.6"))
+            it.defaultDependencies { dependencySet ->
+                dependencySet.add(project.dependencies.create("org.ow2.asm:asm:9.6"))
+                dependencySet.add(project.dependencies.create("org.ow2.asm:asm-tree:9.6"))
+
+                if (KotlinVersion.CURRENT.major >= 2) {
+                    dependencySet.add(project.dependencies.create("org.jetbrains.kotlin:kotlin-metadata-jvm:${KotlinVersion.CURRENT}"))
+                } else {
+                    // for older 0.6.2 kotlin versions (< 2.0.0) use nearest metadata library
+                    dependencySet.add(project.dependencies.create("org.jetbrains.kotlin:kotlin-metadata-jvm:2.0.0"))
+                }
             }
         }
     return project.configurations.register("bcv-rt-jvm-cp-resolver") {
@@ -713,6 +708,6 @@ private fun Project.prepareJvmValidationClasspath(): NamedDomainObjectProvider<C
         it.isCanBeConsumed = false
         it.isCanBeDeclared = false
         it.isVisible = false
-        it.extendsFrom(cp.get())
+        it.extendsFrom(dependencyConfiguration)
     }
 }

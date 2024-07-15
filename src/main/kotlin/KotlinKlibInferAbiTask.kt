@@ -15,6 +15,7 @@ import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
+import org.slf4j.LoggerFactory
 import javax.inject.Inject
 
 /**
@@ -82,6 +83,8 @@ internal interface KlibInferAbiParameters : WorkParameters {
 }
 
 internal abstract class KlibInferAbiWorker : WorkAction<KlibInferAbiParameters> {
+    private val logger = LoggerFactory.getLogger(KlibInferAbiWorker::class.java)
+
     @OptIn(ExperimentalBCVApi::class)
     override fun execute() {
         val availableDumps = parameters.inputDumps.get().map {
@@ -105,22 +108,16 @@ internal abstract class KlibInferAbiWorker : WorkAction<KlibInferAbiParameters> 
             if (oldDumpFile.length() > 0L) {
                 image = KlibDump.from(oldDumpFile)
             } else {
-                // TODO
-                /*
                 logger.warn(
                     "Project's ABI file exists, but empty: $oldDumpFile. " +
                             "The file will be ignored during ABI dump inference for the unsupported target " +
                             parameters.target.get()
                 )
-
-                 */
             }
         }
 
         inferAbi(parameters.target.get(), supportedTargetDumps, image).saveTo(parameters.outputAbiFile.asFile.get())
 
-        // TODO:
-        /*
         logger.warn(
             "An ABI dump for target ${parameters.target.get()} was inferred from the ABI generated for the following targets " +
                     "as the former target is not supported by the host compiler: " +
@@ -128,7 +125,6 @@ internal abstract class KlibInferAbiWorker : WorkAction<KlibInferAbiParameters> 
                     "Inferred dump may not reflect an actual ABI for the target ${parameters.target.get()}. " +
                     "It is recommended to regenerate the dump on the host supporting all required compilation target."
         )
-         */
     }
 
     private fun findMatchingTargets(
