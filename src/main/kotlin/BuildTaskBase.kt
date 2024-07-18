@@ -9,9 +9,14 @@ import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.workers.WorkParameters
+import org.gradle.workers.WorkerExecutor
+import javax.inject.Inject
 
 public abstract class BuildTaskBase : WorkerAwareTaskBase() {
     private val extension = project.apiValidationExtensionOrNull
+
+    @get:Inject
+    internal abstract val executor: WorkerExecutor
 
     private fun stringSetProperty(provider: ApiValidationExtension.() -> Set<String>): SetProperty<String> {
         return project.objects.setProperty(String::class.java).convention(
@@ -46,7 +51,7 @@ public abstract class BuildTaskBase : WorkerAwareTaskBase() {
     @get:Internal
     internal val projectName = project.name
 
-    internal fun fillParams(params: BuildParametersBase) {
+    internal fun fillCommonParams(params: BuildParametersBase) {
         params.ignoredPackages.set(ignoredPackages)
         params.nonPublicMarkers.set(nonPublicMarkers)
         params.ignoredClasses.set(ignoredClasses)

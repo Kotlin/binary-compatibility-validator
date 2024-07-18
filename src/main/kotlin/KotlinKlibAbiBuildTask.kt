@@ -11,8 +11,6 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import org.gradle.workers.WorkAction
-import org.gradle.workers.WorkerExecutor
-import javax.inject.Inject
 
 /**
  * Generates a text file with a KLib ABI dump for a single klib.
@@ -54,16 +52,13 @@ public abstract class KotlinKlibAbiBuildTask : BuildTaskBase() {
     @get:OutputFile
     public abstract val outputAbiFile: RegularFileProperty
 
-    @get:Inject
-    public abstract val executor: WorkerExecutor
-
     @TaskAction
     internal fun generate() {
         val workQueue = executor.classLoaderIsolation {
             it.classpath.from(runtimeClasspath)
         }
         workQueue.submit(KlibAbiBuildWorker::class.java) { params ->
-            fillParams(params)
+            fillCommonParams(params)
 
             params.klibFile.from(klibFile)
             params.target.set(target)

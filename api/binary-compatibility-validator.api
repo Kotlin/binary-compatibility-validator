@@ -64,7 +64,6 @@ public class kotlinx/validation/KlibValidationSettings {
 
 public abstract class kotlinx/validation/KotlinApiBuildTask : kotlinx/validation/BuildTaskBase {
 	public fun <init> ()V
-	public abstract fun getExecutor ()Lorg/gradle/workers/WorkerExecutor;
 	public abstract fun getInputClassesDirs ()Lorg/gradle/api/file/ConfigurableFileCollection;
 	public abstract fun getInputDependencies ()Lorg/gradle/api/file/ConfigurableFileCollection;
 	public abstract fun getInputJar ()Lorg/gradle/api/file/RegularFileProperty;
@@ -81,7 +80,6 @@ public class kotlinx/validation/KotlinApiCompareTask : org/gradle/api/DefaultTas
 
 public abstract class kotlinx/validation/KotlinKlibAbiBuildTask : kotlinx/validation/BuildTaskBase {
 	public fun <init> ()V
-	public abstract fun getExecutor ()Lorg/gradle/workers/WorkerExecutor;
 	public abstract fun getKlibFile ()Lorg/gradle/api/file/ConfigurableFileCollection;
 	public abstract fun getOutputAbiFile ()Lorg/gradle/api/file/RegularFileProperty;
 	public final fun getSignatureVersion ()Lorg/gradle/api/provider/Property;

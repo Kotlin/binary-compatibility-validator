@@ -46,8 +46,6 @@ public abstract class KotlinApiBuildTask @Inject constructor(
     @get:PathSensitive(PathSensitivity.RELATIVE)
     public abstract val inputDependencies: ConfigurableFileCollection
 
-    @get:Inject
-    public abstract val executor: WorkerExecutor
 
     @TaskAction
     internal fun generate() {
@@ -55,7 +53,7 @@ public abstract class KotlinApiBuildTask @Inject constructor(
             it.classpath.from(runtimeClasspath)
         }
         workQueue.submit(AbiBuildWorker::class.java) { params ->
-            fillParams(params)
+            fillCommonParams(params)
 
             params.inputJar.set(inputJar)
             params.inputClassesDirs.from(inputClassesDirs)
