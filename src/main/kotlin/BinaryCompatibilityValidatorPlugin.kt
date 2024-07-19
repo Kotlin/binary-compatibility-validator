@@ -662,9 +662,7 @@ private val Project.klibDumpFileName: String
 private fun Project.prepareKlibValidationClasspath(): NamedDomainObjectProvider<Configuration> {
     val compilerVersion = project.objects.property(String::class.java).convention("2.0.0")
     project.withKotlinPluginVersion { version ->
-        if (version != null) {
-            compilerVersion.set(version)
-        }
+        compilerVersion.set(version)
     }
 
     val dependencyConfiguration =
