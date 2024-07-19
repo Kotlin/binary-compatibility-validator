@@ -661,8 +661,10 @@ private val Project.klibDumpFileName: String
 
 private fun Project.prepareKlibValidationClasspath(): NamedDomainObjectProvider<Configuration> {
     val compilerVersion = project.objects.property(String::class.java).convention("2.0.0")
-    project.withKotlinPluginVersion {
-        compilerVersion.set(it)
+    project.withKotlinPluginVersion { version ->
+        if (version != null) {
+            compilerVersion.set(version)
+        }
     }
 
     val dependencyConfiguration =
@@ -688,9 +690,9 @@ private fun Project.prepareKlibValidationClasspath(): NamedDomainObjectProvider<
 
 private fun Project.prepareJvmValidationClasspath(): NamedDomainObjectProvider<Configuration> {
     val metadataDependencyVersion = project.objects.property(String::class.java).convention("2.0.0")
-    project.withKotlinPluginVersion {
-        if (!it.startsWith("1.")) {
-            metadataDependencyVersion.set(it)
+    project.withKotlinPluginVersion { version ->
+        if (version != null && !version.startsWith("1.")) {
+            metadataDependencyVersion.set(version)
         }
     }
 
@@ -718,17 +720,8 @@ private fun Project.prepareJvmValidationClasspath(): NamedDomainObjectProvider<C
     }
 }
 
-private fun Project.withKotlinPluginVersion(block: (String) -> Unit) {
+private fun Project.withKotlinPluginVersion(block: (String?) -> Unit) {
     // execute block if any of a Kotlin plugin applied
-    plugins.withId("kotlin") {
-        block(readVersion())
-    }
-    plugins.withId("kotlin-multiplatform") {
-        block(readVersion())
-    }
-    plugins.withId("kotlin-android") {
-        block(readVersion())
-    }
     plugins.withId("org.jetbrains.kotlin.jvm") {
         block(readVersion())
     }
@@ -740,12 +733,15 @@ private fun Project.withKotlinPluginVersion(block: (String) -> Unit) {
     }
 }
 
-
-private fun Project.readVersion(): String {
+/**
+ * Explicitly reading the version from the resources because the BCV and the Kotlin plugins may be located in different class loaders,
+ * and we cannot invoke functions from KGP directly.
+ */
+private fun Project.readVersion(): String? {
     val extension = extensions.findByName("kotlin")
     if (extension == null) {
         logger.warn("Binary compatibility plugin could not find Kotlin extension")
-        return "2.0.0"
+        return null
     }
 
     val inputStream =
@@ -753,7 +749,7 @@ private fun Project.readVersion(): String {
 
     if (inputStream == null) {
         logger.warn("Binary compatibility plugin could not find resource 'project.properties'")
-        return "2.0.0"
+        return null
     }
 
     val properties = Properties()
@@ -763,13 +759,13 @@ private fun Project.readVersion(): String {
         }
     } catch (e: Exception) {
         logger.warn("Binary compatibility plugin could not read resource 'project.properties'")
-        return "2.0.0"
+        return null
     }
 
     val version = properties.getProperty("project.version")
     if (version == null) {
         logger.warn("Binary compatibility plugin could not find property 'project.version' in resource 'project.properties'")
-        return "2.0.0"
+        return null
     }
 
     return version
