@@ -11,6 +11,7 @@ import org.gradle.api.artifacts.Configuration
 import org.gradle.api.plugins.*
 import org.gradle.api.provider.*
 import org.gradle.api.tasks.*
+import org.gradle.util.GradleVersion
 import org.jetbrains.kotlin.gradle.dsl.*
 import org.jetbrains.kotlin.gradle.plugin.*
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
@@ -20,10 +21,17 @@ import org.jetbrains.kotlin.library.abi.LibraryAbiReader
 import java.io.*
 import java.util.*
 
+private const val MIN_GRADLE_VERSION = "8.2"
+
 @OptIn(ExperimentalBCVApi::class, ExperimentalLibraryAbiReader::class)
 public class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
 
     override fun apply(target: Project): Unit = with(target) {
+        check(GradleVersion.current() > GradleVersion.version(MIN_GRADLE_VERSION)) {
+            "Binary Compatibility Validator plugin requires Gradle version $MIN_GRADLE_VERSION or higher, " +
+                    "the current version is ${GradleVersion.current()}."
+        }
+
         val extension = extensions.create("apiValidation", ApiValidationExtension::class.java)
         validateExtension(extension)
         allprojects {
