@@ -16,7 +16,6 @@ import org.jetbrains.kotlin.gradle.plugin.*
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.kotlin.konan.target.HostManager
 import org.jetbrains.kotlin.library.abi.ExperimentalLibraryAbiReader
-import org.jetbrains.kotlin.library.abi.LibraryAbiReader
 import java.io.*
 import java.util.*
 
@@ -648,18 +647,32 @@ private val Project.jvmDumpFileName: String
 private val Project.klibDumpFileName: String
     get() = "$name.klib.api"
 
+private fun Project.isGradle8Dot2OrHigher(): Boolean {
+    val parts = gradle.gradleVersion.split('.')
+    if (parts.size < 2) return false
+    val major = parts[0].toIntOrNull() ?: return false
+    val minor = parts[1].toIntOrNull() ?: return false
+    if (major < 8) return false
+    if (major == 8 && minor < 2) return false
+    return true
+}
+
 private fun Project.prepareKlibValidationClasspath(): NamedDomainObjectProvider<Configuration> {
     val compilerVersion = project.objects.property(String::class.java).convention("2.0.0")
     project.withKotlinPluginVersion { version ->
         compilerVersion.set(version)
     }
 
+    val gradle8Dot2OrHigher = isGradle8Dot2OrHigher()
     val dependencyConfiguration =
         project.configurations.create("bcv-rt-klib-cp") {
             it.description = "Runtime classpath for running binary-compatibility-validator."
             it.isCanBeResolved = false
             it.isCanBeConsumed = false
-            it.isCanBeDeclared = true
+
+            if (gradle8Dot2OrHigher) {
+                it.isCanBeDeclared = true
+            }
             it.isVisible = false
         }
 
@@ -669,7 +682,9 @@ private fun Project.prepareKlibValidationClasspath(): NamedDomainObjectProvider<
         it.description = "Resolve the runtime classpath for running binary-compatibility-validator."
         it.isCanBeResolved = true
         it.isCanBeConsumed = false
-        it.isCanBeDeclared = false
+        if (gradle8Dot2OrHigher) {
+            it.isCanBeDeclared = false
+        }
         it.isVisible = false
         it.extendsFrom(dependencyConfiguration)
     }
@@ -684,12 +699,15 @@ private fun Project.prepareJvmValidationClasspath(): NamedDomainObjectProvider<C
     }
 
 
+    val gradle8Dot2OrHigher = isGradle8Dot2OrHigher()
     val dependencyConfiguration =
         project.configurations.create("bcv-rt-jvm-cp") {
             it.description = "Runtime classpath for running binary-compatibility-validator."
             it.isCanBeResolved = false
             it.isCanBeConsumed = false
-            it.isCanBeDeclared = true
+            if (gradle8Dot2OrHigher) {
+                it.isCanBeDeclared = true
+            }
             it.isVisible = false
         }
 
@@ -701,7 +719,9 @@ private fun Project.prepareJvmValidationClasspath(): NamedDomainObjectProvider<C
         it.description = "Resolve the runtime classpath for running binary-compatibility-validator."
         it.isCanBeResolved = true
         it.isCanBeConsumed = false
-        it.isCanBeDeclared = false
+        if (gradle8Dot2OrHigher) {
+            it.isCanBeDeclared = false
+        }
         it.isVisible = false
         it.extendsFrom(dependencyConfiguration)
     }
