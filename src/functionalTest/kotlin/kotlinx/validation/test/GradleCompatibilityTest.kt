@@ -7,34 +7,12 @@ package kotlinx.validation.test
 
 import kotlinx.validation.api.*
 import org.assertj.core.api.Assertions
+import org.gradle.testkit.runner.GradleRunner
+import org.junit.Assume
 import org.junit.Test
 import kotlin.test.assertTrue
 
 class GradleCompatibilityTest : BaseKotlinGradleTest() {
-
-    private fun checkDumpWithGradle(gradleVersion: String) {
-        val runner = test(gradleVersion = gradleVersion, injectPluginClasspath = false) {
-            buildGradleKts {
-                resolve("/examples/gradle/base/withPlugin.gradle.kts")
-            }
-            kotlin("AnotherBuildConfig.kt") {
-                resolve("/examples/classes/AnotherBuildConfig.kt")
-            }
-
-            runner {
-                arguments.add(":apiDump")
-            }
-        }
-
-        runner.build().apply {
-            assertTaskSuccess(":apiDump")
-
-            assertTrue(rootProjectApiDump.exists(), "api dump file should exist")
-
-            val expected = readFileList("/examples/classes/AnotherBuildConfig.dump")
-            Assertions.assertThat(rootProjectApiDump.readText()).isEqualToIgnoringNewLines(expected)
-        }
-    }
 
     @Test
     fun test8Dot0() {
@@ -60,6 +38,42 @@ class GradleCompatibilityTest : BaseKotlinGradleTest() {
                 arguments.add(":apiDump")
             }
         }
+
+        skipInDebug(runner)
+
+        runner.build().apply {
+            assertTaskSuccess(":apiDump")
+
+            assertTrue(rootProjectApiDump.exists(), "api dump file should exist")
+
+            val expected = readFileList("/examples/classes/AnotherBuildConfig.dump")
+            Assertions.assertThat(rootProjectApiDump.readText()).isEqualToIgnoringNewLines(expected)
+        }
+    }
+
+    private fun skipInDebug(runner: GradleRunner) {
+        Assume.assumeFalse(
+            "The test requires a separate Gradle distributive " +
+                    "so it could not be executed with debug turned on.",
+            runner.isDebug
+        )
+    }
+
+    private fun checkDumpWithGradle(gradleVersion: String) {
+        val runner = test(gradleVersion = gradleVersion, injectPluginClasspath = false) {
+            buildGradleKts {
+                resolve("/examples/gradle/base/withPlugin.gradle.kts")
+            }
+            kotlin("AnotherBuildConfig.kt") {
+                resolve("/examples/classes/AnotherBuildConfig.kt")
+            }
+
+            runner {
+                arguments.add(":apiDump")
+            }
+        }
+
+        skipInDebug(runner)
 
         runner.build().apply {
             assertTaskSuccess(":apiDump")
