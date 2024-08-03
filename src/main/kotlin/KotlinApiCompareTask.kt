@@ -23,7 +23,7 @@ public open class KotlinApiCompareTask : DefaultTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     public val generatedApiFile: RegularFileProperty = project.objects.fileProperty()
 
-    private val projectName = project.name
+    private val projectName = project.path
 
     private val rootDir = project.rootDir
 

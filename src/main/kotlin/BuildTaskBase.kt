@@ -49,7 +49,7 @@ public abstract class BuildTaskBase : WorkerAwareTaskBase() {
     public val publicClasses: SetProperty<String> = stringSetProperty { publicClasses }
 
     @get:Internal
-    internal val projectName = project.name
+    internal val projectName = project.path
 
     internal fun fillCommonParams(params: BuildParametersBase) {
         params.ignoredPackages.set(ignoredPackages)
