@@ -207,9 +207,9 @@ and any differences between these two files are reported as errors.
 
 Generated ABI dumps include a library name,
 so it's [recommended](https://docs.gradle.org/current/userguide/multi_project_builds.html#sec:naming_recommendations) 
-to set Gradle's `rootProject.name` for you library. 
-Without root project's name being set, Gradle will infer it from project's directory name and that may lead to unstable
-validation behavior due to mismatching names.
+to set Gradle's `rootProject.name` for your library. 
+Without declaring the root project's name, Gradle defaults to using the project's directory name, which can lead to 
+unstable validation behavior due to potential mismatches in naming.
 
 Currently, all options described in [Optional parameters](#optional-parameters) section are supported for klibs too.
 The only caveat here is that all class names should be specified in the JVM-format,
