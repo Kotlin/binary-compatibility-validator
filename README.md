@@ -26,7 +26,9 @@ The tool allows dumping binary API of a JVM part of a Kotlin library that is pub
 
 ## Requirements
 
-Binary compatibility validator plugin requires Gradle `6.0` or newer. 
+Binary compatibility validator plugin requires Gradle `6.1.1` or newer.
+
+Kotlin version `1.6.20` or newer.
 
 ## Setup
 
@@ -35,7 +37,7 @@ Binary compatibility validator is a Gradle plugin that can be added to your buil
 - in `build.gradle.kts`
 ```kotlin
 plugins {
-    id("org.jetbrains.kotlinx.binary-compatibility-validator") version "0.15.1"
+    id("org.jetbrains.kotlinx.binary-compatibility-validator") version "0.16.3"
 }
 ```
 
@@ -43,7 +45,7 @@ plugins {
 
 ```groovy
 plugins {
-    id 'org.jetbrains.kotlinx.binary-compatibility-validator' version '0.15.1'
+    id 'org.jetbrains.kotlinx.binary-compatibility-validator' version '0.16.3'
 }
 ```
 
