@@ -723,6 +723,25 @@ internal class KlibVerificationTests : BaseKotlinGradleTest() {
     }
 
     @Test
+    fun `apiDump inference should not fail for empty project`() {
+        val runner = test {
+            baseProjectSetting()
+            addToSrcSet("/examples/classes/AnotherBuildConfig.kt", sourceSet = "commonTest")
+            runner {
+                arguments.add("-P$BANNED_TARGETS_PROPERTY_NAME=linuxArm64")
+                arguments.add(":apiDump")
+            }
+        }
+
+        runner.build().apply {
+            assertTaskSuccess(":klibApiDump")
+        }
+        val apiDumpFile = rootProjectAbiDump("testproject")
+        assertTrue(apiDumpFile.exists())
+        assertTrue(apiDumpFile.readText().isEmpty())
+    }
+
+    @Test
     fun `apiDump should dump empty file if the project does not contain sources anymore`() {
         val runner = test {
             baseProjectSetting()
