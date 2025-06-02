@@ -4,6 +4,18 @@
 [![License](https://img.shields.io/github/license/Kotlin/binary-compatibility-validator)](LICENSE.TXT)
 [![KDoc link](https://img.shields.io/badge/API_reference-KDoc-blue)](https://kotlin.github.io/binary-compatibility-validator/)
 
+# Support for this plugin has been discontinued
+The development of a separate binary compatibility validator Gradle plugin has been discontinued, 
+and all its functionality will be moved to Kotlin Gradle Plugin starting from the `2.2.0` release.
+
+As part of the migration, the code of the current plugin has been migrated to [the Kotlin repository](https://github.com/JetBrains/kotlin/tree/master/libraries/tools/abi-validation), 
+as well as issues migrated to [the Kotlin project in YouTrack](https://youtrack.jetbrains.com/issues/KT?q=subsystems:%20%7BTools.%20BCV%7D,%20%7BTools.%20Gradle.%20BCV%7D).
+
+This plugin is frozen from changes, no new features or minor bugfixes will be added to it.
+
+The functionality of working with the ABI in Kotlin Gradle Plugin is in an experimental state now, 
+so it is recommended to continue using this plugin in production projects until KGP API stabilization.
+
 # Binary compatibility validator
 
 The tool allows dumping binary API of a JVM part of a Kotlin library that is public in the sense of Kotlin visibilities and ensures that the public binary API wasn't changed in a way that makes this change binary incompatible.
