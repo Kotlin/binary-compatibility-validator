@@ -6,7 +6,7 @@
 
 # Support for this plugin has been discontinued
 The development of a separate binary compatibility validator Gradle plugin has been discontinued, 
-and all its functionality will be moved to Kotlin Gradle Plugin.
+and all its functionality will be moved to Kotlin Gradle Plugin starting from the `2.2.0` release.
 
 As part of the migration, the code of the current plugin has been migrated to [the Kotlin repository](https://github.com/JetBrains/kotlin/tree/master/libraries/tools/abi-validation), 
 as well as issues migrated to [the Kotlin project in YouTrack](https://youtrack.jetbrains.com/issues/KT?q=subsystems:%20%7BTools.%20BCV%7D,%20%7BTools.%20Gradle.%20BCV%7D).
