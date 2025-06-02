@@ -16,6 +16,8 @@ This plugin is frozen from changes, no new features or minor bugfixes will be ad
 The functionality of working with the ABI in Kotlin Gradle Plugin is in an experimental state now, 
 so it is recommended to continue using this plugin in production projects until KGP API stabilization.
 
+Experimental ABI validation features have been added in Kotlin since version `2.2.0`.
+
 # Binary compatibility validator
 
 The tool allows dumping binary API of a JVM part of a Kotlin library that is public in the sense of Kotlin visibilities and ensures that the public binary API wasn't changed in a way that makes this change binary incompatible.
