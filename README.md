@@ -14,7 +14,7 @@ as well as issues migrated to [the Kotlin project in YouTrack](https://youtrack.
 This plugin is frozen from changes, no new features or bugfixes will be added to it.
 
 The functionality of working with the ABI in Kotlin Gradle Plugin is in an experimental state now, 
-so it is recommended to continue using this plugin in production projects until ABI in KGP stabilization.
+so it is recommended to continue using this plugin in production projects until KGP API stabilization.
 
 # Binary compatibility validator
 
