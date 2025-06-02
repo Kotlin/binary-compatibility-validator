@@ -11,7 +11,7 @@ and all its functionality will be moved to Kotlin Gradle Plugin.
 As part of the migration, the code of the current plugin has been migrated to [the Kotlin repository](https://github.com/JetBrains/kotlin/tree/master/libraries/tools/abi-validation), 
 as well as issues migrated to [the Kotlin project in YouTrack](https://youtrack.jetbrains.com/issues/KT?q=subsystems:%20%7BTools.%20BCV%7D,%20%7BTools.%20Gradle.%20BCV%7D).
 
-This plugin is frozen from changes, no new features or bugfixes will be added to it.
+This plugin is frozen from changes, no new features or minor bugfixes will be added to it.
 
 The functionality of working with the ABI in Kotlin Gradle Plugin is in an experimental state now, 
 so it is recommended to continue using this plugin in production projects until KGP API stabilization.
