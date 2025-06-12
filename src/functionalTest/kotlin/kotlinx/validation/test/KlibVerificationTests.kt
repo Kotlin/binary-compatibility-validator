@@ -850,4 +850,25 @@ internal class KlibVerificationTests : BaseKotlinGradleTest() {
                 .contains("+// Targets: [linuxArm64]")
         }
     }
+
+    @Test
+    fun `check cross compilation support`() {
+        Assume.assumeFalse(HostManager().isEnabled(KonanTarget.MACOS_ARM64))
+
+        val runner = test {
+            settingsGradleKts {
+                resolve("/examples/gradle/settings/settings-name-testproject.gradle.kts")
+            }
+            buildGradleKts {
+                resolve("/examples/gradle/base/withNativePluginAndCrossCompilation.gradle.kts")
+            }
+            additionalBuildConfig("/examples/gradle/configuration/appleTargets/targets.gradle.kts")
+            addToSrcSet("/examples/classes/TopLevelDeclarations.kt")
+            runner {
+                arguments.addAll(listOf(":apiDump", "-Pkotlin.native.enableKlibsCrossCompilation=true"))
+            }
+        }
+
+        checkKlibDump(runner.build(), "/examples/classes/TopLevelDeclarations.klib.all.dump")
+    }
 }
