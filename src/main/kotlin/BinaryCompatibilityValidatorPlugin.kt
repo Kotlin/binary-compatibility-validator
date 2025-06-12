@@ -17,7 +17,6 @@ import org.jetbrains.kotlin.gradle.plugin.*
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.kotlin.konan.target.HostManager
 import org.jetbrains.kotlin.library.abi.ExperimentalLibraryAbiReader
-import org.jetbrains.kotlin.library.abi.LibraryAbiReader
 import java.io.*
 import java.util.*
 
@@ -320,6 +319,7 @@ private inline fun <reified T : Task> Project.task(
 private const val BANNED_TARGETS_PROPERTY_NAME = "binary.compatibility.validator.klib.targets.disabled.for.testing"
 private const val KLIB_DUMPS_DIRECTORY = "klib"
 private const val KLIB_INFERRED_DUMPS_DIRECTORY = "klib-all"
+private const val ENABLE_CROSS_COMPILATION_PROPERTY_NAME = "kotlin.native.enableKlibsCrossCompilation"
 
 /**
  * KLib ABI dump validation and dump extraction consists of multiple steps that extracts and transforms dumps for klibs.
@@ -544,10 +544,14 @@ private class KlibValidationPipelineBuilder(
 
     private fun Project.targetIsSupported(target: KotlinTarget): Boolean {
         if (bannedTargets().contains(target.targetName)) return false
-        return when (target) {
-            is KotlinNativeTarget -> HostManager().isEnabled(target.konanTarget)
-            else -> true
+        if (target !is KotlinNativeTarget || HostManager().isEnabled(target.konanTarget)) {
+            return true
         }
+
+        // Starting from Kotlin 2.1.0, cross compilation could be enabled via property
+        if (!isKgpVersionAtLeast2_1(getKotlinPluginVersion())) return false
+
+        return (project.findProperty(ENABLE_CROSS_COMPILATION_PROPERTY_NAME) as String?).toBoolean()
     }
 
     // Compilable targets not supported by the host compiler
@@ -770,3 +774,11 @@ private var Configuration.isCanBeDeclaredCompat: Boolean
             isCanBeDeclared = value
         }
     }
+
+private fun isKgpVersionAtLeast2_1(kgpVersion: String): Boolean {
+    val parts = kgpVersion.split('.')
+    if (parts.size < 2) return false
+    val major = parts[0].toIntOrNull() ?: return false
+    val minor = parts[1].toIntOrNull() ?: return false
+    return major > 2 || (major == 2 && minor >= 1)
+}
