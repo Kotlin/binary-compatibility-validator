@@ -551,7 +551,7 @@ private class KlibValidationPipelineBuilder(
         // Starting from Kotlin 2.1.0, cross compilation could be enabled via property
         if (!isKgpVersionAtLeast2_1(getKotlinPluginVersion())) return false
 
-        return (project.properties[ENABLE_CROSS_COMPILATION_PROPERTY_NAME] as String?).toBoolean()
+        return (project.findProperty(ENABLE_CROSS_COMPILATION_PROPERTY_NAME) as String?).toBoolean()
     }
 
     // Compilable targets not supported by the host compiler
