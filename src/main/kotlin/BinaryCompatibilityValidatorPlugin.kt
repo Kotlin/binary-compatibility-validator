@@ -17,7 +17,6 @@ import org.jetbrains.kotlin.gradle.plugin.*
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.kotlin.konan.target.HostManager
 import org.jetbrains.kotlin.library.abi.ExperimentalLibraryAbiReader
-import org.jetbrains.kotlin.library.abi.LibraryAbiReader
 import java.io.*
 import java.util.*
 
@@ -133,9 +132,9 @@ public class BinaryCompatibilityValidatorPlugin : Plugin<Project> {
         val androidExtension = project.extensions
             .getByName("kotlin") as KotlinAndroidProjectExtension
         androidExtension.target.compilations.matching {
-            it.compilationName == "release"
+            it.compilationName.contains("release", ignoreCase = true) && !it.compilationName.contains("test", true)
         }.all {
-            project.configureKotlinCompilation(it, extension, jvmRuntimeClasspath, useOutput = true)
+            project.configureKotlinCompilation(it, extension, jvmRuntimeClasspath, useOutput = true, dumpFileNameExtension = it.compilationName.replace("release", "", true))
         }
     }
 
@@ -207,13 +206,14 @@ private fun Project.configureKotlinCompilation(
     commonApiDump: TaskProvider<Task>? = null,
     commonApiCheck: TaskProvider<Task>? = null,
     useOutput: Boolean = false,
+    dumpFileNameExtension: String = "",
 ) {
     val projectName = project.name
-    val dumpFileName = project.jvmDumpFileName
+    val dumpFileName = getDumpFileName(dumpFileNameExtension)
     val apiDirProvider = targetConfig.apiDir
     val apiBuildDir = apiDirProvider.flatMap { f -> layout.buildDirectory.asFile.map { it.resolve(f) } }
 
-    val apiBuild = task<KotlinApiBuildTask>(targetConfig.apiTaskName("Build")) {
+    val apiBuild = task<KotlinApiBuildTask>(targetConfig.apiTaskName("Build${dumpFileNameExtension.capitalize()}")) {
         isEnabled = apiCheckEnabled(projectName, extension)
         // 'group' is not specified deliberately, so it will be hidden from ./gradlew tasks
         description =
@@ -228,7 +228,14 @@ private fun Project.configureKotlinCompilation(
         outputApiFile.fileProvider(apiBuildDir.map { it.resolve(dumpFileName) })
         runtimeClasspath.from(jvmRuntimeClasspath)
     }
-    configureCheckTasks(apiBuild, extension, targetConfig, commonApiDump, commonApiCheck)
+    configureCheckTasks(apiBuild, extension, targetConfig, commonApiDump, commonApiCheck, dumpFileNameExtension)
+}
+
+private fun Project.getDumpFileName(dumpFileNameExtension: String): String {
+    val jvmDumpFileName = project.jvmDumpFileName
+    val capitalizedIfNeededJvmDumpFileName =
+        if (dumpFileNameExtension.isEmpty()) jvmDumpFileName else jvmDumpFileName.capitalize()
+    return "$dumpFileNameExtension$capitalizedIfNeededJvmDumpFileName"
 }
 
 internal val Project.sourceSets: SourceSetContainer
@@ -280,6 +287,7 @@ private fun Project.configureCheckTasks(
     targetConfig: TargetConfig,
     commonApiDump: TaskProvider<Task>? = null,
     commonApiCheck: TaskProvider<Task>? = null,
+    dumpFileNameExtension: String = "",
 ) {
     val projectName = project.name
     val apiCheckDir = targetConfig.apiDir.map {
@@ -287,16 +295,16 @@ private fun Project.configureCheckTasks(
             logger.debug("Configuring api for ${targetConfig.targetName ?: "jvm"} to $r")
         }
     }
-    val apiCheck = task<KotlinApiCompareTask>(targetConfig.apiTaskName("Check")) {
+    val dumpFileName = getDumpFileName(dumpFileNameExtension)
+    val apiCheck = task<KotlinApiCompareTask>(targetConfig.apiTaskName("Check${dumpFileNameExtension.capitalize()}")) {
         isEnabled = apiCheckEnabled(projectName, extension) && apiBuild.map { it.enabled }.getOrElse(true)
         group = "verification"
         description = "Checks signatures of public API against the golden value in API folder for $projectName"
-        projectApiFile.fileProvider(apiCheckDir.map { it.resolve(jvmDumpFileName) })
+        projectApiFile.fileProvider(apiCheckDir.map { it.resolve(dumpFileName) })
         generatedApiFile.set(apiBuild.flatMap { it.outputApiFile })
     }
 
-    val dumpFileName = project.jvmDumpFileName
-    val apiDump = task<SyncFile>(targetConfig.apiTaskName("Dump")) {
+    val apiDump = task<SyncFile>(targetConfig.apiTaskName("Dump${dumpFileNameExtension.capitalize()}")) {
         isEnabled = apiCheckEnabled(projectName, extension) && apiBuild.map { it.enabled }.getOrElse(true)
         group = "other"
         description = "Syncs the API file for $projectName"
