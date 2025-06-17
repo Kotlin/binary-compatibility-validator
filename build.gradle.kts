@@ -1,4 +1,6 @@
 import kotlinx.kover.gradle.plugin.dsl.MetricType
+import kotlinx.validation.build.getSensitiveProperty
+import kotlinx.validation.build.intermediateSpaceRepositoryPublishing
 import kotlinx.validation.build.mavenCentralMetadata
 import kotlinx.validation.build.mavenRepositoryPublishing
 import kotlinx.validation.build.signPublicationIfKeyPresent
@@ -126,7 +128,11 @@ publishing {
             from(components["java"])
         }
 
-        mavenRepositoryPublishing(project)
+        if (project.getSensitiveProperty("libs.publication_repository") == "central") {
+            intermediateSpaceRepositoryPublishing(project)
+        } else {
+            mavenRepositoryPublishing(project)
+        }
         mavenCentralMetadata()
     }
 

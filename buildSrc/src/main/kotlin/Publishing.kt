@@ -23,6 +23,18 @@ fun PublishingExtension.mavenRepositoryPublishing(project: Project) {
     }
 }
 
+fun PublishingExtension.intermediateSpaceRepositoryPublishing(project: Project) {
+    repositories {
+        maven {
+            url = URI(project.getSensitiveProperty("libs.repo.url")!!)
+            credentials {
+                username = project.getSensitiveProperty("libs.repo.user")
+                password = project.getSensitiveProperty("libs.repo.password")
+            }
+        }
+    }
+}
+
 fun Project.signPublicationIfKeyPresent(publication: MavenPublication) {
     val keyId = project.getSensitiveProperty("libs.sign.key.id")
     val signingKey = project.getSensitiveProperty("libs.sign.key.private")
