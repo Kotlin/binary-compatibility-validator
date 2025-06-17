@@ -11,13 +11,15 @@ import org.gradle.api.publish.maven.*
 import org.gradle.plugins.signing.*
 import java.net.*
 
-fun PublishingExtension.mavenRepositoryPublishing(project: Project) {
+// Artifacts are published to an intermediate repo (libs.repo.url) first,
+// and then deployed to the central portal.
+fun PublishingExtension.publishingRepository(project: Project) {
     repositories {
         maven {
-            url = URI("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
+            url = URI(project.getSensitiveProperty("libs.repo.url") ?: error("libs.repo.url is not set"))
             credentials {
-                username = project.getSensitiveProperty("libs.sonatype.user")
-                password = project.getSensitiveProperty("libs.sonatype.password")
+                username = project.getSensitiveProperty("libs.repo.user")
+                password = project.getSensitiveProperty("libs.repo.password")
             }
         }
     }

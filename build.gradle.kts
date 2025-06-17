@@ -1,6 +1,6 @@
+import kotlinx.validation.build.publishingRepository
 import kotlinx.kover.gradle.plugin.dsl.CoverageUnit
 import kotlinx.validation.build.mavenCentralMetadata
-import kotlinx.validation.build.mavenRepositoryPublishing
 import kotlinx.validation.build.signPublicationIfKeyPresent
 import org.gradle.api.attributes.TestSuiteType.FUNCTIONAL_TEST
 import org.jetbrains.dokka.gradle.DokkaTask
@@ -125,8 +125,8 @@ publishing {
         create<MavenPublication>("maven") {
             from(components["java"])
         }
+        publishingRepository(project)
 
-        mavenRepositoryPublishing(project)
         mavenCentralMetadata()
     }
 
