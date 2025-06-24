@@ -45,7 +45,7 @@
                     </a>
             </div>
             <div class="library-version">
-0.16.0            </div>
+0.18.0            </div>
         </div>
         <div class="filter-section" id="filter-section">
                 <button class="platform-tag platform-selector jvm-like" data-active="" data-filter=":dokkaHtml/main">jvm</button>
@@ -112,7 +112,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-build-task-base/index.html">BuildTaskBase</a> : <span data-unresolved-link="org.gradle.api/DefaultTask///PointingToDeclaration/">DefaultTask</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-build-task-base/index.html">BuildTaskBase</a> : <a href="-worker-aware-task-base/index.html">WorkerAwareTaskBase</a></div></div></div>
                 </div>
               </div>
             </div>
@@ -232,7 +232,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":dokkaHtml/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="org.gradle.api.tasks/CacheableTask///PointingToDeclaration/"><span class="token annotation builtin">CacheableTask</span></span></div></div><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-kotlin-klib-extract-abi-task/index.html">KotlinKlibExtractAbiTask</a> : <span data-unresolved-link="org.gradle.api/DefaultTask///PointingToDeclaration/">DefaultTask</span></div><div class="brief "><p class="paragraph">Extracts dump for targets supported by the host compiler from a merged API dump stored in a project.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":dokkaHtml/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="org.gradle.api.tasks/CacheableTask///PointingToDeclaration/"><span class="token annotation builtin">CacheableTask</span></span></div></div><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-kotlin-klib-extract-abi-task/index.html">KotlinKlibExtractAbiTask</a> : <a href="-worker-aware-task-base/index.html">WorkerAwareTaskBase</a></div><div class="brief "><p class="paragraph">Extracts dump for targets supported by the host compiler from a merged API dump stored in a project.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -247,7 +247,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":dokkaHtml/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="org.gradle.api.tasks/CacheableTask///PointingToDeclaration/"><span class="token annotation builtin">CacheableTask</span></span></div></div><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-kotlin-klib-infer-abi-task/index.html">KotlinKlibInferAbiTask</a> : <span data-unresolved-link="org.gradle.api/DefaultTask///PointingToDeclaration/">DefaultTask</span></div><div class="brief "><p class="paragraph">Task infers a possible KLib ABI dump for an unsupported target. To infer a dump, tasks walk up the default targets hierarchy tree starting from the unsupported target until it finds a node corresponding to a group of targets having at least one supported target. After that, dumps generated for such supported targets are merged and declarations that are common to all of them are considered as a common ABI that most likely will be shared by the unsupported target. At the next step, if a project contains an old dump, declarations specific to the unsupported target are copied from it and merged into the common ABI extracted previously. The resulting dump is then used as an inferred dump for the unsupported target.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":dokkaHtml/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="org.gradle.api.tasks/CacheableTask///PointingToDeclaration/"><span class="token annotation builtin">CacheableTask</span></span></div></div><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-kotlin-klib-infer-abi-task/index.html">KotlinKlibInferAbiTask</a> : <a href="-worker-aware-task-base/index.html">WorkerAwareTaskBase</a></div><div class="brief "><p class="paragraph">Task infers a possible KLib ABI dump for an unsupported target. To infer a dump, tasks walk up the default targets hierarchy tree starting from the unsupported target until it finds a node corresponding to a group of targets having at least one supported target. After that, dumps generated for such supported targets are merged and declarations that are common to all of them are considered as a common ABI that most likely will be shared by the unsupported target. At the next step, if a project contains an old dump, declarations specific to the unsupported target are copied from it and merged into the common ABI extracted previously. The resulting dump is then used as an inferred dump for the unsupported target.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -262,7 +262,22 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":dokkaHtml/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="org.gradle.api.tasks/CacheableTask///PointingToDeclaration/"><span class="token annotation builtin">CacheableTask</span></span></div></div><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-kotlin-klib-merge-abi-task/index.html">KotlinKlibMergeAbiTask</a> : <span data-unresolved-link="org.gradle.api/DefaultTask///PointingToDeclaration/">DefaultTask</span></div><div class="brief "><p class="paragraph">Merges multiple individual KLib ABI dumps into a single merged dump.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":dokkaHtml/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="org.gradle.api.tasks/CacheableTask///PointingToDeclaration/"><span class="token annotation builtin">CacheableTask</span></span></div></div><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-kotlin-klib-merge-abi-task/index.html">KotlinKlibMergeAbiTask</a> : <a href="-worker-aware-task-base/index.html">WorkerAwareTaskBase</a></div><div class="brief "><p class="paragraph">Merges multiple individual KLib ABI dumps into a single merged dump.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1358473222%2FClasslikes%2F769193423" anchor-label="WorkerAwareTaskBase" id="-1358473222%2FClasslikes%2F769193423" data-filterable-set=":dokkaHtml/main"></a>
+          <div class="table-row" data-filterable-current=":dokkaHtml/main" data-filterable-set=":dokkaHtml/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-worker-aware-task-base/index.html"><span>Worker</span><wbr></wbr><span>Aware</span><wbr></wbr><span>Task</span><wbr></wbr><span><span>Base</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1358473222%2FClasslikes%2F769193423"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":dokkaHtml/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-worker-aware-task-base/index.html">WorkerAwareTaskBase</a> : <span data-unresolved-link="org.gradle.api/DefaultTask///PointingToDeclaration/">DefaultTask</span></div></div></div>
                 </div>
               </div>
             </div>
@@ -292,7 +307,7 @@
   </div>
 </div>
       <div class="footer">
-        <span class="go-to-top-icon"><a href="#content" id="go-to-top-link"></a></span><span>© 2024 Copyright</span><span
+        <span class="go-to-top-icon"><a href="#content" id="go-to-top-link"></a></span><span>© 2025 Copyright</span><span
                 class="pull-right"><span>Generated by </span><a
                 href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span>
       </div>

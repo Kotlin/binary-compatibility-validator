@@ -115,12 +115,14 @@ $dokka.location:kotlinx.validation/KotlinKlibAbiBuildTask/signatureVersion/#/Poi
 $dokka.location:kotlinx.validation/KotlinKlibAbiBuildTask/target/#/PointingToDeclaration/binary-compatibility-validator/kotlinx.validation/-kotlin-klib-abi-build-task/target.html
 $dokka.location:kotlinx.validation/KotlinKlibExtractAbiTask///PointingToDeclaration/binary-compatibility-validator/kotlinx.validation/-kotlin-klib-extract-abi-task/index.html
 $dokka.location:kotlinx.validation/KotlinKlibExtractAbiTask/KotlinKlibExtractAbiTask/#/PointingToDeclaration/binary-compatibility-validator/kotlinx.validation/-kotlin-klib-extract-abi-task/-kotlin-klib-extract-abi-task.html
+$dokka.location:kotlinx.validation/KotlinKlibExtractAbiTask/executor/#/PointingToDeclaration/binary-compatibility-validator/kotlinx.validation/-kotlin-klib-extract-abi-task/executor.html
 $dokka.location:kotlinx.validation/KotlinKlibExtractAbiTask/inputAbiFile/#/PointingToDeclaration/binary-compatibility-validator/kotlinx.validation/-kotlin-klib-extract-abi-task/input-abi-file.html
 $dokka.location:kotlinx.validation/KotlinKlibExtractAbiTask/outputAbiFile/#/PointingToDeclaration/binary-compatibility-validator/kotlinx.validation/-kotlin-klib-extract-abi-task/output-abi-file.html
 $dokka.location:kotlinx.validation/KotlinKlibExtractAbiTask/strictValidation/#/PointingToDeclaration/binary-compatibility-validator/kotlinx.validation/-kotlin-klib-extract-abi-task/strict-validation.html
 $dokka.location:kotlinx.validation/KotlinKlibExtractAbiTask/targetsToRemove/#/PointingToDeclaration/binary-compatibility-validator/kotlinx.validation/-kotlin-klib-extract-abi-task/targets-to-remove.html
 $dokka.location:kotlinx.validation/KotlinKlibInferAbiTask///PointingToDeclaration/binary-compatibility-validator/kotlinx.validation/-kotlin-klib-infer-abi-task/index.html
 $dokka.location:kotlinx.validation/KotlinKlibInferAbiTask/KotlinKlibInferAbiTask/#/PointingToDeclaration/binary-compatibility-validator/kotlinx.validation/-kotlin-klib-infer-abi-task/-kotlin-klib-infer-abi-task.html
+$dokka.location:kotlinx.validation/KotlinKlibInferAbiTask/executor/#/PointingToDeclaration/binary-compatibility-validator/kotlinx.validation/-kotlin-klib-infer-abi-task/executor.html
 $dokka.location:kotlinx.validation/KotlinKlibInferAbiTask/inputDumps/#/PointingToDeclaration/binary-compatibility-validator/kotlinx.validation/-kotlin-klib-infer-abi-task/input-dumps.html
 $dokka.location:kotlinx.validation/KotlinKlibInferAbiTask/oldMergedKlibDump/#/PointingToDeclaration/binary-compatibility-validator/kotlinx.validation/-kotlin-klib-infer-abi-task/old-merged-klib-dump.html
 $dokka.location:kotlinx.validation/KotlinKlibInferAbiTask/outputAbiFile/#/PointingToDeclaration/binary-compatibility-validator/kotlinx.validation/-kotlin-klib-infer-abi-task/output-abi-file.html
@@ -128,7 +130,11 @@ $dokka.location:kotlinx.validation/KotlinKlibInferAbiTask/target/#/PointingToDec
 $dokka.location:kotlinx.validation/KotlinKlibMergeAbiTask///PointingToDeclaration/binary-compatibility-validator/kotlinx.validation/-kotlin-klib-merge-abi-task/index.html
 $dokka.location:kotlinx.validation/KotlinKlibMergeAbiTask/KotlinKlibMergeAbiTask/#/PointingToDeclaration/binary-compatibility-validator/kotlinx.validation/-kotlin-klib-merge-abi-task/-kotlin-klib-merge-abi-task.html
 $dokka.location:kotlinx.validation/KotlinKlibMergeAbiTask/dumps/#/PointingToDeclaration/binary-compatibility-validator/kotlinx.validation/-kotlin-klib-merge-abi-task/dumps.html
+$dokka.location:kotlinx.validation/KotlinKlibMergeAbiTask/executor/#/PointingToDeclaration/binary-compatibility-validator/kotlinx.validation/-kotlin-klib-merge-abi-task/executor.html
 $dokka.location:kotlinx.validation/KotlinKlibMergeAbiTask/mergedApiFile/#/PointingToDeclaration/binary-compatibility-validator/kotlinx.validation/-kotlin-klib-merge-abi-task/merged-api-file.html
+$dokka.location:kotlinx.validation/WorkerAwareTaskBase///PointingToDeclaration/binary-compatibility-validator/kotlinx.validation/-worker-aware-task-base/index.html
+$dokka.location:kotlinx.validation/WorkerAwareTaskBase/WorkerAwareTaskBase/#/PointingToDeclaration/binary-compatibility-validator/kotlinx.validation/-worker-aware-task-base/-worker-aware-task-base.html
+$dokka.location:kotlinx.validation/WorkerAwareTaskBase/runtimeClasspath/#/PointingToDeclaration/binary-compatibility-validator/kotlinx.validation/-worker-aware-task-base/runtime-classpath.html
 kotlinx.validation
 kotlinx.validation.api
 kotlinx.validation.api.klib
