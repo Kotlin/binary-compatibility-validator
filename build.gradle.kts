@@ -1,4 +1,4 @@
-import kotlinx.kover.gradle.plugin.dsl.MetricType
+import kotlinx.kover.gradle.plugin.dsl.CoverageUnit
 import kotlinx.validation.build.mavenCentralMetadata
 import kotlinx.validation.build.mavenRepositoryPublishing
 import kotlinx.validation.build.signPublicationIfKeyPresent
@@ -215,7 +215,7 @@ tasks.withType<Sign>().configureEach {
 }
 
 kover {
-    koverReport {
+    reports {
         filters {
             excludes {
                 packages("kotlinx.validation.test")
@@ -223,8 +223,8 @@ kover {
         }
         verify {
             rule {
-                minBound(80, MetricType.BRANCH)
-                minBound(90, MetricType.LINE)
+                minBound(80, CoverageUnit.BRANCH)
+                minBound(90, CoverageUnit.LINE)
             }
         }
     }
