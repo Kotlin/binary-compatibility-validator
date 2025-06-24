@@ -4,6 +4,20 @@
 [![License](https://img.shields.io/github/license/Kotlin/binary-compatibility-validator)](LICENSE.TXT)
 [![KDoc link](https://img.shields.io/badge/API_reference-KDoc-blue)](https://kotlin.github.io/binary-compatibility-validator/)
 
+# Support for this plugin has been discontinued
+
+> [!WARNING]
+> The development of a separate binary compatibility validator Gradle plugin has been discontinued, 
+> and all its functionality will be moved to Kotlin Gradle Plugin starting from the [`2.2.0` release](https://kotlinlang.org/docs/whatsnew22.html#binary-compatibility-validation-included-in-kotlin-gradle-plugin).
+> 
+> As part of the migration, the code of the current plugin has been migrated to [the Kotlin repository](https://github.com/JetBrains/kotlin/tree/master/libraries/tools/abi-validation), 
+> as well as issues migrated to [the Kotlin project in YouTrack](https://youtrack.jetbrains.com/issues/KT?q=subsystems:%20%7BTools.%20BCV%7D,%20%7BTools.%20Gradle.%20BCV%7D).
+> 
+> This plugin is frozen from changes, no new features or minor bugfixes will be added to it.
+> 
+> The functionality of working with the ABI in Kotlin Gradle Plugin is in an experimental state now, 
+> so it is recommended to continue using this plugin in production projects until KGP API stabilization.
+
 # Binary compatibility validator
 
 The tool allows dumping binary API of a JVM part of a Kotlin library that is public in the sense of Kotlin visibilities and ensures that the public binary API wasn't changed in a way that makes this change binary incompatible.
@@ -26,7 +40,9 @@ The tool allows dumping binary API of a JVM part of a Kotlin library that is pub
 
 ## Requirements
 
-Binary compatibility validator plugin requires Gradle `6.0` or newer. 
+Binary compatibility validator plugin requires Gradle `6.1.1` or newer.
+
+Kotlin version `1.6.20` or newer.
 
 ## Setup
 
@@ -35,7 +51,7 @@ Binary compatibility validator is a Gradle plugin that can be added to your buil
 - in `build.gradle.kts`
 ```kotlin
 plugins {
-    id("org.jetbrains.kotlinx.binary-compatibility-validator") version "0.16.0"
+    id("org.jetbrains.kotlinx.binary-compatibility-validator") version "0.18.0"
 }
 ```
 
@@ -43,7 +59,7 @@ plugins {
 
 ```groovy
 plugins {
-    id 'org.jetbrains.kotlinx.binary-compatibility-validator' version '0.16.0'
+    id 'org.jetbrains.kotlinx.binary-compatibility-validator' version '0.18.0'
 }
 ```
 
@@ -204,6 +220,12 @@ The dump file combines all dumps generated for individual targets with declarati
 annotated with corresponding target names.
 During the validation phase, that file is compared to the dump extracted from the latest version of the library, 
 and any differences between these two files are reported as errors.
+
+Generated ABI dumps include a library name,
+so it's [recommended](https://docs.gradle.org/current/userguide/multi_project_builds.html#sec:naming_recommendations) 
+to set Gradle's `rootProject.name` for your library. 
+Without declaring the root project's name, Gradle defaults to using the project's directory name, which can lead to 
+unstable validation behavior due to potential mismatches in naming.
 
 Currently, all options described in [Optional parameters](#optional-parameters) section are supported for klibs too.
 The only caveat here is that all class names should be specified in the JVM-format,

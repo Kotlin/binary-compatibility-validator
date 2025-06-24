@@ -1,4 +1,4 @@
-import kotlinx.kover.gradle.plugin.dsl.MetricType
+import kotlinx.kover.gradle.plugin.dsl.CoverageUnit
 import kotlinx.validation.build.mavenCentralMetadata
 import kotlinx.validation.build.mavenRepositoryPublishing
 import kotlinx.validation.build.signPublicationIfKeyPresent
@@ -64,10 +64,10 @@ val createClasspathManifest = tasks.register("createClasspathManifest") {
 
 dependencies {
     implementation(gradleApi())
-    implementation(libs.kotlinx.metadata)
+    compileOnly(libs.kotlinx.metadata)
     compileOnly(libs.kotlin.compiler.embeddable)
-    implementation(libs.ow2.asm)
-    implementation(libs.ow2.asmTree)
+    compileOnly(libs.ow2.asm)
+    compileOnly(libs.ow2.asmTree)
     implementation(libs.javaDiffUtils)
     compileOnly(libs.gradlePlugin.kotlin)
 
@@ -109,6 +109,7 @@ kotlin {
 tasks.compileTestKotlin {
     compilerOptions {
         languageVersion.set(KotlinVersion.KOTLIN_1_9)
+        freeCompilerArgs.add("-Xjvm-default=all-compatibility")
     }
 }
 
@@ -168,12 +169,17 @@ testing {
                 implementation(project())
                 implementation(libs.assertJ.core)
                 implementation(libs.kotlin.test)
-                implementation(libs.kotlin.compiler.embeddable)
             }
         }
 
         val test by getting(JvmTestSuite::class) {
             description = "Regular unit tests"
+            dependencies {
+                implementation(libs.kotlinx.metadata)
+                implementation(libs.kotlin.compiler.embeddable)
+                implementation(libs.ow2.asm)
+                implementation(libs.ow2.asmTree)
+            }
         }
 
         val functionalTest by creating(JvmTestSuite::class) {
@@ -183,6 +189,8 @@ testing {
             dependencies {
                 implementation(files(createClasspathManifest))
 
+                implementation(libs.kotlinx.metadata)
+                implementation(libs.kotlin.compiler.embeddable)
                 implementation(gradleApi())
                 implementation(gradleTestKit())
             }
@@ -207,7 +215,7 @@ tasks.withType<Sign>().configureEach {
 }
 
 kover {
-    koverReport {
+    reports {
         filters {
             excludes {
                 packages("kotlinx.validation.test")
@@ -215,8 +223,8 @@ kover {
         }
         verify {
             rule {
-                minBound(80, MetricType.BRANCH)
-                minBound(90, MetricType.LINE)
+                minBound(80, CoverageUnit.BRANCH)
+                minBound(90, CoverageUnit.LINE)
             }
         }
     }
