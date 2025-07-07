@@ -13,13 +13,16 @@ import java.net.*
 
 // Artifacts are published to an intermediate repo (libs.repo.url) first,
 // and then deployed to the central portal.
-fun PublishingExtension.publishingRepository(project: Project) {
-    repositories {
-        maven {
-            url = URI(project.getSensitiveProperty("libs.repo.url") ?: error("libs.repo.url is not set"))
-            credentials {
-                username = project.getSensitiveProperty("libs.repo.user")
-                password = project.getSensitiveProperty("libs.repo.password")
+fun PublishingExtension.addPublishingRepositoryIfPresent(project: Project) {
+    val repositoryUrl = project.getSensitiveProperty("libs.repo.url")
+    if (!repositoryUrl.isNullOrBlank()) {
+        repositories {
+            maven {
+                url = URI(repositoryUrl)
+                credentials {
+                    username = project.getSensitiveProperty("libs.repo.user")
+                    password = project.getSensitiveProperty("libs.repo.password")
+                }
             }
         }
     }

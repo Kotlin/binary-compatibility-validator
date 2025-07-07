@@ -1,4 +1,4 @@
-import kotlinx.validation.build.publishingRepository
+import kotlinx.validation.build.addPublishingRepositoryIfPresent
 import kotlinx.kover.gradle.plugin.dsl.CoverageUnit
 import kotlinx.validation.build.mavenCentralMetadata
 import kotlinx.validation.build.signPublicationIfKeyPresent
@@ -125,7 +125,7 @@ publishing {
         create<MavenPublication>("maven") {
             from(components["java"])
         }
-        publishingRepository(project)
+        addPublishingRepositoryIfPresent(project)
 
         mavenCentralMetadata()
     }
