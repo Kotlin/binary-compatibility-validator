@@ -852,7 +852,7 @@ internal class KlibVerificationTests : BaseKotlinGradleTest() {
     }
 
     @Test
-    fun `check cross compilation support`() {
+    fun `check cross compilation support for apiDump`() {
         Assume.assumeFalse(HostManager().isEnabled(KonanTarget.MACOS_ARM64))
 
         val runner = test {
@@ -868,7 +868,29 @@ internal class KlibVerificationTests : BaseKotlinGradleTest() {
                 arguments.addAll(listOf(":apiDump", "-Pkotlin.native.enableKlibsCrossCompilation=true"))
             }
         }
-
         checkKlibDump(runner.build(), "/examples/classes/TopLevelDeclarations.klib.all.dump")
+    }
+
+    @Test
+    fun `check cross compilation support for apiCheck`() {
+        Assume.assumeFalse(HostManager().isEnabled(KonanTarget.MACOS_ARM64))
+
+        val runner = test {
+            settingsGradleKts {
+                resolve("/examples/gradle/settings/settings-name-testproject.gradle.kts")
+            }
+            buildGradleKts {
+                resolve("/examples/gradle/base/withNativePluginAndCrossCompilation.gradle.kts")
+            }
+            additionalBuildConfig("/examples/gradle/configuration/appleTargets/targets.gradle.kts")
+            addToSrcSet("/examples/classes/TopLevelDeclarations.kt")
+            abiFile(projectName = "testproject") {
+                resolve("/examples/classes/TopLevelDeclarations.klib.all.dump")
+            }
+            runner {
+                arguments.addAll(listOf(":apiCheck", "-Pkotlin.native.enableKlibsCrossCompilation=true"))
+            }
+        }
+        assertApiCheckPassed(runner.build())
     }
 }

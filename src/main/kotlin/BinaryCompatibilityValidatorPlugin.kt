@@ -556,18 +556,10 @@ private class KlibValidationPipelineBuilder(
 
     // Compilable targets not supported by the host compiler
     private fun Project.unsupportedTargets(): Provider<Set<KlibTarget>> {
-        val banned = bannedTargets() // for testing only
         return project.provider {
-            val hm = HostManager()
             project.kotlinMultiplatform.targets.matching { it.emitsKlib }
                 .asSequence()
-                .filter {
-                    if (it is KotlinNativeTarget) {
-                        !hm.isEnabled(it.konanTarget) || it.targetName in banned
-                    } else {
-                        false
-                    }
-                }
+                .filterNot { targetIsSupported(it) }
                 .map { it.toKlibTarget() }
                 .toSet()
         }
