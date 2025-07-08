@@ -774,7 +774,7 @@ private var Configuration.isCanBeDeclaredCompat: Boolean
         }
     }
 
-private fun isKgpVersionAtLeast2_1(kgpVersion: String): Boolean {
+internal fun isKgpVersionAtLeast2_1(kgpVersion: String): Boolean {
     val parts = kgpVersion.split('.')
     if (parts.size < 2) return false
     val major = parts[0].toIntOrNull() ?: return false
@@ -782,7 +782,7 @@ private fun isKgpVersionAtLeast2_1(kgpVersion: String): Boolean {
     return major > 2 || (major == 2 && minor >= 1)
 }
 
-private fun isKgpVersionAtLeast2_2_20(kgpVersion: String): Boolean {
+internal fun isKgpVersionAtLeast2_2_20(kgpVersion: String): Boolean {
     val parts = kgpVersion.split('.')
     if (parts.size < 3) return false
     val major = parts[0].toIntOrNull() ?: return false
