@@ -494,6 +494,8 @@ private class KlibValidationPipelineBuilder(
             it.dumps.addAll(inferredDumps)
         }
 
+        val kgpVersion = readVersion()
+
         kotlin.targets.matching { it.emitsKlib }.configureEach { currentTarget ->
             val mainCompilation = currentTarget.mainCompilationOrNull ?: return@configureEach
 
@@ -502,7 +504,7 @@ private class KlibValidationPipelineBuilder(
             val targetConfig = TargetConfig(project, extension, targetName, intermediateFilesConfig)
             val apiBuildDir =
                 targetConfig.apiDir.flatMap { f -> project.layout.buildDirectory.asFile.map { it.resolve(f) } }
-            val targetSupported = targetIsSupported(currentTarget)
+            val targetSupported = targetIsSupported(currentTarget, kgpVersion)
             // If a target is supported, the workflow is simple: create a dump, then merge it along with other dumps.
             if (targetSupported) {
                 val buildTargetAbi = configureKlibCompilation(
@@ -542,13 +544,13 @@ private class KlibValidationPipelineBuilder(
         }
     }
 
-    private fun Project.targetIsSupported(target: KotlinTarget): Boolean {
+    private fun Project.targetIsSupported(target: KotlinTarget, kgpVersion: String?): Boolean {
         if (bannedTargets().contains(target.targetName)) return false
         if (target !is KotlinNativeTarget || HostManager().isEnabled(target.konanTarget)) {
             return true
         }
 
-        val kgpVersion = getKotlinPluginVersion()
+        if (kgpVersion == null) return false
 
         // Starting from Kotlin 2.1.0, cross compilation could be enabled via property
         if (!isKgpVersionAtLeast2_1(kgpVersion)) return false
@@ -564,9 +566,10 @@ private class KlibValidationPipelineBuilder(
     // Compilable targets not supported by the host compiler
     private fun Project.unsupportedTargets(): Provider<Set<KlibTarget>> {
         return project.provider {
+            val kgpVersion = readVersion()
             project.kotlinMultiplatform.targets.matching { it.emitsKlib }
                 .asSequence()
-                .filterNot { targetIsSupported(it) }
+                .filterNot { targetIsSupported(it, kgpVersion) }
                 .map { it.toKlibTarget() }
                 .toSet()
         }
