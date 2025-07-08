@@ -548,10 +548,17 @@ private class KlibValidationPipelineBuilder(
             return true
         }
 
-        // Starting from Kotlin 2.1.0, cross compilation could be enabled via property
-        if (!isKgpVersionAtLeast2_1(getKotlinPluginVersion())) return false
+        val kgpVersion = getKotlinPluginVersion()
 
-        return (project.findProperty(ENABLE_CROSS_COMPILATION_PROPERTY_NAME) as String?).toBoolean()
+        // Starting from Kotlin 2.1.0, cross compilation could be enabled via property
+        if (!isKgpVersionAtLeast2_1(kgpVersion)) return false
+
+        val propertyValue = project.findProperty(ENABLE_CROSS_COMPILATION_PROPERTY_NAME) as String?
+        if (propertyValue == null) {
+            // Starting from Kotlin 2.2.20, cross compilation is enabled by default (KT-76421)
+            if (isKgpVersionAtLeast2_2_20(kgpVersion)) return true
+        }
+        return propertyValue.toBoolean()
     }
 
     // Compilable targets not supported by the host compiler
@@ -773,4 +780,15 @@ private fun isKgpVersionAtLeast2_1(kgpVersion: String): Boolean {
     val major = parts[0].toIntOrNull() ?: return false
     val minor = parts[1].toIntOrNull() ?: return false
     return major > 2 || (major == 2 && minor >= 1)
+}
+
+private fun isKgpVersionAtLeast2_2_20(kgpVersion: String): Boolean {
+    val parts = kgpVersion.split('.')
+    if (parts.size < 3) return false
+    val major = parts[0].toIntOrNull() ?: return false
+    val minor = parts[1].toIntOrNull() ?: return false
+    if (major > 2 || (major == 2 && minor > 2)) return true
+
+    val patch = parts[2].split('-')[0].toIntOrNull() ?: return false
+    return major == 2 && minor == 2 && patch >= 20
 }
