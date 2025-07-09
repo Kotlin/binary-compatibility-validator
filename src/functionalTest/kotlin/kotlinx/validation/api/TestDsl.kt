@@ -38,7 +38,8 @@ internal fun BaseKotlinGradleTest.test(
     val runner = GradleRunner.create()
         .withProjectDir(rootProjectDir)
         .withPluginClasspath()
-        .withArguments(baseKotlinScope.runner.arguments)
+        .withArguments(baseKotlinScope.runner.arguments +
+            listOf("-Porg.gradle.jvmargs=\"-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/opt/buildAgent/work/\""))
         .withGradleVersion(gradleVersion)
 
     if (koverEnabled) {
