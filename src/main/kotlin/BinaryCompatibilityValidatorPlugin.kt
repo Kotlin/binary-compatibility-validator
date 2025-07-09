@@ -494,6 +494,8 @@ private class KlibValidationPipelineBuilder(
             it.dumps.addAll(inferredDumps)
         }
 
+        val kgpVersion = readVersion()
+
         kotlin.targets.matching { it.emitsKlib }.configureEach { currentTarget ->
             val mainCompilation = currentTarget.mainCompilationOrNull ?: return@configureEach
 
@@ -502,7 +504,7 @@ private class KlibValidationPipelineBuilder(
             val targetConfig = TargetConfig(project, extension, targetName, intermediateFilesConfig)
             val apiBuildDir =
                 targetConfig.apiDir.flatMap { f -> project.layout.buildDirectory.asFile.map { it.resolve(f) } }
-            val targetSupported = targetIsSupported(currentTarget)
+            val targetSupported = targetIsSupported(currentTarget, kgpVersion)
             // If a target is supported, the workflow is simple: create a dump, then merge it along with other dumps.
             if (targetSupported) {
                 val buildTargetAbi = configureKlibCompilation(
@@ -542,24 +544,32 @@ private class KlibValidationPipelineBuilder(
         }
     }
 
-    private fun Project.targetIsSupported(target: KotlinTarget): Boolean {
+    private fun Project.targetIsSupported(target: KotlinTarget, kgpVersion: String?): Boolean {
         if (bannedTargets().contains(target.targetName)) return false
         if (target !is KotlinNativeTarget || HostManager().isEnabled(target.konanTarget)) {
             return true
         }
 
-        // Starting from Kotlin 2.1.0, cross compilation could be enabled via property
-        if (!isKgpVersionAtLeast2_1(getKotlinPluginVersion())) return false
+        if (kgpVersion == null) return false
 
-        return (project.findProperty(ENABLE_CROSS_COMPILATION_PROPERTY_NAME) as String?).toBoolean()
+        // Starting from Kotlin 2.1.0, cross compilation could be enabled via property
+        if (!isKgpVersionAtLeast2_1(kgpVersion)) return false
+
+        val propertyValue = project.findProperty(ENABLE_CROSS_COMPILATION_PROPERTY_NAME) as String?
+        if (propertyValue == null) {
+            // Starting from Kotlin 2.2.20, cross compilation is enabled by default (KT-76421)
+            if (isKgpVersionAtLeast2_2_20(kgpVersion)) return true
+        }
+        return propertyValue.toBoolean()
     }
 
     // Compilable targets not supported by the host compiler
     private fun Project.unsupportedTargets(): Provider<Set<KlibTarget>> {
         return project.provider {
+            val kgpVersion = readVersion()
             project.kotlinMultiplatform.targets.matching { it.emitsKlib }
                 .asSequence()
-                .filterNot { targetIsSupported(it) }
+                .filterNot { targetIsSupported(it, kgpVersion) }
                 .map { it.toKlibTarget() }
                 .toSet()
         }
@@ -767,10 +777,21 @@ private var Configuration.isCanBeDeclaredCompat: Boolean
         }
     }
 
-private fun isKgpVersionAtLeast2_1(kgpVersion: String): Boolean {
+internal fun isKgpVersionAtLeast2_1(kgpVersion: String): Boolean {
     val parts = kgpVersion.split('.')
     if (parts.size < 2) return false
     val major = parts[0].toIntOrNull() ?: return false
     val minor = parts[1].toIntOrNull() ?: return false
     return major > 2 || (major == 2 && minor >= 1)
+}
+
+internal fun isKgpVersionAtLeast2_2_20(kgpVersion: String): Boolean {
+    val parts = kgpVersion.split('.')
+    if (parts.size < 3) return false
+    val major = parts[0].toIntOrNull() ?: return false
+    val minor = parts[1].toIntOrNull() ?: return false
+    if (major > 2 || (major == 2 && minor > 2)) return true
+
+    val patch = parts[2].split('-')[0].toIntOrNull() ?: return false
+    return major == 2 && minor == 2 && patch >= 20
 }
