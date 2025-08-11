@@ -4,8 +4,6 @@
 [![License](https://img.shields.io/github/license/Kotlin/binary-compatibility-validator)](LICENSE.TXT)
 [![KDoc link](https://img.shields.io/badge/API_reference-KDoc-blue)](https://kotlin.github.io/binary-compatibility-validator/)
 
-# Support for this plugin has been discontinued
-
 > [!IMPORTANT]
 > This plugin is in maintenance mode.
 > 
