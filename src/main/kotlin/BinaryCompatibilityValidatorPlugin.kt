@@ -16,6 +16,7 @@ import org.jetbrains.kotlin.gradle.dsl.*
 import org.jetbrains.kotlin.gradle.plugin.*
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.kotlin.konan.target.HostManager
+import org.jetbrains.kotlin.konan.target.TargetSupportException
 import org.jetbrains.kotlin.library.abi.ExperimentalLibraryAbiReader
 import java.io.*
 import java.util.*
@@ -546,9 +547,14 @@ private class KlibValidationPipelineBuilder(
 
     private fun Project.targetIsSupported(target: KotlinTarget, kgpVersion: String?): Boolean {
         if (bannedTargets().contains(target.targetName)) return false
-        if (target !is KotlinNativeTarget || HostManager().isEnabled(target.konanTarget)) {
-            return true
+        if (target !is KotlinNativeTarget) return true
+        // isEnabled resolves the current host, which throws on hosts Kotlin/Native doesn't recognize (e.g. linux/aarch64)
+        val hostSupportsTarget = try {
+            HostManager().isEnabled(target.konanTarget)
+        } catch (e: TargetSupportException) {
+            false
         }
+        if (hostSupportsTarget) return true
 
         if (kgpVersion == null) return false
 
