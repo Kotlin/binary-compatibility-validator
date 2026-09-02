@@ -552,7 +552,7 @@ private class KlibValidationPipelineBuilder(
         val hostSupportsTarget = try {
             HostManager().isEnabled(target.konanTarget)
         } catch (e: TargetSupportException) {
-            false
+            return false
         }
         if (hostSupportsTarget) return true
 
